@@ -57,10 +57,10 @@ completed per region). I can add a template per LMS in Phase 5.
 ### Q4. Save code length
 
 A save code that holds per-quest progress (status, hints, attempts, time) for ~90 quests is
-about **240 characters**. That is fine to copy and paste (e.g. into an LMS text box), but too
+about **250 characters**. That is fine to copy and paste (e.g. into an LMS text box), but too
 long to type. A truly short code (≈ 12–20 characters) is impossible without a server.
 
-**Recommendation:** keep the 240-character copy/paste code plus the full progress file. The
+**Recommendation:** keep the 250-character copy/paste code plus the full progress file. The
 alternative is a "lite" code (completion only, ~40 characters, typeable) that drops hint,
 attempt and time data, so teacher reports from lite codes would be thinner. **Which do you
 prefer, or both?**

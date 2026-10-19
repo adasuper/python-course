@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-q3-path-to-the-well
+region: hearthvale-village
+title: The Path to the Well
+type: parsons
+npc: miller
+learning_outcome: Arrange move and say instructions in order so the hero reaches the well and greets the miller.
+csta: [2-AP-10]
+estimated_minutes: 7
+prerequisites: [r1-q2-hello-hearthvale]
+vocabulary: [sequence, instruction]
+
+story_intro: |
+  Miller Dusty is waiting by the well. "Achoo! Sorry. Flour. Could you come say good morning? A gust of wind blew my directions everywhere."
+
+  The scraps of the program are all here, but they're jumbled. Put them back in the right [[sequence]]. One scrap doesn't belong at all.
+goal: Put the lines in order so the hero walks to the miller without bumping into anything, then says good morning.
+concept_card: |
+  Order matters. The same instructions in a different order can send the hero somewhere else, or straight into a wall. Plan the path one step at a time.
+
+stage:
+  kind: grid
+  grid: |
+    #########
+    #H...#..#
+    #.##.#..#
+    #..#....#
+    #..#..MW#
+    #########
+  facing: right
+  legend:
+    "#": { tile: hedge, solid: true }
+    ".": { tile: grass }
+    H: { tile: grass, hero: true }
+    M: { tile: grass, object: npc }
+    W: { tile: cobble, object: well }
+  npcs:
+    M: { name: Miller Dusty, sprite: npc_miller }
+
+parsons:
+  fixed_top:
+    - from codeweald import hero
+  lines:
+    - hero.move("right", 3)
+    - hero.move("down", 2)
+    - hero.move("right")
+    - hero.move("down")
+    - hero.say("Good morning, Miller!")
+  distractors:
+    - hero.move("up")
+  indent: false
+
+validators:
+  - id: at-miller
+    type: state
+    hero_at: [5, 4]
+    fail_hint: The hero needs to end up right next to the miller, on the tile to his left.
+  - id: no-bonks
+    type: state
+    max_bonks: 0
+    fail_hint: The hero bumped into something. Check the order of the moves.
+  - id: greeted
+    type: state
+    said_contains: good morning
+    fail_hint: Don't forget to say good morning!
+  - id: greet-last
+    type: custom
+    python: |
+      def check(ctx):
+          acts = [a for a in ctx.outcome.world.actions if a["t"] in ("move", "bonk", "say")]
+          if acts and acts[-1]["t"] == "say":
+              return Pass()
+          return Fail("Say good morning when you get there, not before you leave!")
+
+common_mistakes:
+  - id: bonked
+    detect: { kind: state, min_bonks: 1 }
+    feedback: >-
+      Bonk! The hero walked into a hedge. Python did exactly what the lines said, in order.
+      Trace the path with your finger and check which move should come first.
+  - id: said-too-early
+    detect: { kind: validator_failed, id: greet-last }
+    feedback: >-
+      You said good morning before you got to the miller! The hello should be the very last
+      instruction, after all the moves.
+  - id: wrong-spot
+    detect: { kind: validator_failed, id: at-miller }
+    feedback: >-
+      The hero didn't stop next to the miller. Count the steps again. Remember, one scrap
+      doesn't belong in the program at all.
+
+wrong_solutions:
+  - order: [1, 0, 2, 3, 4]
+    expect_mistake: bonked
+    note: Going down first walks the hero into a hedge.
+  - order: [4, 0, 1, 2, 3]
+    expect_mistake: said-too-early
+  - order: [0, 1, 2, 5, 3, 4]
+    expect_mistake: bonked
+    note: The distractor "up" bumps into the hedge.
+
+hints:
+  - The hero starts at the top left. Which way can it go first without hitting the hedge?
+  - "First go right along the top row, then down the gap. Say good morning only when you're next to the miller. The line `hero.move(\"up\")` isn't needed."
+  - |
+    ```python
+    from codeweald import hero
+    hero.move("right", 3)
+    hero.move("down", 2)
+    ____
+    hero.move("down")
+    hero.say("Good morning, Miller!")
+    ```
+
+story_outro: |
+  "Good morning to you too!" Miller Dusty beams, then sneezes. "You followed the steps perfectly. Like a recipe, but with fewer sneezes."

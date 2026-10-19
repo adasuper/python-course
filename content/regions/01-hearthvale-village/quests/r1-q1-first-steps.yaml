@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-q1-first-steps
+region: hearthvale-village
+title: Byte's First Steps
+type: predict
+npc: byte
+learning_outcome: Predict where the hero ends up when move instructions run in order, top to bottom.
+csta: [2-AP-10]
+estimated_minutes: 6
+vocabulary: [program, instruction, sequence]
+
+story_intro: |
+  Byte hops onto a fence post. "Before you write any code, let's *read* some."
+
+  "This is a [[program]]. Each line is one [[instruction]] for the hero. Python follows them in [[sequence]]: the top line first, then the next, then the next."
+goal: Read the program and predict where the hero will stop. Then run it to check.
+concept_card: |
+  A program is a list of instructions. Python runs them **in order**, from the top line to the bottom line. Change the order, and you change what happens.
+
+stage:
+  kind: grid
+  grid: |
+    #########
+    #H......#
+    #.......#
+    #......W#
+    #.M...T.#
+    #########
+  facing: right
+  legend:
+    "#": { tile: hedge, solid: true }
+    ".": { tile: grass }
+    H: { tile: grass, hero: true }
+    W: { tile: cobble, object: well }
+    M: { tile: grass, object: market_stall, look: stall }
+    T: { tile: grass, object: tree }
+
+starter_code: |
+  from codeweald import hero
+  hero.move("right", 4)
+  hero.move("down", 2)
+  hero.move("left", 2)
+  hero.move("down")
+
+prompts:
+  - kind: mcq
+    question: When the program ends, what is the hero standing next to?
+    options:
+      - The market stall
+      - The well
+      - The big tree
+      - Nothing. The hero is back where it started.
+    answer: 0
+    verify: { kind: hero_at, at: [3, 4] }
+    explain: >-
+      Right 4, down 2, left 2, then down 1. Step by step, that lands the hero right beside the market stall.
+  - kind: mcq
+    question: Which move does the hero make first?
+    options:
+      - Right 4 steps
+      - Down 1 step
+      - Left 2 steps
+    answer: 0
+    verify: { kind: none }
+    explain: Python starts at the top. The first move line is `hero.move("right", 4)`.
+
+hints:
+  - Put your finger on the hero. Read one line at a time and move your finger the same way.
+  - "`hero.move(\"right\", 4)` means 4 steps to the right. `hero.move(\"down\")` means just 1 step down."
+  - |
+    Trace it step by step:
+    ```text
+    line 2: right 4 -> the hero is near the top right
+    line 3: down 2  -> the hero is on the well's row
+    line 4: left 2  -> the hero walks back toward the middle
+    line 5: down 1  -> the hero stops next to ____
+    ```
+
+story_outro: |
+  "See?" says Byte. "The computer does exactly what you write, in exactly that order. No more, no less. Now *you* know how to read a program."

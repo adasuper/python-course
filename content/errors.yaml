@@ -1,0 +1,336 @@
+# Kid-friendly messages for every error key the Python runtime can report.
+# Byte says these. {placeholders} are filled in by the game, e.g. {line} is the line number.
+# Teachers can change the wording here; no code changes needed.
+
+# ----- syntax: Python can't read the code, so nothing runs -----
+syntax.unclosed_string:
+  title: A quote never closed
+  message: >-
+    The text that starts on line {line} never ends. Every opening quote needs a matching closing quote.
+  tip: >-
+    Look for the quote at the start of the text, then add the same kind of quote at the end, like `print("Hello")`.
+syntax.unclosed_bracket:
+  title: A bracket never closed
+  message: >-
+    A `{bracket}` opens on line {line}, but it never closes. Every `{bracket}` needs a `{closer}`.
+  tip: >-
+    Add `{closer}` where the instruction ends. Count them: each opening bracket needs a closing one.
+syntax.extra_bracket:
+  title: An extra closing bracket
+  message: >-
+    Line {line} has a closing bracket with no opening bracket to match it.
+  tip: Count the brackets on that line. Remove the extra one, or add the missing opening one.
+syntax.print_no_parens:
+  title: print needs brackets
+  message: >-
+    On line {line}, `print` is missing its brackets. In Python, print needs ( ) around what it shows.
+  tip: 'Write it like this: `print("Hello")`'
+syntax.missing_colon:
+  title: A colon is missing
+  message: >-
+    Line {line} starts a block (like `if`, `for`, `while` or `def`), so it must end with a colon `:`.
+  tip: 'Add `:` at the very end of line {line}.'
+syntax.smart_quotes:
+  title: Curly quotes sneaked in
+  message: >-
+    Line {line} has a curly quote `{char}`. Python only understands straight quotes. Curly ones often come from copying text.
+  tip: 'Retype the quotes with your keyboard: `"` or `''`.'
+syntax.invalid_character:
+  title: A strange symbol
+  message: >-
+    Line {line} has a symbol Python doesn't understand: `{char}`.
+  tip: Delete that symbol, or retype it with your keyboard.
+syntax.name_starts_with_digit:
+  title: Names can't start with a number
+  message: >-
+    Something on line {line} starts with a number but keeps going like a name. Names can't start with a number.
+  tip: 'Put the number later, like `shelf_2` instead of `2nd_shelf`.'
+syntax.bad_variable_name:
+  title: That name has a space or a dash
+  message: >-
+    On line {line}, `{name}` isn't a name Python can use. Names can't have spaces or dashes.
+  tip: 'Join the words with an underscore, like `book_count`.'
+syntax.assign_in_condition:
+  title: One = or two?
+  message: >-
+    Line {line} uses `=`, which *stores* a value. To *compare* two things, use `==`.
+  tip: 'Try `if gold == 10:` instead of `if gold = 10:`'
+syntax.missing_comma:
+  title: Words without quotes (or a missing comma)
+  message: >-
+    Python got confused on line {line}. Often this means some words need quotes around them, or a comma is missing.
+  tip: 'Text needs quotes: `print("Welcome to Hearthvale!")`'
+syntax.assign_to_value:
+  title: Can't store into that
+  message: >-
+    Line {line} tries to store a value into something that isn't a name.
+  tip: 'The name goes on the left of `=` and the value on the right, like `gold = 5`.'
+syntax.generic:
+  title: Python can't read this line
+  message: >-
+    Python got stuck reading line {line}. Check the spelling, the quotes and the brackets.
+  tip: 'If that line is a note for humans, start it with `#` to make it a comment.'
+
+# ----- indentation -----
+indent.expected:
+  title: This line needs to be pushed in
+  message: >-
+    The `{after}` on line {after_line} needs at least one indented line under it. Line {line} should be pushed in.
+  tip: Press Tab (or type 4 spaces) at the start of line {line}.
+indent.unexpected:
+  title: An unexpected indent
+  message: >-
+    Line {line} is pushed in (indented), but nothing above it needs that.
+  tip: Remove the spaces at the start of line {line}.
+indent.mismatch:
+  title: The indents don't line up
+  message: >-
+    Line {line} is indented by a different amount than the lines around it.
+  tip: Line it up exactly with the lines in the same block.
+indent.tabs:
+  title: Tabs and spaces mixed
+  message: >-
+    Line {line} mixes tabs and spaces at the start. Python can't tell how far it is pushed in.
+  tip: Delete the space at the start of the line and indent it again.
+indent.generic:
+  title: An indentation problem
+  message: >-
+    Something is wrong with how line {line} is pushed in.
+  tip: Lines inside a block are indented by the same amount, usually 4 spaces.
+
+# ----- names -----
+name.wrong_case:
+  title: Python cares about capitals
+  message: >-
+    On line {line}, Python doesn't know `{name}`. Capital letters matter in Python!
+  tip: 'Did you mean `{suggestion}`?'
+name.missing_quotes:
+  title: Words need quotes
+  message: >-
+    On line {line}, Python looked for something called `{name}` and found nothing. If you meant the word itself, it needs quotes.
+  tip: 'Text goes inside quotes: `print("{name}")`'
+name.typo:
+  title: A typo?
+  message: >-
+    Python doesn't know `{name}` on line {line}. It looks a lot like `{suggestion}`.
+  tip: 'Check the spelling. Did you mean `{suggestion}`?'
+name.before_assignment:
+  title: Used before it exists
+  message: >-
+    Line {line} uses `{name}`, but `{name}` only gets its value later in the program. Python runs from top to bottom.
+  tip: Move the line that sets `{name}` above line {line}.
+name.not_defined:
+  title: Python doesn't know that name
+  message: >-
+    On line {line}, Python doesn't know anything called `{name}`.
+  tip: Check the spelling, or set `{name}` first. If you meant text, put it in quotes.
+name.unbound_local:
+  title: Used before it was set (inside a function)
+  message: >-
+    On line {line}, `{name}` is used inside a function before the function gives it a value.
+  tip: Give `{name}` a value inside the function first, or pass it in as a parameter.
+
+# ----- types -----
+type.str_plus_number:
+  title: Text and numbers don't glue together
+  message: >-
+    On line {line}, you tried to join text and a number with `+`. Python won't glue a number onto words.
+  tip: 'Turn the number into text with `str(...)`, or use an f-string.'
+type.number_plus_str:
+  title: A number and text don't add up
+  message: >-
+    On line {line}, you tried to add a number and some text. Python can't do maths with text.
+  tip: 'If the text came from `input()`, turn it into a number with `int(...)` first.'
+type.str_as_int:
+  title: Text where a number should be
+  message: >-
+    On line {line}, Python needed a whole number but got text.
+  tip: 'Use `int(...)` to turn text like `"5"` into the number `5`.'
+type.not_int:
+  title: That needs a whole number
+  message: >-
+    On line {line}, Python needed a whole number, like 3, but got something else.
+  tip: 'Use a whole number, or wrap the value in `int(...)`.'
+type.arg_count:
+  title: Wrong number of inputs
+  message: >-
+    Line {line} gives a function the wrong number of values. Check how many it asks for.
+  tip: Count the parameters in the `def` line and the values in the call. They should match.
+type.none_value:
+  title: Nothing to work with
+  message: >-
+    On line {line}, a value is `None`, which means "nothing". Did a function forget to `return` its answer?
+  tip: 'Inside the function, use `return` to hand back the answer instead of `print`.'
+type.not_callable:
+  title: That's not something you can call
+  message: >-
+    Line {line} puts `( )` after a `{what}`, as if it were a function. It isn't one.
+  tip: 'Remove the brackets, or check that you used the right name.'
+type.bad_operands:
+  title: Those values don't mix
+  message: >-
+    On line {line}, `{op}` can't be used with a `{left}` and a `{right}`.
+  tip: Check what kind of value each side holds.
+type.generic:
+  title: The wrong kind of value
+  message: >-
+    On line {line}, a value was the wrong type for what you asked Python to do.
+  tip: Read the real Python error below. It names the types involved.
+
+# ----- other runtime errors -----
+index.out_of_range:
+  title: No item at that position
+  message: >-
+    On line {line}, you asked for a position that the list doesn't have. Positions start at 0.
+  tip: 'The last position is one less than `len(...)`.'
+key.missing:
+  title: That key isn't in the dictionary
+  message: >-
+    On line {line}, the dictionary has no key {key}.
+  tip: 'Check the spelling and capitals, or use `in` to check first.'
+zero_division:
+  title: Can't divide by zero
+  message: >-
+    Line {line} divides by zero. Nobody can share cookies among zero friends!
+  tip: Check the number you divide by before you divide.
+value.int_conversion:
+  title: That text isn't a whole number
+  message: >-
+    On line {line}, `int()` was given {text}. It can only turn digit-words like `"42"` into numbers.
+  tip: Make sure the text holds only digits.
+value.float_conversion:
+  title: That text isn't a number
+  message: >-
+    On line {line}, `float()` was given text that isn't a number.
+  tip: 'Use digits and at most one dot, like `"3.5"`.'
+value.remove_missing:
+  title: Not in the list
+  message: >-
+    On line {line}, you tried to remove something that isn't in the list.
+  tip: 'Use `in` to check first: `if item in my_list:`'
+value.generic:
+  title: A strange value
+  message: >-
+    On line {line}, a value wasn't one Python could use there.
+  tip: Read the real Python error below for the details.
+attribute.generic:
+  title: That can't do that
+  message: >-
+    On line {line}, a `{what}` doesn't have anything called `{name}`.
+  tip: Check the spelling, and check what kind of value you have.
+
+# ----- limits: the program ran too long or did too much -----
+limits.loop:
+  title: A loop that never ends?
+  message: >-
+    Your loop on line {line} ran {budget} times! Your loop might be running forever! Check that your loop condition eventually becomes False.
+  tip: Something inside the loop must change, so the condition can turn False.
+limits.actions:
+  title: The hero is exhausted
+  message: >-
+    Your hero did more than {budget} actions, so Byte stopped the program. Is the hero stuck walking into a wall forever?
+  tip: Check that your loop stops when the hero reaches the goal.
+limits.output:
+  title: That's a LOT of printing
+  message: >-
+    Your program printed more than {budget} letters, so Byte stopped it before the Scroll ran out.
+  tip: Is a print inside a loop that never ends?
+limits.timeout:
+  title: Byte had to stop your program
+  message: >-
+    Your code took longer than {seconds} seconds, so Byte stopped it. Your loop might be running forever! Check that your loop condition eventually becomes False.
+  tip: Look for a loop whose condition never changes, or a very, very big number.
+limits.recursion:
+  title: A function that calls itself forever
+  message: >-
+    A function kept calling itself over and over, so Python stopped on line {line}.
+  tip: Make sure the function has a way to stop.
+limits.memory:
+  title: Out of room
+  message: >-
+    Your program tried to make something far too big to fit in memory.
+  tip: Look for a very large number or a list that keeps growing.
+
+# ----- the game API -----
+api.no_map:
+  title: No map in this quest
+  message: >-
+    There's no map in this quest, so the hero can't {action} here.
+  tip: 'This quest is about the Scroll of Output. Try `print(...)` instead.'
+api.no_world:
+  title: The world isn't ready
+  message: >-
+    The world isn't ready yet. Try pressing Run again.
+api.bad_direction:
+  title: Which way is that?
+  message: >-
+    Line {line} asks the hero to go "{value}", but that isn't a direction.
+  tip: 'Use one of "up", "down", "left" or "right" (in quotes).'
+api.direction_case:
+  title: Directions are lowercase
+  message: >-
+    On line {line}, "{value}" has a capital letter. Directions are all lowercase.
+  tip: 'Write "{suggestion}" instead.'
+api.direction_not_text:
+  title: Directions go in quotes
+  message: >-
+    On line {line}, the direction is {value}, but directions are words in quotes.
+  tip: 'Write it like `hero.move("up")`.'
+api.steps_text:
+  title: Steps are a number
+  message: >-
+    On line {line}, the number of steps is {value}. That's text, because of the quotes.
+  tip: 'Take away the quotes: `hero.move("up", 3)`.'
+api.steps_not_number:
+  title: Steps are a number
+  message: >-
+    On line {line}, the number of steps must be a whole number, but it's {value}.
+  tip: 'Like this: `hero.move("up", 3)`.'
+api.steps_not_whole:
+  title: Whole steps only
+  message: >-
+    On line {line}, the hero can't take {value} steps. Use a whole number.
+  tip: 'Try `hero.move("up", 2)`.'
+api.steps_negative:
+  title: Steps can't be negative
+  message: >-
+    On line {line}, the hero can't take {value} steps. To go back, use the opposite direction.
+  tip: 'Instead of `hero.move("up", -2)`, write `hero.move("down", 2)`.'
+api.unknown_action:
+  title: An unknown action
+  message: >-
+    On line {line}, the {owner} doesn't know how to `{name}`.
+  tip: 'Check the spelling. The closest match is `{suggestion}`.'
+api.sleep_not_number:
+  title: Sleep needs a number
+  message: >-
+    On line {line}, `time.sleep()` needs a number of seconds, but it got {value}.
+  tip: 'Like this: `time.sleep(1)`'
+api.sleep_negative:
+  title: Can't sleep backwards
+  message: >-
+    On line {line}, `time.sleep()` got {value}. Even owls can't go back in time.
+  tip: Use 0 or a positive number.
+
+# ----- the sandbox -----
+sandbox.blocked:
+  title: Not in the Spellbook
+  message: >-
+    `{name}()` on line {line} isn't available in the Spellbook. You won't need it for any quest.
+import.not_allowed:
+  title: That spellbook isn't in our library
+  message: >-
+    Line {line} tries to import `{name}`, but Codeweald's library doesn't have it.
+  tip: 'You can import: {allowed}.'
+input.empty:
+  title: No more answers
+  message: >-
+    On line {line}, your program asked for an answer, but nobody in this quest has any more answers to give.
+  tip: Check how many times your program calls `input()`.
+
+# ----- anything else -----
+generic:
+  title: Python found a problem
+  message: >-
+    Python found a problem on line {line}: a `{type}`. Let's read the real error together.
+  tip: Open "Show the real Python error" below and read the last line first.

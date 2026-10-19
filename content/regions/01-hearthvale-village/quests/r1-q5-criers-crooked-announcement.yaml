@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-q5-criers-crooked-announcement
+region: hearthvale-village
+title: The Crier's Crooked Announcement
+type: fix
+npc: crier
+learning_outcome: Use the line number in an error message to find and fix a missing quote and a missing closing parenthesis.
+csta: [2-AP-17]
+estimated_minutes: 8
+prerequisites: [r1-q4-notes-for-the-baker]
+vocabulary: [error, error message, line number, bug, syntax]
+rewards: { item: spyglass-of-errors }
+
+story_intro: |
+  Crier Bellows clears his throat. "HEAR YE! Er... my announcement won't even START. Python just shows an error!"
+
+  When Python can't read your code, it shows an [[error message]]. It tells you what went wrong and the [[line number]] to check. This spell has **2 bugs**. Python will show you one at a time.
+goal: Fix the two bugs so the crier's announcement prints all three lines.
+concept_card: |
+  An **error message** tells you *what* went wrong and *where*. Read the line number first, then look closely at that line. Fix one error, run again, and read the next message.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_crier, name: Crier Bellows }
+
+starter_code: |
+  print("Hear ye! Hear ye!)
+  print("Market at noon!"
+  print("Bring your own basket.")
+
+solution: |
+  print("Hear ye! Hear ye!")
+  print("Market at noon!")
+  print("Bring your own basket.")
+
+validators:
+  - id: announcement
+    type: output
+    expect: |
+      Hear ye! Hear ye!
+      Market at noon!
+      Bring your own basket.
+    fail_hint: The announcement runs, but the words don't match the crier's script. Check each letter.
+
+common_mistakes:
+  - id: unclosed-quote
+    detect: { kind: error, key: syntax.unclosed_string }
+    feedback: >-
+      A quote opened but never closed. Look at the line in the error message. Every opening `"`
+      needs a closing `"` right before the `)`.
+  - id: unclosed-paren
+    detect: { kind: error, key: syntax.unclosed_bracket }
+    feedback: >-
+      A `(` was never closed. Look at the line in the error message and add a `)` at the end of it.
+  - id: words-changed
+    detect: { kind: validator_failed, id: announcement }
+    feedback: >-
+      No more errors. Great! But the words on the Scroll don't match the crier's script. Check the
+      spelling and the punctuation.
+
+wrong_solutions:
+  - expect_mistake: unclosed-paren
+    note: Only the quote is fixed.
+    code: |
+      print("Hear ye! Hear ye!")
+      print("Market at noon!"
+      print("Bring your own basket.")
+  - expect_mistake: unclosed-quote
+    note: Only the bracket is fixed.
+    code: |
+      print("Hear ye! Hear ye!)
+      print("Market at noon!")
+      print("Bring your own basket.")
+  - expect_mistake: words-changed
+    code: |
+      print("Hear ye! Hear ye!")
+      print("Market at moon!")
+      print("Bring your own basket.")
+
+hints:
+  - Press Run and read the error message. Which line does it point to?
+  - Line 1 is missing a closing quote `"`. After you fix it, run again. Line 2 is missing a closing `)`.
+  - |
+    ```python
+    print("Hear ye! Hear ye!")
+    print("Market at noon!"____
+    print("Bring your own basket.")
+    ```
+
+story_outro: |
+  "HEAR YE! HEAR YE! MARKET AT NOON!" The crier's voice rings across the square. You earned the **Spyglass of Errors**. Error messages are clues, not scoldings.

@@ -1,0 +1,282 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-boss-village-crier-bug
+region: hearthvale-village
+title: The Village Crier Bug
+type: boss
+npc: clangle
+learning_outcome: Use print statements, comments and error messages together to repair and finish a program.
+csta: [2-AP-17, 2-AP-19]
+estimated_minutes: 12
+prerequisites:
+  - r1-q1-first-steps
+  - r1-q2-hello-hearthvale
+  - r1-q3-path-to-the-well
+  - r1-q4-notes-for-the-baker
+  - r1-q5-criers-crooked-announcement
+  - r1-q6-welcome-sign
+vocabulary: [bug, debugging, error message, comment]
+
+boss:
+  name: The Village Crier Bug
+  bug: Clangle
+  sprite: bug_clangle
+
+story_intro: |
+  A tiny, bell-shaped [[bug]] named Clangle has crawled into the crier's bell. "Clang-clang! Your announcements are MINE now!"
+
+  The big announcement is due today. Clangle broke it in three ways. Fix them one at a time. That's called [[debugging]].
+goal: Fix the announcement in three phases to turn Clangle back into a friendly firefly.
+concept_card: |
+  Debugging is detective work. Run the code, read the clues, fix one thing, and run it again.
+
+phases:
+  - id: unjam-the-bell
+    title: Unjam the bell
+    type: fix
+    learning_outcome: Use error messages to find and fix errors that stop a program from running.
+    csta: [2-AP-17]
+    estimated_minutes: 4
+    story_intro: |
+      Clangle jammed the bell! The announcement won't even run. Python will tell you where to look. There are **2 bugs**.
+    goal: Fix the two bugs so the announcement runs and prints all three lines.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_clangle, name: Clangle }
+        - { sprite: npc_crier, name: Crier Bellows }
+    starter_code: |
+      print("Hear ye, hear ye!")
+      Print("The market moves to the square.")
+      print("The fair starts at noon!)
+    solution: |
+      print("Hear ye, hear ye!")
+      print("The market moves to the square.")
+      print("The fair starts at noon!")
+    validators:
+      - id: runs
+        type: output
+        expect: |
+          Hear ye, hear ye!
+          The market moves to the square.
+          The fair starts at noon!
+        fail_hint: It runs now, but the words don't match. Check every letter against the starter code.
+    common_mistakes:
+      - id: open-quote
+        detect: { kind: error, key: syntax.unclosed_string }
+        feedback: >-
+          The text on one line never ends. Find the line in the error message and add the missing
+          closing quote `"` before the `)`.
+      - id: capital-p
+        detect: { kind: error, key: name.wrong_case }
+        feedback: >-
+          Python is picky about capital letters. `Print` is not the same as `print`. Change the capital P
+          to a small p.
+      - id: words-changed
+        detect: { kind: validator_failed, id: runs }
+        feedback: The errors are gone, but some words changed. Compare each line with the starter code.
+    wrong_solutions:
+      - expect_mistake: capital-p
+        note: Only the quote is fixed.
+        code: |
+          print("Hear ye, hear ye!")
+          Print("The market moves to the square.")
+          print("The fair starts at noon!")
+      - expect_mistake: open-quote
+        note: Only the capital P is fixed.
+        code: |
+          print("Hear ye, hear ye!")
+          print("The market moves to the square.")
+          print("The fair starts at noon!)
+    hints:
+      - Run it and read the error message. Which line does it point to?
+      - Line 3 is missing a closing quote. After you fix it, run again. Then look at how line 2 is spelled.
+      - |
+        ```python
+        print("Hear ye, hear ye!")
+        ____("The market moves to the square.")
+        print("The fair starts at noon!")
+        ```
+    story_outro: |
+      CLANG! The bell shakes loose. Clangle wobbles. "Lucky guess!"
+
+  - id: words-in-order
+    title: Words in order
+    type: fix
+    learning_outcome: Arrange print statements so the output matches a required order.
+    csta: [2-AP-17]
+    estimated_minutes: 4
+    story_intro: |
+      Clangle scrambled the order! The crier's script must go like this:
+      ```text
+      Hear ye, hear ye!
+      The market moves to the square.
+      The fair starts at noon!
+      Bring a friend and a basket.
+      ```
+    goal: Reorder the print lines so the output matches the crier's script exactly.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_clangle, name: Clangle }
+        - { sprite: npc_crier, name: Crier Bellows }
+    starter_code: |
+      print("The fair starts at noon!")
+      print("Hear ye, hear ye!")
+      print("Bring a friend and a basket.")
+      print("The market moves to the square.")
+    solution: |
+      print("Hear ye, hear ye!")
+      print("The market moves to the square.")
+      print("The fair starts at noon!")
+      print("Bring a friend and a basket.")
+    validators:
+      - id: script
+        type: output
+        expect: |
+          Hear ye, hear ye!
+          The market moves to the square.
+          The fair starts at noon!
+          Bring a friend and a basket.
+        fail_hint: Compare the Scroll with the crier's script, line by line.
+    common_mistakes:
+      - id: first-line
+        detect: { kind: output_regex, pattern: "\\AHear ye, hear ye!", expect: absent }
+        feedback: >-
+          Every announcement starts with "Hear ye, hear ye!" Move that line to the top. Python runs
+          the lines from top to bottom.
+      - id: order
+        detect: { kind: validator_failed, id: script }
+        feedback: >-
+          A good start! The words are all there, but some lines are in the wrong order. Compare the
+          Scroll with the script, one line at a time.
+    wrong_solutions:
+      - expect_mistake: first-line
+        code: |
+          print("The market moves to the square.")
+          print("Hear ye, hear ye!")
+          print("The fair starts at noon!")
+          print("Bring a friend and a basket.")
+      - expect_mistake: order
+        code: |
+          print("Hear ye, hear ye!")
+          print("The fair starts at noon!")
+          print("The market moves to the square.")
+          print("Bring a friend and a basket.")
+    hints:
+      - Which line should the crier shout first?
+      - The order of the print lines is the order of the Scroll. Move each line to match the script, top to bottom.
+      - |
+        ```python
+        print("Hear ye, hear ye!")
+        print("The market moves to the square.")
+        ____
+        print("Bring a friend and a basket.")
+        ```
+    story_outro: |
+      The announcement flows in perfect order. Clangle's bell-shell cracks a little. "Clang... clang?"
+
+  - id: ring-it-out
+    title: Ring it out
+    type: modify
+    learning_outcome: Document a program with comments that explain each part.
+    csta: [2-AP-19]
+    estimated_minutes: 4
+    story_intro: |
+      Last step! Walk the hero to the crier's podium and ring out the news. Leave [[comments|comment]] so the next crier knows what your code does.
+    goal: Walk the hero to the tile in front of the podium, say "Hear ye!", and add a comment above the walking part and above the speaking part.
+    stage:
+      kind: grid
+      grid: |
+        #########
+        #.......#
+        #...P...#
+        #.......#
+        #H......#
+        #########
+      facing: right
+      legend:
+        "#": { tile: hedge, solid: true }
+        ".": { tile: cobble }
+        H: { tile: cobble, hero: true }
+        P: { tile: cobble, object: crier_podium, look: podium }
+    starter_code: |
+      from codeweald import hero
+
+    solution: |
+      from codeweald import hero
+      # Walk to the podium
+      hero.move("right", 3)
+      hero.move("up")
+      # Ring out the news
+      hero.say("Hear ye!")
+    validators:
+      - id: at-podium
+        type: state
+        hero_at: [4, 3]
+        fail_hint: The hero needs to stand right in front of the podium, on the tile just below it.
+      - id: rang
+        type: state
+        said_contains: hear ye
+        fail_hint: Make the hero say "Hear ye!" with `hero.say(...)`.
+      - id: comments
+        type: style
+        min_comments: 2
+        fail_hint: Add a `#` comment above the walking part and another above the speaking part.
+    common_mistakes:
+      - id: say-no-parens
+        detect: { kind: detector, name: missing_call_parens }
+        feedback: >-
+          `hero.say` needs brackets and quotes to work: `hero.say("Hear ye!")`. Without the `( )`,
+          nothing happens.
+      - id: not-there
+        detect: { kind: validator_failed, id: at-podium }
+        feedback: >-
+          The hero isn't in front of the podium yet. The podium is 3 steps right and 2 steps up from the
+          start. Stop on the tile just below it.
+      - id: no-comments
+        detect: { kind: validator_failed, id: comments }
+        feedback: >-
+          The hero rang out the news. Now leave notes for the next crier: a `#` comment above the walking
+          part and another above the speaking part.
+    wrong_solutions:
+      - expect_mistake: no-comments
+        code: |
+          from codeweald import hero
+          hero.move("right", 3)
+          hero.move("up")
+          hero.say("Hear ye!")
+      - expect_mistake: not-there
+        code: |
+          from codeweald import hero
+          # Walk to the podium
+          hero.move("right", 2)
+          hero.move("up")
+          # Ring out the news
+          hero.say("Hear ye!")
+      - expect_mistake: say-no-parens
+        code: |
+          from codeweald import hero
+          # Walk to the podium
+          hero.move("right", 3)
+          hero.move("up")
+          # Ring out the news
+          hero.say
+    hints:
+      - Where is the podium compared to the hero? Count the steps right, then up.
+      - Move right 3, then up 1. Then use `hero.say("Hear ye!")`. Put a line starting with `#` above each part.
+      - |
+        ```python
+        from codeweald import hero
+        # Walk to the podium
+        hero.move("right", 3)
+        hero.move(____)
+        # Ring out the news
+        hero.say("Hear ye!")
+        ```
+    story_outro: |
+      "HEAR YE!" The bell rings clear across Hearthvale.
+
+story_outro: |
+  Clangle shivers, glows, and turns into a friendly little firefly. "Ooh. That's much nicer," it hums, and floats off to light the bakery.
+
+  You found **Script Fragment: Words**, the first piece of the Great Script! Byte nods slowly. "Not bad, apprentice. Not bad at all."

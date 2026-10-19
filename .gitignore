@@ -1,0 +1,9 @@
+node_modules/
+dist/
+public/pyodide/
+public/assets/art/
+src/generated/
+test-results/
+playwright-report/
+*.log
+.DS_Store

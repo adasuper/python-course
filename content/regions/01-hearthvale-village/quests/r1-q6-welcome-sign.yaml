@@ -1,0 +1,99 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-q6-welcome-sign
+region: hearthvale-village
+title: Paint the Welcome Sign
+type: make
+npc: painter
+learning_outcome: Write a program with several print() calls that prints a three-line welcome sign exactly as shown.
+csta: [2-AP-11]
+estimated_minutes: 8
+prerequisites: [r1-q5-criers-crooked-announcement]
+vocabulary: [print, string, quotes]
+
+story_intro: |
+  Pria Brushwell holds up a blank board. "I paint whatever your code prints. Exactly. If you print a typo, I paint a typo!"
+
+  Here's the sign the village wants:
+  ```text
+  Welcome to Hearthvale!
+  Try Bun's Bakery
+  Mind the chickens.
+  ```
+goal: Write three print() lines that print the welcome sign exactly as shown.
+concept_card: |
+  Text in Python can use double quotes `"..."` or single quotes `'...'`. If your text has an apostrophe, like `Bun's`, wrap it in **double quotes** so the apostrophe doesn't end the text early.
+  ```python
+  print("Try Bun's Bakery")
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_painter, name: Pria Brushwell }
+
+starter_code: |
+  # Paint the sign: one print() for each line.
+
+solution: |
+  # Paint the sign: one print() for each line.
+  print("Welcome to Hearthvale!")
+  print("Try Bun's Bakery")
+  print("Mind the chickens.")
+
+validators:
+  - id: sign
+    type: output
+    expect: |
+      Welcome to Hearthvale!
+      Try Bun's Bakery
+      Mind the chickens.
+    fail_hint: >-
+      So close! Check each line against the sign. Capital letters, spaces and the full stop all count.
+  - id: three-prints
+    type: ast
+    min_count: { print: 3 }
+    fail_hint: Use one `print()` for each line of the sign.
+
+common_mistakes:
+  - id: apostrophe-quote
+    detect: { kind: code_regex, pattern: "print\\(\\s*'[^'\\n]*'s[^\\n]*\\)" }
+    feedback: >-
+      The apostrophe in `Bun's` ends your text early! When text has an apostrophe, use double quotes
+      around it: `print("Try Bun's Bakery")`.
+  - id: one-print
+    detect: { kind: validator_failed, id: three-prints }
+    feedback: >-
+      The sign looks right, but Pria wants one `print()` for each line. Split it into three `print()` lines.
+  - id: wrong-text
+    detect: { kind: validator_failed, id: sign }
+    feedback: >-
+      So close! Compare your Scroll with the sign, one line at a time. Capital letters, spaces and the
+      full stop all count.
+
+wrong_solutions:
+  - expect_mistake: apostrophe-quote
+    code: |
+      print('Welcome to Hearthvale!')
+      print('Try Bun's Bakery')
+      print('Mind the chickens.')
+  - expect_mistake: wrong-text
+    code: |
+      print("Welcome to Hearthvale!")
+      print("Try Bun's Bakery")
+      print("Mind the chickens")
+  - expect_mistake: one-print
+    code: |
+      print("Welcome to Hearthvale!\nTry Bun's Bakery\nMind the chickens.")
+
+hints:
+  - The sign has three lines. How many `print()` instructions do you need?
+  - "Copy each line of the sign into its own `print(\"...\")`. Line 2 has an apostrophe, so use double quotes around it."
+  - |
+    ```python
+    print("Welcome to Hearthvale!")
+    print(____)
+    print("Mind the chickens.")
+    ```
+
+story_outro: |
+  Pria paints with a flourish. The new sign gleams at the village gate. "Not a single typo," she says. "I'm almost disappointed."

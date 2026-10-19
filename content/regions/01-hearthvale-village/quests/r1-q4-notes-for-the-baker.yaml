@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-q4-notes-for-the-baker
+region: hearthvale-village
+title: Notes for the Baker
+type: modify
+npc: baker
+learning_outcome: "Use # comments to explain what each part of a program does."
+csta: [2-AP-19]
+estimated_minutes: 7
+prerequisites: [r1-q3-path-to-the-well]
+vocabulary: [comment, code]
+rewards: { item: feather-of-comments }
+
+story_intro: |
+  Baker Bun waves a floury list at you. "My order program has a SOCK on it! A pickled sock! Who orders that?"
+
+  A [[comment]] is a line that starts with `#`. Python skips it. You can use comments to leave notes for humans, or to switch a line off without deleting it.
+goal: Turn the sock line into a comment, then add at least two comments that say what the parts of the program do.
+concept_card: |
+  A **comment** starts with `#`. Python skips everything after the `#` on that line. Use comments to explain your code, or to switch a line off for a while.
+  ```python
+  # This is the title
+  print("Baker Bun's Order")
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_baker, name: Baker Bun }
+
+starter_code: |
+  print("Baker Bun's Order")
+  print("12 loaves of bread")
+  print("6 cherry pies")
+  print("1 pickled sock")
+  print("Thank you!")
+
+solution: |
+  # The title of the order
+  print("Baker Bun's Order")
+  # The food we need
+  print("12 loaves of bread")
+  print("6 cherry pies")
+  # print("1 pickled sock")
+  # A polite goodbye
+  print("Thank you!")
+
+validators:
+  - id: order
+    type: output
+    expect: |
+      Baker Bun's Order
+      12 loaves of bread
+      6 cherry pies
+      Thank you!
+    fail_hint: Compare the Scroll with Baker Bun's real order. Only the sock should be gone.
+  - id: labels
+    type: style
+    min_comments: 3
+    fail_hint: Add comments that say what each part does, like `# The food we need`. You need at least two, plus the sock line.
+
+common_mistakes:
+  - id: no-hash
+    detect: { kind: error, key: syntax.generic }
+    feedback: >-
+      Python tried to run your note as code and got confused. A note for humans must start with `#`,
+      like `# The food we need`.
+  - id: sock-still-prints
+    detect: { kind: output_regex, pattern: pickled sock }
+    feedback: >-
+      That pickled sock is still on the Scroll! Put a `#` at the very start of its line.
+      Then Python will skip it.
+  - id: too-few-comments
+    detect: { kind: validator_failed, id: labels }
+    feedback: >-
+      The sock is gone. Nice! Now add at least two comments that label the parts of the
+      program, like `# The title` and `# The food we need`.
+
+wrong_solutions:
+  - expect_mistake: sock-still-prints
+    code: |
+      # The title
+      print("Baker Bun's Order")
+      # The food we need
+      print("12 loaves of bread")
+      print("6 cherry pies")
+      print("1 pickled sock")
+      print("Thank you!")
+  - expect_mistake: no-hash
+    code: |
+      The title
+      print("Baker Bun's Order")
+      print("12 loaves of bread")
+      print("6 cherry pies")
+      # print("1 pickled sock")
+      print("Thank you!")
+  - expect_mistake: too-few-comments
+    code: |
+      print("Baker Bun's Order")
+      print("12 loaves of bread")
+      print("6 cherry pies")
+      # print("1 pickled sock")
+      print("Thank you!")
+
+hints:
+  - Which line shouldn't be on the order at all? What symbol makes Python skip a line?
+  - Put `#` at the start of the sock line. Then add a comment line above the title and another above the food, like `# The food we need`.
+  - |
+    ```python
+    # The title of the order
+    print("Baker Bun's Order")
+    ____
+    print("12 loaves of bread")
+    print("6 cherry pies")
+    # print("1 pickled sock")
+    print("Thank you!")
+    ```
+
+story_outro: |
+  "No sock! And look, little notes!" Baker Bun hugs the list. You earned the **Feather of Comments**. Comments help other people, and future you, understand your code.

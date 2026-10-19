@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-side1-banner-painter
+region: hearthvale-village
+title: Banner Painter
+type: make
+side_quest: true
+learning_outcome: Use print() with symbols to draw a picture banner, one row at a time.
+csta: [2-AP-13]
+estimated_minutes: 8
+prerequisites: [r1-boss-village-crier-bug]
+vocabulary: [print, comment]
+
+story_intro: |
+  A note on the Quest Board says: *"WANTED: a banner for the village fair. Any picture will do. Made of letters and symbols, please. Paint costs extra."*
+
+  You can draw pictures with `print`! Each `print` paints one row. Try symbols like `*`, `#`, `~` or `^`.
+goal: Draw a banner that is at least 4 rows tall, and add a comment that says what it shows.
+concept_card: |
+  Text art is made one row at a time. Each `print()` is one row. Plan your picture on paper first, row by row, then turn each row into a `print()`.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_painter, name: Pria Brushwell }
+
+starter_code: |
+  # Draw your banner here!
+
+solution: |
+  # A banner for the village fair
+  print("*****************")
+  print("*  HEARTHVALE!  *")
+  print("*  ~  FAIR  ~   *")
+  print("*****************")
+
+validators:
+  - id: rows
+    type: custom
+    fail_hint: Your banner needs at least 4 rows. Add more print() lines!
+    python: |
+      def check(ctx):
+          rows = [line for line in ctx.lines if line.strip()]
+          return Pass() if len(rows) >= 4 else Fail("Your banner needs at least 4 rows. Add more print() lines!")
+  - id: comment
+    type: style
+    min_comments: 1
+    fail_hint: "Add a comment (a line starting with #) that says what your banner shows."
+
+common_mistakes:
+  - id: too-short
+    detect: { kind: validator_failed, id: rows }
+    feedback: Nice start! A good banner needs at least 4 rows. Add more `print()` lines, one for each row.
+  - id: no-comment
+    detect: { kind: validator_failed, id: comment }
+    feedback: Great banner! Now add a comment, a line starting with `#`, that says what it shows.
+
+wrong_solutions:
+  - expect_mistake: too-short
+    code: |
+      # A tiny banner
+      print("*****")
+      print("*****")
+  - expect_mistake: no-comment
+    code: |
+      print("*****************")
+      print("*  HEARTHVALE!  *")
+      print("*  ~  FAIR  ~   *")
+      print("*****************")
+
+hints:
+  - Plan your picture first. What will each row look like?
+  - Each `print("...")` paints one row. Use the same width for every row so the edges line up.
+  - |
+    ```python
+    # A banner for the fair
+    print("*************")
+    print("*  ____     *")
+    print("*************")
+    print("*************")
+    ```
+
+story_outro: |
+  Pria hangs your banner over the market square. The chickens seem impressed. Or hungry. It's hard to tell with chickens.

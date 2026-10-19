@@ -1,0 +1,192 @@
+# yaml-language-server: $schema=../../../schema/region.schema.json
+# Region 1: Hearthvale Village. What a program is, print(), strings, comments,
+# and reading a simple error. See docs/curriculum-map.md.
+id: hearthvale-village
+number: 1
+name: Hearthvale Village
+concepts:
+  - programs as ordered steps
+  - print()
+  - strings
+  - comments
+  - reading an error
+
+intro:
+  - speaker: byte
+    text: Welcome to Hearthvale! Cozy chimneys. Warm bread. Very loud chickens.
+  - speaker: byte
+    text: When the Great Script shattered, the village words got scrambled. Even the town crier shouts nonsense now.
+  - speaker: byte
+    text: Talk to the villagers with a **!** above their heads. Each one has a quest for you. I'll be right here, looking wise.
+
+# The village map. One character is one tile. See docs/specs.md §11.1 for the legend.
+overworld:
+  grid: |
+    TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    T.....,o........TT..~~.......T
+    T.RRRRR.""..........~~.RRRRR.T
+    T.RRRRR.""".........~~.RRRRR.T
+    T.WwdwW....T...,..T.~~.WwdwW.T
+    T...=...............~~...=...T
+    Ts..=...L...........~~...=.b.T
+    Ts..=..T.:::P:::::..~~...=---T
+    T..,=....:::::::M:..~~...=...T
+    T...=====:::::::::==BB====...T
+    TT.......:::::O:::..~~....,..T
+    T.....b..:::::::::L.~~.......T
+    T............=..."..~~...o..TT
+    T.RRRRR..."..=RRRRR.~~.......T
+    T.RRRRR......=RRRRR.~~..,....T
+    T.WwdwW......=WwdwW.~~.....b.T
+    T...=============...~~.......T
+    T."".........=......~~.T.....T
+    T.b"......,..=......~~.......T
+    TTTTTTTTTTTTT=TTTTTTTTTTTTTTTT
+  legend:
+    P: { tile: cobble, over: crier_podium, solid: true }
+  objects:
+    - { kind: spawn, at: [13, 17] }
+    - { kind: npc, id: byte, at: [14, 17], quest: r1-q1-first-steps }
+    - { kind: npc, id: pip, at: [10, 8], quest: r1-q2-hello-hearthvale }
+    - { kind: npc, id: miller, at: [24, 6], quest: r1-q3-path-to-the-well }
+    - { kind: npc, id: baker, at: [5, 6], quest: r1-q4-notes-for-the-baker }
+    - { kind: npc, id: crier, at: [12, 8], quest: r1-q5-criers-crooked-announcement }
+    - { kind: npc, id: painter, at: [17, 17], quest: r1-q6-welcome-sign }
+    - { kind: npc, id: clangle, at: [15, 10], quest: r1-boss-village-crier-bug }
+    - { kind: npc, id: tamsin, at: [7, 13] }
+    - { kind: board, at: [11, 13] }
+    - { kind: sign, at: [12, 18], text: "Welcome to Hearthvale! Please mind the chickens." }
+    - { kind: sign, at: [19, 8], text: "To the Mill. Watch out for flour." }
+    - { kind: poi, id: owl-hollow, at: [1, 1] }
+    - { kind: poi, id: mill-meadow, at: [28, 1] }
+    - { kind: poi, id: chicken-corner, at: [1, 18] }
+    - { kind: poi, id: river-nook, at: [28, 18] }
+    - { kind: exit, at: [13, 19], text: "The road to the Whispering Library. (Coming soon!)" }
+
+npcs:
+  byte:
+    name: Byte
+    sprite: byte
+    greeting: Ah, my apprentice. Ready for your very first steps?
+  pip:
+    name: Pip Puddlefoot
+    sprite: npc_villager_a
+    greeting: Hi! Everyone's words got jumbled. Can you make the village say hello again?
+  miller:
+    name: Miller Dusty
+    sprite: npc_miller
+    greeting: Achoo! Sorry. Flour. It gets everywhere.
+  baker:
+    name: Baker Bun
+    sprite: npc_baker
+    greeting: My order list is a mess! There's a sock on it. A SOCK.
+  crier:
+    name: Crier Bellows
+    sprite: npc_crier
+    greeting: HEAR YE! Er... hear... something? My words are all broken!
+  painter:
+    name: Pria Brushwell
+    sprite: npc_painter
+    greeting: I paint signs! Well, I paint whatever your code prints.
+  clangle:
+    name: Clangle
+    sprite: bug_clangle
+    greeting: Clang-clang! I live in the bell now. Your announcements are MINE!
+  tamsin:
+    name: Old Tamsin
+    sprite: npc_villager_b
+    greeting: In my day, we wrote programs with a quill. And we liked it.
+
+concept_scene:
+  title: What is a program?
+  analogy: >-
+    A [[program]] is like a recipe. The computer is a very literal cook. It does each step
+    in order, top to bottom, exactly as written. Even if you write "add 100 eggs."
+  lines:
+    - speaker: byte
+      text: Every program is a list of [[instructions|instruction]]. Python does them one at a time, from the top line down.
+    - speaker: byte
+      text: The instruction `print` shows words on the [[Scroll of Output]]. The words go inside [[quotes]].
+    - speaker: byte
+      text: A line that starts with `#` is a [[comment]]. It's a note for humans. Python skips it completely.
+    - speaker: byte
+      text: Watch this little program run. Notice the order. Then the quests are all yours.
+  worked_example:
+    stage: { kind: none }
+    code: |
+      # A comment starts with #. Python skips it.
+      print("Hello, Hearthvale!")
+      print("I am Byte. I am an owl.")
+      print("Owls are always right.")
+    explain:
+      - line: 1
+        text: This is a [[comment]]. Python skips it. It's a note for you.
+      - line: 2
+        text: The first `print` runs first. Its words appear on the Scroll.
+      - line: 3
+        text: Then the next line runs. Top to bottom, every time.
+      - line: 4
+        text: Last line, last words. (They are true words, too.)
+
+quests:
+  - r1-q1-first-steps
+  - r1-q2-hello-hearthvale
+  - r1-q3-path-to-the-well
+  - r1-q4-notes-for-the-baker
+  - r1-q5-criers-crooked-announcement
+  - r1-q6-welcome-sign
+boss: r1-boss-village-crier-bug
+side_quests:
+  - r1-side1-banner-painter
+
+knowledge_check:
+  items:
+    - kind: mcq
+      question: What does `print()` do?
+      options:
+        - It shows text on the Scroll of Output.
+        - It sends the text to a paper printer.
+        - It deletes a line of code.
+      answer: 0
+      explain: "`print()` shows text on the Scroll of Output. No paper needed!"
+    - kind: predict
+      question: What will this print?
+      code: |
+        print("Bake")
+        print("Cool")
+        print("Eat")
+      answer: |
+        Bake
+        Cool
+        Eat
+      explain: Python runs the lines in order, top to bottom, so the words come out in that order.
+    - kind: mcq
+      question: Which line will Python skip?
+      code: |
+        # Feed the chickens
+        print("Cluck!")
+      options:
+        - "# Feed the chickens"
+        - print("Cluck!")
+        - Neither line. Python runs both.
+      answer: 0
+      explain: A line that starts with `#` is a comment. Python skips it.
+    - kind: mcq
+      question: An error message says "line 3". Where do you look first?
+      options:
+        - Line 3 of my code
+        - The first line of my code
+        - The last line of my code
+      answer: 0
+      explain: Start at line 3. Sometimes the real slip is just above it, so check that line too.
+
+fragment:
+  id: fragment-words
+  name: "Script Fragment: Words"
+  description: The first piece of the Great Script. It holds the power of words that speak.
+
+pois:
+  - owl-hollow
+  - mill-meadow
+  - chicken-corner
+  - river-nook

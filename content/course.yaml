@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../schema/course.schema.json
+# The course: which regions are in it, in what order, and the opening story.
+# Turn a region off with `enabled: false` to make the course shorter.
+id: codeweald-intro-python
+title: "Codeweald: Intro to Python"
+opening:
+  - speaker: narrator
+    text: Long ago, the realm of Codeweald ran on the Great Script. It told the rivers where to flow and the bread when to rise.
+  - speaker: narrator
+    text: Then, one gloomy Tuesday, the Great Script shattered into pieces. Glitchy creatures called **Bugs** crawled out of the cracks.
+  - speaker: byte
+    text: Hoo! Hello there. I am Byte. I am an owl, and I am almost always right.
+  - speaker: byte
+    text: The Great Script was written in a language called Python. To fix it, we need someone who can write Python too.
+  - speaker: byte
+    text: That someone is you. Congratulations! You are now a Scriptwright apprentice.
+  - speaker: byte
+    text: Don't worry. Mistakes are fine here. Nothing explodes. Well, almost nothing.
+  - speaker: byte
+    text: Our first stop is Hearthvale Village. Follow me, apprentice!
+regions:
+  - id: hearthvale-village
+    lessons: 2
+side_quests: true

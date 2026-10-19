@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "term": {
+        "type": "string"
+      },
+      "definition": {
+        "type": "string"
+      },
+      "example": {
+        "type": "string"
+      },
+      "related": {
+        "default": [],
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "term",
+      "definition"
+    ],
+    "additionalProperties": false
+  }
+}

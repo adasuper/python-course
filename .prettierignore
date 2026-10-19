@@ -1,0 +1,11 @@
+dist
+node_modules
+public/pyodide
+public/assets/art
+src/generated
+docs
+*.md
+content
+playwright-report
+test-results
+package-lock.json

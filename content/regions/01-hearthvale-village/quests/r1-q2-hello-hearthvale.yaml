@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r1-q2-hello-hearthvale
+region: hearthvale-village
+title: Hello, Hearthvale!
+type: investigate
+npc: pip
+learning_outcome: Explain what print() shows on the Scroll of Output by running a program and answering questions about it.
+csta: [2-AP-11]
+estimated_minutes: 6
+prerequisites: [r1-q1-first-steps]
+vocabulary: [print, string, quotes, output, Scroll of Output]
+rewards: { item: quill-of-printing }
+
+story_intro: |
+  Pip Puddlefoot waves at you. "Everyone in Hearthvale forgot how to say hello! Byte says you have a spell for that."
+
+  The spell is `print`. It shows words on the [[Scroll of Output]]. The words go inside [[quotes]], and Python calls them a [[string]].
+goal: Run the program, watch the Scroll of Output, and answer Pip's questions. Try the changes the questions ask for!
+concept_card: |
+  `print("...")` shows text on the Scroll of Output. Each `print` makes a new line. The text inside the quotes is called a **string**.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_villager_a, name: Pip Puddlefoot }
+
+starter_code: |
+  print("Hello, Hearthvale!")
+  print("The bread is warm.")
+  print("The chickens are loud.")
+
+questions:
+  - kind: number
+    question: Run the program. How many lines appear on the Scroll of Output?
+    answer: 3
+    hint: Count the lines on the Scroll after you press Run. Each print makes one line.
+    explain: Three `print` instructions make three lines of output.
+  - kind: mcq
+    question: Swap lines 1 and 2 in the Spellbook, then run it again. What changes?
+    options:
+      - The first two lines of output swap places too.
+      - Nothing changes at all.
+      - Python shows an error.
+    answer: 0
+    hint: Python runs lines from top to bottom. What is on the top line now?
+    explain: The output follows the order of the code. Change the order, change the output.
+  - kind: mcq
+    question: Now remove the quotes around `Hello, Hearthvale!` and run it. What happens?
+    options:
+      - Python shows an error.
+      - It prints the same thing.
+      - It prints nothing at all.
+    answer: 0
+    hint: Without quotes, Python doesn't know those words are text. Put the quotes back when you're done!
+    explain: Text needs quotes. Without them, Python tries to read the words as code and gets confused.
+  - kind: text
+    question: "Finish the sentence with one word: `print` ____ text on the Scroll of Output."
+    accept: [shows, writes, displays, prints, puts]
+    hint: What did you see happen on the Scroll each time you ran the program?
+    explain: "`print` shows text on the Scroll of Output."
+
+hints:
+  - Press Run first, then look at the Scroll of Output. That's where `print` puts its words.
+  - Each `print(...)` makes one new line. The words between the quotes are what you see.
+  - |
+    Here's how the Scroll looks for the first line:
+    ```text
+    Hello, Hearthvale!
+    ____
+    ____
+    ```
+
+story_outro: |
+  "HELLO, HEARTHVALE!" Pip shouts, delighted. You earned the **Quill of Printing**. With it, your words can appear anywhere on the Scroll.

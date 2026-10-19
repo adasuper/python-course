@@ -749,7 +749,7 @@ As a Content author, I want declarative checks for output, world state, variable
 **Acceptance criteria**
 - `output`: `exact | normalized | contains | regex | fuzzy`, with `normalize` options and a fuzzy `threshold`.
 - `state`: `hero_at`, `hero_on`, `has_items`, `items_count`, `chests_opened`, `max_bonks`, `said_contains`.
-- `variable`: `name`, `equals`, `type`, `matches`.
+- `variable`: `name`, `equals`, `value_type`, `matches`.
 - `ast`: `require`, `forbid`, `require_calls`, `min_count`, `require_else`, `function`, `no_literal`, `uses_names`, `max_lines`.
 - `style`: `min_comments`, `comment_above`, `max_line_length` (uses `tokenize`, because `ast` drops comments; needed by Region 1's comment quests).
 - Each returns `{ id, passed, hint }`; all validators run on every attempt.

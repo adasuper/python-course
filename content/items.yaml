@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../schema/items.schema.json
+# Concept items. Each description is also a one-line summary of the concept,
+# so the inventory works as a reference notebook.
+- id: quill-of-printing
+  name: Quill of Printing
+  icon: quill
+  region: hearthvale-village
+  description: "`print()` writes words on the [[Scroll of Output]]. Put the words inside [[quotes]]."
+  example: print("Hello, Hearthvale!")
+- id: feather-of-comments
+  name: Feather of Comments
+  icon: feather
+  region: hearthvale-village
+  description: "A line that starts with `#` is a note for humans, and Python skips it."
+  example: |
+    # This is a comment. Python skips it.
+    print("This line runs.")
+- id: spyglass-of-errors
+  name: Spyglass of Errors
+  icon: spyglass
+  region: hearthvale-village
+  description: "An [[error message]] tells you what went wrong and which line to check first."
+  example: |
+    print("Hi)
+    # SyntaxError on line 1: the quote never closed.

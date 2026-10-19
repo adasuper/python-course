@@ -1,0 +1,540 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "number": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "name": {
+      "type": "string"
+    },
+    "concepts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "intro": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speaker": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "speaker",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "overworld": {
+      "type": "object",
+      "properties": {
+        "grid": {
+          "type": "string"
+        },
+        "legend": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "tile": {
+                "type": "string"
+              },
+              "over": {
+                "type": "string"
+              },
+              "solid": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "tile"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "npc",
+                  "board",
+                  "poi",
+                  "spawn",
+                  "sign",
+                  "exit"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "at": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "quest": {
+                "type": "string",
+                "pattern": "^r\\d+-(q\\d+|boss|side\\d+)-[a-z0-9-]+$"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "at"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "grid",
+        "objects"
+      ],
+      "additionalProperties": false
+    },
+    "npcs": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "sprite": {
+            "type": "string"
+          },
+          "greeting": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "sprite"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "concept_scene": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "analogy": {
+          "type": "string"
+        },
+        "lines": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "speaker": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "speaker",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "worked_example": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "stage": {
+              "default": {
+                "kind": "none"
+              },
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "const": "grid"
+                    },
+                    "grid": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "legend": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "tile": {
+                            "type": "string"
+                          },
+                          "solid": {
+                            "type": "boolean"
+                          },
+                          "object": {
+                            "type": "string"
+                          },
+                          "item": {
+                            "type": "string"
+                          },
+                          "hero": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "look": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "facing": {
+                      "type": "string",
+                      "enum": [
+                        "up",
+                        "down",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "chests": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "loot": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "code"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "npcs": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "sprite": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "grid"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "const": "npc"
+                    },
+                    "cast": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sprite": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "sprite",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "const": "none"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "explain": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "line": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line",
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "title",
+        "analogy",
+        "lines",
+        "worked_example"
+      ],
+      "additionalProperties": false
+    },
+    "quests": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^r\\d+-(q\\d+|boss|side\\d+)-[a-z0-9-]+$"
+      }
+    },
+    "boss": {
+      "type": "string",
+      "pattern": "^r\\d+-(q\\d+|boss|side\\d+)-[a-z0-9-]+$"
+    },
+    "side_quests": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^r\\d+-(q\\d+|boss|side\\d+)-[a-z0-9-]+$"
+      }
+    },
+    "knowledge_check": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "minItems": 3,
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "mcq"
+                  },
+                  "question": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "minItems": 3,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "answer": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "explain": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "question",
+                  "options",
+                  "answer",
+                  "explain"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "predict"
+                  },
+                  "question": {
+                    "default": "What will this print?",
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "answer": {
+                    "type": "string"
+                  },
+                  "explain": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "code",
+                  "answer",
+                  "explain"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "fragment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "pois": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "number",
+    "name",
+    "concepts",
+    "overworld",
+    "npcs",
+    "concept_scene",
+    "quests",
+    "boss",
+    "knowledge_check",
+    "fragment"
+  ],
+  "additionalProperties": false
+}

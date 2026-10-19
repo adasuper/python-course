@@ -1,43 +1,32 @@
 # Progress
 
-## Current phase: 0 — Plan (awaiting approval)
+## Current phase: 1 — Vertical slice (in progress)
 
-### Done
+### Phase 0 — Plan ✅ (approved 2026-10-19)
 
-- Architecture and detailed design: [docs/specs.md](docs/specs.md)
-- Feature list as user stories: [docs/features.md](docs/features.md)
-- Curriculum map (11 regions → quests → learning outcomes → CSTA codes):
-  [docs/curriculum-map.md](docs/curriculum-map.md)
-- Phased build plan with exit criteria: [docs/build-plan.md](docs/build-plan.md)
-- Open questions and assumptions: [docs/open-questions.md](docs/open-questions.md)
+Planning documents:
 
-### Decisions worth flagging for review
+- [docs/specs.md](docs/specs.md)
+- [docs/features.md](docs/features.md)
+- [docs/curriculum-map.md](docs/curriculum-map.md)
+- [docs/build-plan.md](docs/build-plan.md)
+- [docs/open-questions.md](docs/open-questions.md)
 
-- **`input()`:** a quest input queue, plus "replay-on-input" for interactive play. There is no
-  SharedArrayBuffer, so **no COOP/COEP headers** are needed (works on GitHub Pages and any
-  static server). See specs §6.5.
-- **Infinite loops:** three layers.
-  1. An in-Python loop budget stops the program instantly and names the line, with no
-     restart.
-  2. Action and output budgets.
-  3. A hard wall-clock kill + worker restart as the backstop.
+**Owner decisions:** all defaults, except:
 
-  See specs §6.3.
-- **Phaser 3.90.0 is the final 3.x release.** It stays as specified, behind an adapter so a
-  move to Phaser 4 stays cheap. See open question Q5.
-- **Pyodide 314.x = Python 3.14.**
-- **Art:** kenney.nl and OpenGameArt are unreachable from the build environment, so the plan
-  is original pixel art generated from code (Q6).
+- **Q3 — students must save their progress.** Devices may wipe data at sign-out, so the save
+  code, progress file and "Continue from a save" moved into Phase 1 (specs §12.5).
+- **Q5 — Phaser 4** (4.2.x) instead of Phaser 3.
 
-### Next
+**Design change made while starting Phase 1:** overworld maps are ASCII grids in
+`region.yaml` instead of Tiled files (specs §11.1). They are simpler for teachers and share
+code with quest stages.
 
-- **Phase 1 — Vertical slice** (after approval): scaffolding, Pyodide worker with timeouts,
-  game API + action log + replay, CodeMirror editor, Hearthvale Village map, Byte dialogue,
-  all of Region 1, save/load, content tests and CI.
+### Phase 1 — Next steps
+
+See the milestone table in [docs/build-plan.md](docs/build-plan.md#phase-1--vertical-slice).
 
 ### Known issues
 
 - CSTA standard descriptions are paraphrased. Verify them verbatim against csteachers.org
   (unreachable from the build environment) before the teacher guide.
-- The course-length numbers in the brief conflict (11 regions × 30–60 min vs "20–25 units").
-  The current assumption is that a unit = a 45-minute lesson, ~23 lessons in total (Q1).

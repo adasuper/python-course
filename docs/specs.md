@@ -84,7 +84,7 @@ considered and rejected.
 | # | Decision | Why | Alternatives considered |
 |---|---|---|---|
 | D1 | **Vite + TypeScript (strict)** | As specified. Fast dev server, simple static build. | — |
-| D2 | **Phaser 3.90.0** (final 3.x release), all Phaser code behind a thin `WorldView` adapter | As specified. Stable and well documented, with a Canvas fallback for weak GPUs. Phaser 4 (4.2.1, July 2026) keeps the API, so the adapter keeps a later upgrade cheap. | Phaser 4.x now (newer renderer, but young on low-end GPUs). See open question Q5. |
+| D2 | **Phaser 4 (4.2.x, pinned)**, all Phaser code behind a thin `WorldView` adapter | The project owner's choice (Q5). Phaser 3.90.0 was the final 3.x release, while Phaser 4 is maintained, keeps most of the v3 API, offers WebGL and Canvas rendering and is ≈ 355 KB gzip. The adapter keeps engine details out of the rest of the app. | Phaser 3.90 (frozen, no more fixes). |
 | D3 | **Pyodide 314.x (Python 3.14)**, pinned, bundled from the `pyodide` npm package | As specified. Python 3.14 gives the clearest built-in error messages ("Did you mean…?"). | Skulpt/Brython (not real CPython; error messages and semantics differ). |
 | D4 | **Pyodide runs in a dedicated Web Worker** | Student code can never block the UI thread. The worker can be killed. | Main-thread Pyodide (freezes the UI). |
 | D5 | **Timeouts in three layers:** loop-iteration budget via `sys.monitoring` (no restart needed) → action/output budget → wall-clock hard `terminate()` + worker restart | Catches 99% of infinite loops instantly, *with the line number*, and without paying for a restart. The hard kill is the backstop for C-level work (e.g. `10**10**8`). | Hard kill only (2–5 s restart every time on a Chromebook); Pyodide interrupt buffer (needs SharedArrayBuffer). |
@@ -107,9 +107,9 @@ considered and rejected.
 ```
 ┌───────────────────────────── Browser tab (main thread) ─────────────────────────────┐
 │                                                                                      │
-│  Preact UI (DOM)                         Phaser 3 (canvas)                           │
+│  Preact UI (DOM)                         Phaser 4 (canvas)                           │
 │  ├─ Screens: title, creator, overworld   ├─ BootScene (loads art)                    │
-│  │  HUD, quest, spellbook, inventory,    ├─ OverworldScene (Tiled maps, NPCs)        │
+│  │  HUD, quest, spellbook, inventory,    ├─ OverworldScene (ASCII maps, NPCs)        │
 │  │  workshop, settings, teacher          └─ StageScene (quest grids, NPC stages)     │
 │  ├─ CodeMirror 6 editor ("Spellbook")            ▲                                   │
 │  ├─ Scroll of Output, hints, feedback            │ WorldView adapter (typed API)     │
@@ -172,7 +172,6 @@ python-course/
 │           ├─ r1-q1-hello-hearthvale.yaml
 │           └─ r1-boss-village-crier.yaml
 ├─ schema/                         # generated JSON Schema for YAML autocomplete
-├─ maps/                           # Tiled (.tmj) overworld maps
 ├─ public/
 │  ├─ codeweald.config.json        # deploy-time settings (editable after build)
 │  ├─ assets/{tiles,sprites,ui,audio,fonts}/
@@ -226,7 +225,7 @@ python-course/
 
 | Screen | Purpose | Notes |
 |---|---|---|
-| Title / profile picker | Choose or create a local profile | Multiple profiles for shared lab PCs |
+| Title / profile picker | Choose or create a local profile, or **Continue from a save** (code or file) | Multiple profiles for shared lab PCs; §12.5 |
 | Character creator | Avatar, nickname, color theme | §11.8 |
 | Overworld | Walk the region map; talk to NPCs; quest board | Phaser + DOM HUD |
 | World map | Travel between unlocked regions | DOM list + illustration |
@@ -798,7 +797,7 @@ once the region's core quests are done (or earlier, if the teacher enables it).
 | File | Holds |
 |---|---|
 | `content/course.yaml` | Course id, title, ordered region list, `enabled` flags, lessons per region (pacing), side quests on/off |
-| `content/regions/NN-slug/region.yaml` | Region metadata, Tiled map path, NPCs, concept scene, quest order, boss id, side quests, knowledge check, Script Fragment |
+| `content/regions/NN-slug/region.yaml` | Region metadata, overworld map (ASCII grid + objects), NPCs, concept scene, quest order, boss id, side quests, knowledge check, Script Fragment |
 | `content/regions/NN-slug/quests/*.yaml` | One quest per file |
 | `content/glossary.yaml` | Terms |
 | `content/items.yaml` | Concept items (name, icon, description = concept summary, linked concept card) |
@@ -976,7 +975,17 @@ id: forked-road-forest
 number: 4
 name: "Forked Road Forest"
 concepts: [booleans, comparisons, if/elif/else, and/or/not, indentation]
-map: maps/r4-forked-road-forest.tmj       # Tiled map; NPC objects carry `npc` ids
+overworld:                                # ASCII map, same idea as quest stages (§11.1)
+  grid: |
+    TTTTTTTTTTTTTTTTTTTT
+    T......~~~.........T
+    T..==========......T
+    …
+  objects:
+    - { kind: npc, id: gatekeeper, at: [12, 4], quest: r4-q3-gatekeeper }
+    - { kind: board, at: [3, 2] }                   # Quest Board
+    - { kind: poi, id: old-oak, at: [17, 1] }
+    - { kind: spawn, at: [2, 6] }
 music: null
 npcs:
   gatekeeper: { name: "Gatekeeper Moss", sprite: npc_gatekeeper, greeting: "Halt! …" }
@@ -1038,10 +1047,14 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 
 ### 11.1 Overworld and regions
 
-- Each region is a Tiled map (16×16 px tiles, about 40×30 tiles), scaled to an integer factor
-  with `pixelArt: true`.
-- The object layer places NPCs, signs, the region's **Quest Board**, POIs ("secret corners")
-  and region exits. The `questId` property binds an NPC to content.
+- Each region's overworld is an **ASCII grid in `region.yaml`**, the same idea as quest stages:
+  one character per 16×16 px tile, a default legend (grass, path, water, trees, houses,
+  fences, flowers…) and optional per-region legend entries. Maps are about 30×20 tiles,
+  shown with integer scaling and `pixelArt: true`. This replaces the Tiled maps in the first
+  draft. Teachers can edit a map in any text editor, no extra tool is needed, and the same
+  grid code serves quests and the overworld.
+- An `objects` list places NPCs, signs, the region's **Quest Board**, POIs ("secret corners"),
+  the spawn point and region exits. An NPC's `quest` property binds it to content.
 - **Movement:** grid-based, using arrow keys or WASD while the world has focus, an on-screen
   D-pad for pointer/touch, and click-to-walk to adjacent tiles. **Interact:** Enter / Space /
   E on the facing NPC or sign.
@@ -1241,7 +1254,31 @@ an LMS text box. It needs no file handling.
   to copy and paste, too long to type by hand. Code drafts are not included (use the file
   for those).
 - Typos are caught by the check group: "That code has a typo — check the characters again."
-- The trade-off with "short" is open question Q4.
+- The trade-off with "short" was open question Q4; the owner chose this format.
+
+### 12.5 Saving out (devices may wipe data)
+
+**Decision Q3:** assume a student's device may forget everything at sign-out. Local storage is
+only a convenience; the save code or progress file is the real copy.
+
+- **Save menu** (HUD button, `S` shortcut while the HUD has focus) with two equal options:
+  - **Copy save code**: copies the code and shows it as selectable text, for pasting into a
+    Google Classroom private comment, a doc or any text box.
+  - **Save progress file**: where `window.showSaveFilePicker` exists (Chrome on ChromeOS and
+    desktop), the system "Save as" dialog opens, so students can pick Google Drive in the
+    Files app. Otherwise it is a normal download. The game makes no network request either
+    way; Drive syncing is done by the operating system.
+- **Continue from a save** on the title screen: paste a code or open a file
+  (`showOpenFilePicker`, or `<input type="file">` as the fallback). The restored profile
+  resumes at its last region and open quest.
+- **Unsaved-progress tracking:** the profile stores `lastSavedOutHash`. When the current
+  progress hash differs, the HUD shows an "Unsaved progress" marker (icon + text) and the
+  `beforeunload` leave-page warning is armed.
+- **Save points:** after each completed quest or boss phase, a non-blocking toast ("Save
+  point! Keep your progress safe.") offers both save options. It never steals focus; it is
+  announced politely and closes with Esc.
+- **Same profile on a new device:** profile ids travel inside codes and files. If a restore
+  matches an existing local profile, the student chooses Replace or Keep both.
 
 ---
 
@@ -1634,11 +1671,11 @@ The build prints a pacing summary from `course.yaml`: total lessons, minutes and
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| **Managed Chromebooks in ephemeral/guest mode wipe local data at sign-out** | Lost progress | Prominent Save code / Export; an end-of-session reminder ("Save your progress code"); teacher guide guidance; open question Q3 |
+| **Managed Chromebooks may wipe local data at sign-out** (decided Q3: students must save progress) | Lost progress | §12.5: save code and progress file are Phase 1 features; "Continue from a save" on the title screen; unsaved-progress marker; save-point toasts; leave-page warning; lesson plans end with a save step |
 | First Pyodide download (~14 MB) on a busy school network | Slow first day | Background loading during onboarding; teacher guide suggests opening the game once per device before class; the SW keeps it cached |
 | School web filters block `.wasm` or service workers | Game can't run Python | Deployment checklist and a built-in **System check** page (SW, IndexedDB, WASM, storage quota, local TTS voices) |
 | Worker restart (layer-3 timeout) takes 2–5 s on weak devices | Frustration | Layer 1 catches almost all loops without a restart; optional standby worker |
-| Phaser 3 is end-of-line (3.90 final) | No upstream fixes | `WorldView` adapter isolates Phaser; evaluate Phaser 4 in Phase 6 (Q5) |
+| Phaser 4 is young (4.0 shipped April 2026) and most online examples are still v3 | Renderer bugs on weak GPUs; v3 snippets that don't work | Pinned version; `WorldView` adapter; Canvas fallback if WebGL fails; test on a throttled, low-end profile from Phase 1 |
 | Python sandbox escape | Network/storage access from student code | Worker-level API neutering is the real boundary; no DOM in the worker; CSP |
 | Pyodide/Python upgrade changes error messages | Wrong friendly messages | Pinned version; classifier fixtures fail loudly on upgrade |
 | ~90 quests is a lot of authored content | Schedule | Scaffolder, baked expectations, content tests; regions delivered in batches (Phases 3–4) |

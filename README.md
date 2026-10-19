@@ -31,7 +31,7 @@ grades 6–8.
 
 ## Planned stack
 
-Vite + TypeScript (strict) · Phaser 3 (world rendering) · Preact (accessible DOM UI) ·
+Vite + TypeScript (strict) · Phaser 4 (world rendering) · Preact (accessible DOM UI) ·
 Pyodide / CPython 3.14 in a Web Worker · CodeMirror 6 · YAML content validated with Zod ·
 Vitest + Playwright + axe-core · GitHub Actions.
 

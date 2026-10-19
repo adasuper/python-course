@@ -66,7 +66,7 @@ must deliver all of Region 1. `fix`, `make` and `boss` are Phase 1 in any case.
 | [F-PRG](#f-prg--xp-levels-items-notebook-and-badges) | XP, levels, items, notebook and badges | 8 | 1–4 |
 | [F-BOS](#f-bos--bosses-knowledge-checks-and-side-quests) | Bosses, knowledge checks and side quests | 6 | 1–2, 4 |
 | [F-WSH](#f-wsh--workshop-sandbox) | Workshop (sandbox) | 4 | 2 |
-| [F-SAV](#f-sav--save-load-exportimport-and-save-codes) | Save, load, export/import and save codes | 9 | 1–2 |
+| [F-SAV](#f-sav--save-load-exportimport-and-save-codes) | Save, load, export/import and save codes | 10 | 1–2 |
 | [F-A11](#f-a11--accessibility-and-settings) | Accessibility and settings | 15 | 1–2, 6 |
 | [F-OFF](#f-off--offlinepwa-and-privacy) | Offline/PWA and privacy | 9 | 1–2, 5–6 |
 | [F-TCH](#f-tch--teacher-mode-class-code-and-guide) | Teacher mode, class code and guide | 10 | 5 |
@@ -75,7 +75,7 @@ must deliver all of Region 1. `fix`, `make` and `boss` are Phase 1 in any case.
 | [F-CUR](#f-cur--curriculum-content) | Curriculum content | 11 | 1–4 |
 | [F-QA](#f-qa--testing-ci-performance-and-reading-level) | Testing, CI, performance and reading level | 19 | 1–2, 5–6 |
 | [F-DEP](#f-dep--deployment-and-documentation) | Deployment and documentation | 10 | 0–1, 5–6 |
-| | **Total** | **209** | |
+| | **Total** | **210** | |
 
 ---
 
@@ -164,7 +164,7 @@ Priority: Must · Phase: 1 · Spec: §5.1, §6.1 · Brief: §7
 ### F-WLD-01 — Walk around Hearthvale with the keyboard
 As a Student, I want to walk the village with arrow keys or WASD, so that I can explore and find quests.
 **Acceptance criteria**
-- Hearthvale Village is a Tiled map (16×16 px tiles, about 40×30 tiles) drawn with integer scaling and `pixelArt: true`.
+- Hearthvale Village is an ASCII map in `region.yaml` (16×16 px tiles, about 30×20 tiles) drawn with integer scaling and `pixelArt: true`.
 - Movement is one tile per key press (hold to repeat) while the world has focus.
 - Walls and water block movement.
 
@@ -566,7 +566,7 @@ As a Student, I want my program's actions played back as animation, so that I ca
 **Acceptance criteria**
 - `ReplayEngine` animates actions through the `WorldView` adapter using the §8 durations at 1×.
 - `out` actions fill the Scroll of Output when they play.
-- All Phaser code sits behind `WorldView` (Phaser 3.90.0), so the engine can be swapped later.
+- All Phaser code sits behind `WorldView` (Phaser 4.2.x, pinned), so engine upgrades stay contained.
 
 Priority: Must · Phase: 1 · Spec: §8, D2 · Brief: §2, §2.1
 
@@ -1066,19 +1066,20 @@ Priority: Must · Phase: 1 · Spec: §12.2, §16 · Brief: §7
 ### F-SAV-04 — Download my progress
 As a Student, I want to download my progress as a file, so that I can move it or hand it in.
 **Acceptance criteria**
-- "Export progress" downloads `codeweald-<nickname>-<YYYY-MM-DD>.codeweald.json` with `{ format: "codeweald-progress", version, courseId, contentVersion, exportedOn, profile, drafts }`.
+- "Save progress file" writes `codeweald-<nickname>-<YYYY-MM-DD>.codeweald.json` with `{ format: "codeweald-progress", version, courseId, contentVersion, exportedOn, profile, drafts }`.
+- Where the browser supports it (Chrome/ChromeOS), it opens the system "Save as" dialog so I can pick a folder that survives sign-out, such as Google Drive in the Files app. Elsewhere it falls back to a normal download. The game itself makes no network request.
 - It includes my code; dates only, no time of day.
 
-Priority: Must · Phase: 2 · Spec: §12.3 · Brief: §1, §6
+Priority: Must · Phase: 1 · Spec: §12.3 · Brief: §1, §6
 
 ### F-SAV-05 — Load my progress file
 As a Student, I want to load my progress file on another computer, so that I can pick up where I left off.
 **Acceptance criteria**
 - Import accepts only a user-picked file ≤ 5 MB, validated with Zod; values are only ever rendered as text.
-- I choose **Replace this profile**, **Add as new profile** or **Merge** (union of completions, items and badges; max of XP, hints, attempts and time).
+- I choose **Replace this profile** or **Add as new profile** (Phase 1). **Merge** (union of completions, items and badges; max of XP, hints, attempts and time) arrives in Phase 2.
 - Unknown quest ids from other content versions are kept but ignored.
 
-Priority: Must · Phase: 2 · Spec: §12.3, §15.3 · Brief: §1
+Priority: Must · Phase: 1 · Spec: §12.3, §15.3 · Brief: §1
 
 ### F-SAV-06 — Get a save code
 As a Student, I want a text code for my progress, so that I can move it without a file or paste it into an assignment box.
@@ -1087,7 +1088,7 @@ As a Student, I want a text code for my progress, so that I can move it without 
 - It encodes content version, avatar, theme, nickname, XP, per-quest status, hint tier, attempts bucket, time bucket, knowledge-check best scores and special badges.
 - A "Copy" button copies it; the code is selectable text with an accessible label.
 
-Priority: Must · Phase: 2 · Spec: §12.4 · Brief: §1, §6
+Priority: Must · Phase: 1 · Spec: §12.4 · Brief: §1, §6
 
 ### F-SAV-07 — Restore from a save code
 As a Student, I want to paste a save code to get my progress back, so that switching computers is easy.
@@ -1096,14 +1097,17 @@ As a Student, I want to paste a save code to get my progress back, so that switc
 - A typo shows "That code has a typo — check the characters again."
 - Round-trip and fuzz tests pass (F-QA-02).
 
-Priority: Must · Phase: 2 · Spec: §12.4 · Brief: §1
+Priority: Must · Phase: 1 · Spec: §12.4 · Brief: §1
 
 ### F-SAV-08 — Reminder to save before I leave
 As a Student on a school Chromebook that wipes data at sign-out, I want a reminder to save my code at the end of class, so that I don't lose progress.
 **Acceptance criteria**
-- A visible "Save your progress code" reminder appears from the menu and when the tab is about to close after progress changed.
+- The HUD shows an "Unsaved progress" marker (icon + text) whenever progress changed since my last save code or file.
+- After each completed quest and boss phase, a non-blocking "Save point" toast offers **Copy save code** and **Save file**.
+- Closing the tab with unsaved progress triggers the browser's leave-page warning.
+- The teacher guide's lesson plans end with a 2-minute "save your progress" step.
 
-Priority: Should · Phase: 2 · Spec: §21 · Brief: §1
+Priority: Must · Phase: 1 · Spec: §12.5 · Brief: §1
 
 ### F-SAV-09 — Remove a profile
 As a Student, I want to delete my profile on a shared computer, so that my progress doesn't stay on a machine I won't use again.
@@ -1111,6 +1115,15 @@ As a Student, I want to delete my profile on a shared computer, so that my progr
 - "Delete profile" needs an explicit confirmation that names the profile and offers "Export first".
 
 Priority: Should · Phase: 2 · Spec: §5.2, §12.2 · Brief: §1
+
+### F-SAV-10 — Continue from a save on any computer
+As a Student whose Chromebook forgot everything overnight, I want a "Continue from a save" button on the title screen, so that I'm back in the game in seconds.
+**Acceptance criteria**
+- The title screen offers **Continue from a save**: paste a save code, or open a progress file (system file picker, so Google Drive works on ChromeOS).
+- A restored profile drops me where I left off (region, open quest), and its drafts come back from a file.
+- If this browser already has the same profile (same profile id), I'm asked whether to replace it or keep both.
+
+Priority: Must · Phase: 1 · Spec: §12.5 · Brief: §1
 
 ---
 
@@ -1778,7 +1791,7 @@ Priority: Must · Phase: 6 · Spec: §21 · Brief: §8
 As a School IT admin, I want the game checked on a real low-end device, so that we know it will run in class.
 **Acceptance criteria**
 - A manual run on a 4 GB Chromebook stays ≤ 350 MB for the tab; results are logged.
-- Phaser 4 is evaluated against Phaser 3.90 and the decision is recorded (open question Q5).
+- Phaser 4 rendering is verified on a low-end Chromebook profile (WebGL and the Canvas fallback).
 
 Priority: Should · Phase: 6 · Spec: §17, §21, D2 · Brief: §8
 
@@ -1872,7 +1885,7 @@ Brief section → stories that implement it. "Your role" = the brief's opening i
 |---|---|---|
 | Your role / General rules | Plan first, PROGRESS.md, simple code, commit per milestone, phase gates | F-DEP-05, F-DEP-10, F-QA-01, F-QA-05 |
 | 1 | Audience, devices, session length, course length, privacy, offline, accessibility | F-ONB-01, F-ONB-05, F-ONB-06, F-WLD-04–06, F-DLG-01, F-DLG-07, F-EDT-03, F-QST-03, F-SAV-01, F-SAV-02, F-SAV-04–09, F-A11-01–15, F-OFF-01–08, F-AUT-11, F-CUR-11, F-QA-12, F-QA-15, F-QA-16 |
-| 2 | Stack: Vite + TS strict, Phaser 3, Pyodide in worker, CodeMirror 6, YAML + schema, Vitest + Playwright, original/CC0 assets | F-EXE-01, F-API-08, F-EDT-01, F-EDT-02, F-AUT-01, F-AUT-02, F-AUT-06, F-AUT-07, F-API-05, F-ONB-03, F-QA-01–03, F-DEP-06, F-DEP-07, F-CUR-10 |
+| 2 | Stack: Vite + TS strict, Phaser 4 (owner's choice, Q5), Pyodide in worker, CodeMirror 6, YAML + schema, Vitest + Playwright, original/CC0 assets | F-EXE-01, F-API-08, F-EDT-01, F-EDT-02, F-AUT-01, F-AUT-02, F-AUT-06, F-AUT-07, F-API-05, F-ONB-03, F-QA-01–03, F-DEP-06, F-DEP-07, F-CUR-10 |
 | 2.1 | Execution: timeout + restart, game API, action log + replay with speed and step, `input()`, Scroll of Output, kid-friendly errors + real-error toggle, sandbox | F-EXE-02–14, F-API-01–14, F-EDT-05, F-FBK-07, F-FBK-08, F-FBK-09, F-DEP-02 |
 | 2.2 | Validation: output, state, variables, AST, hidden tests, structured targeted feedback | F-FBK-01–06, F-FBK-15, F-EXE-14 |
 | 3.1 | Story, Byte, Bugs, character creator, nickname + filter | F-ONB-02–07, F-WLD-02, F-DLG-01, F-BOS-03, F-CUR-04, F-CUR-10 |

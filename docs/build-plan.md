@@ -58,26 +58,26 @@ progress. Everything later builds on these foundations.
 | **M1.2 Python worker** | `pyodide` npm package copied to `public/pyodide/` at build; `python.worker.ts` with byte-progress init; typed protocol; `PyRunner` with wall-clock timeout → terminate → restart; network APIs neutered in the worker; Pyodide-in-Node test harness for Vitest | F-EXE |
 | **M1.3 `codeweald` package v1** | ASCII-grid world simulation; full core API (§7.1); action log with `ln`; loop/action/output budgets via `sys.monitoring`; sandbox (builtins, import allowlist, `time`/`random` wrappers); **error translation for the Region 1 set** (unclosed string, missing/extra parenthesis, `print` without parentheses, missing quotes, name typo, wrong capitals such as `Print`, unexpected indent, smart quotes, generic) + "Show the real Python error"; validators `output`, `state`, `variable`, `ast`; mistakes `error`, `code_regex`, `validator_failed`, `detector` (the ones Region 1 needs) | F-API, F-EXE, F-FBK |
 | **M1.4 Content pipeline v1** | Zod schemas (quest, region, glossary, items, errors, course); generated JSON Schema; `build-content` (safe text AST, glossary links); `validate-content` (schema, cross-refs, reference + wrong solutions in Pyodide/Node); generated per-quest content tests; `npm run new-quest` | F-AUT, F-QA |
-| **M1.5 World and replay** | `make-art.ts` (original pixel art: tiles, hero avatars ×8, Byte, Region 1 NPCs, Bug Boss); Phaser `BootScene`, `OverworldScene` (Hearthvale Tiled map, grid movement, NPC interaction, markers), `StageScene` (quest grids, NPC stages); `WorldView` adapter; `ReplayEngine` with speed, step, pause, skip, line highlight, live-region narration, reduced-motion path | F-WLD, F-API |
+| **M1.5 World and replay** | `make-art.ts` (original pixel art: tiles, hero avatars ×8, Byte, Region 1 NPCs, Bug Boss); Phaser `BootScene`, `OverworldScene` (Hearthvale ASCII map from `region.yaml`, grid movement, NPC interaction, markers), `StageScene` (quest grids, NPC stages); `WorldView` adapter; `ReplayEngine` with speed, step, pause, skip, line highlight, live-region narration, reduced-motion path | F-WLD, F-API |
 | **M1.6 Core UI** | Title/profile picker; character creator (avatars, nickname + filter + generator, theme); overworld HUD + Quest Log; quest screen layout (§9.10); CodeMirror 6 editor (highlighting, line numbers, auto-indent, font size, Esc+Tab, `Ctrl+Enter`); Scroll of Output; feedback panel; 3-tier hints; Byte dialogue with glossary toggletips; concept scene; loading screen with progress | F-ONB, F-EDT, F-DLG, F-FBK |
 | **M1.7 Quest types for Region 1** | Every type Region 1 uses, fully functional and keyboard-operable. Per the curriculum map that is predict, investigate (including "change and observe" questions), parsons, modify, fix, make and boss (3 phases); only `fill` is unused. The `style` validator covers the comment quests. Parsons gets keyboard pick-up/move/indent in this phase; Phase 2 finishes its screen-reader polish. Knowledge check screen. | F-QST, F-BOS |
 | **M1.8 Region 1 content** | All Region 1 quests, the boss (all phases), the side quests and the knowledge check, as YAML that passes `validate-content`. Quill of Printing and the other Region 1 items. Script Fragment. | F-PRG (minimal), content |
-| **M1.9 Save/load** | IndexedDB persistence (profiles, drafts, debounce + flush), localStorage/memory fallbacks, schema version + migration scaffold, multiple profiles | F-SAV |
+| **M1.9 Save/load and saving out** | IndexedDB persistence (profiles, drafts, debounce + flush), localStorage/memory fallbacks, schema version + migration scaffold, multiple profiles. **Because devices may wipe data (Q3), this phase also delivers:** save code encode/decode, progress file save/open (system file pickers with a download fallback), Continue from a save, the unsaved-progress marker, save-point toasts and the leave-page warning (specs §12.5) | F-SAV |
 | **M1.10 Tests and CI** | CI jobs `checks`, `unit`, `content`, `build`, `e2e`; E2E: golden path (new player → creator → all of Region 1 → item in inventory → reload → persists), infinite loop (both loop budget and hard timeout + restart), keyboard-only quest; axe on the Phase 1 screens | F-QA |
 
 **Exit criteria:**
 
 - [ ] `npm run validate-content` passes for every Region 1 quest (solutions + ≥ 2 wrong solutions each).
 - [ ] Unit suites pass: action log, sandbox, budgets, error translation (Region 1 set), validators, schema, save/load, nickname filter.
-- [ ] E2E passes: golden path with reload persistence; infinite loop (both layers); keyboard-only quest.
+- [ ] E2E passes: golden path with reload persistence; infinite loop (both layers); keyboard-only quest; **save code → clear all site data → Continue from a save restores progress**.
 - [ ] axe: no serious/critical violations on the title, creator, overworld HUD, quest and knowledge-check screens.
 - [ ] Initial app download ≤ 4 MB gzip excluding Pyodide (size budget in CI).
 - [ ] **Demo:** `npm install && npm run build && npm run preview`, then open the printed URL.
       Instructions in `README.md` and `PROGRESS.md`. **Stop for your review.**
 
 **Not in Phase 1** (deliberately): XP/levels/badges beyond the minimum needed to show items, the
-Workshop, export/import and save codes, the full settings screen, PWA/offline, teacher
-features, Regions 2–11.
+Workshop, the import Merge option, the full settings screen, PWA/offline, teacher features,
+Regions 2–11.
 
 ---
 
@@ -92,7 +92,7 @@ features, Regions 2–11.
 | M2.5 Progression | XP + levels + titles; concept items; Inventory/Notebook; badges engine + all triggers; celebration (reduced-motion aware) | F-PRG |
 | M2.6 Spellbook reference | Spell Pages: concept cards, worked examples, My Spells; Jar Shelf variables panel | F-EDT |
 | M2.7 Workshop | Sandbox maps; replay-on-input (Mode B); saved programs; `.py` export; API reference panel | F-WSH, F-EXE |
-| M2.8 Save codes and files | Progress file export/import (replace/new/merge); save code encode/decode + typo detection; end-of-session reminder | F-SAV |
+| M2.8 Save polish | Merge option on import; save-code fuzz tests across content versions; delete profile with "Save first" | F-SAV |
 | M2.9 Settings and a11y features | Text scale, fonts (Atkinson Hyperlegible Next / OpenDyslexic), high contrast, reduced motion, TTS, shortcut toggle, audio; "Describe surroundings" | F-A11 |
 | M2.10 PWA basics | Service worker, manifest, Pyodide runtime cache, "ready offline" indicator, update prompt; System check page | F-OFF |
 
@@ -180,7 +180,7 @@ completeness check (every region has a lesson plan and an answer key).
 | M6.3 Low-end performance | 4× CPU / slow network profiles; Pyodide-ready and run-latency budgets; memory on a 4 GB device; calibrate loop budget; standby-worker decision |
 | M6.4 Reading level | Full report; rewrite flagged text; glossary completeness |
 | M6.5 Content review | Every quest played; hints sanity; misconceptions; tone; bias/inclusion review of art and names |
-| M6.6 Deployment | GitHub Pages workflow; Apache/Nginx/IIS snippets; system-check page; final README; Phaser 4 evaluation note |
+| M6.6 Deployment | GitHub Pages workflow; Apache/Nginx/IIS snippets; system-check page; final README |
 
 **Exit criteria:** every CI job green; zero serious/critical axe violations; all §17 budgets met
 on the throttled profile; deployment verified on GitHub Pages and on one plain static server.

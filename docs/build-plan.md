@@ -57,7 +57,7 @@ progress. Everything later builds on these foundations.
 | **M1.1 Scaffolding** | Vite + TS strict + Preact; ESLint/Prettier; Vitest; Playwright config; `ci.yml` skeleton (checks + unit); `ASSETS_LICENSES.md`; README dev section | F-DEP, F-QA |
 | **M1.2 Python worker** | `pyodide` npm package copied to `public/pyodide/` at build; `python.worker.ts` with byte-progress init; typed protocol; `PyRunner` with wall-clock timeout → terminate → restart; network APIs neutered in the worker; Pyodide-in-Node test harness for Vitest | F-EXE |
 | **M1.3 `codeweald` package v1** | ASCII-grid world simulation; full core API (§7.1); action log with `ln`; loop/action/output budgets via `sys.monitoring`; sandbox (builtins, import allowlist, `time`/`random` wrappers); **error translation for the Region 1 set** (unclosed string, missing/extra parenthesis, `print` without parentheses, missing quotes, name typo, wrong capitals such as `Print`, unexpected indent, smart quotes, generic) + "Show the real Python error"; validators `output`, `state`, `variable`, `ast`; mistakes `error`, `code_regex`, `validator_failed`, `detector` (the ones Region 1 needs) | F-API, F-EXE, F-FBK |
-| **M1.4 Content pipeline v1** | Zod schemas (quest, region, glossary, items, errors, course); generated JSON Schema; `build-content` (safe text AST, glossary links); `validate-content` (schema, cross-refs, reference + wrong solutions in Pyodide/Node); generated per-quest content tests; `npm run new-quest` | F-AUT, F-QA |
+| **M1.4 Content pipeline v1** | Zod schemas (quest, region, glossary, items, errors, course); generated JSON Schema; `build-content` (safe text AST, glossary links, reference solutions dropped from the game); `validate-content` (schema, cross-refs, reference + wrong solutions in Pyodide/Node); generated per-quest content tests; `npm run new-quest`; `npm run solutions` → instructor answer key for Region 1 | F-AUT, F-QA, F-INS |
 | **M1.5 World and replay** | `make-art.ts` (original pixel art: tiles, hero avatars ×8, Byte, Region 1 NPCs, Bug Boss); Phaser `BootScene`, `OverworldScene` (Hearthvale ASCII map from `region.yaml`, grid movement, NPC interaction, markers), `StageScene` (quest grids, NPC stages); `WorldView` adapter; `ReplayEngine` with speed, step, pause, skip, line highlight, live-region narration, reduced-motion path | F-WLD, F-API |
 | **M1.6 Core UI** | Title/profile picker; character creator (avatars, nickname + filter + generator, theme); overworld HUD + Quest Log; quest screen layout (§9.10); CodeMirror 6 editor (highlighting, line numbers, auto-indent, font size, Esc+Tab, `Ctrl+Enter`); Scroll of Output; feedback panel; 3-tier hints; Byte dialogue with glossary toggletips; concept scene; loading screen with progress | F-ONB, F-EDT, F-DLG, F-FBK |
 | **M1.7 Quest types for Region 1** | Every type Region 1 uses, fully functional and keyboard-operable. Per the curriculum map that is predict, investigate (including "change and observe" questions), parsons, modify, fix, make and boss (3 phases); only `fill` is unused. The `style` validator covers the comment quests. Parsons gets keyboard pick-up/move/indent in this phase; Phase 2 finishes its screen-reader polish. Knowledge check screen. | F-QST, F-BOS |
@@ -76,8 +76,7 @@ progress. Everything later builds on these foundations.
       Instructions in `README.md` and `PROGRESS.md`. **Stop for your review.**
 
 **Not in Phase 1** (deliberately): XP/levels/badges beyond the minimum needed to show items, the
-Workshop, the import Merge option, the full settings screen, PWA/offline, teacher features,
-Regions 2–11.
+Workshop, the import Merge option, the full settings screen, PWA/offline, Regions 2–11.
 
 ---
 
@@ -154,10 +153,25 @@ from `course.yaml`.
 
 ---
 
-## Phase 5 — Teacher features
+## Phase 5 — Instructor answer key, authoring guide, self-paced extras
+
+**Requirement change (owner decision Q13):** there are **no teacher features** in the app.
+Codeweald is a self-paced course students do on their own. Teacher mode, class codes, the
+dashboard, CSV export and the in-app teacher guide are dropped. Instructors get the solutions
+in a generated answer key, which starts in Phase 1 and grows with each region.
 
 | Milestone | Scope |
 |---|---|
+| M5.1 | Answer key complete for all 11 regions (`npm run solutions` → `docs/solutions.md`); CI check that it is up to date |
+| M5.2 | `docs/quest-authoring.md`: schema, validators, mistakes, hidden tests, stages, scaffolder, `validate-content`, editing on github.com with CI as the checker |
+| M5.3 *(proposed, optional)* | **My progress** page for self-paced learners: regions and quests done, "I can…" learning outcomes earned, knowledge-check scores, time spent. Local only. |
+| M5.4 *(proposed, optional)* | Printable **course-complete certificate** (nickname only, no real name), shown after the capstone |
+
+**Exit criteria:** the answer key lists every quest, boss phase and knowledge-check item; the
+build bundle contains no reference solutions (unit test); the authoring guide's examples pass
+`validate-content`; axe on any new screens.
+
+---|---|
 | M5.1 | Teacher gate (`set-passphrase`, default-passphrase banner, auto-lock); unlock regions; view solutions and answer keys |
 | M5.2 | Class code generator + student entry; hints all/nudge/off; knowledge-check gating option |
 | M5.3 | Dashboard: import files and save codes; overview, quest, student and outcome views; remember/forget class |
@@ -195,5 +209,5 @@ on the throttled profile; deployment verified on GitHub Pages and on one plain s
 | 2 | █████ | Parsons accessibility; feedback engine breadth |
 | 3 | ████ | Content volume (5 regions) |
 | 4 | ████ | Capstone validation design |
-| 5 | ███ | Dashboard UX |
+| 5 | █ | Small now that teacher features are gone |
 | 6 | ███ | Device testing access |

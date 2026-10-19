@@ -47,7 +47,10 @@ const CREATURES = [
 
 export function randomNickname(random: () => number = Math.random): string {
   const pick = <T>(list: T[]) => list[Math.floor(random() * list.length)]!;
-  return `${pick(ADJECTIVES)} ${pick(CREATURES)}`;
+  for (;;) {
+    const name = `${pick(ADJECTIVES)} ${pick(CREATURES)}`;
+    if (name.length <= 16) return name;
+  }
 }
 
 // Blocked word stems, stored ROT13 so the source stays readable for everyone.
@@ -101,7 +104,6 @@ const BLOCKED_ROT13 = [
   'ubzb',
   'qlxr',
   'genaal',
-  'xxx',
   'uvgyre',
 ];
 const rot13 = (s: string) =>
@@ -185,16 +187,49 @@ export function normalizeForFilter(text: string): string {
 
 export type NicknameProblem = 'length' | 'characters' | 'personal' | 'blocked' | null;
 
+const SHORT = 5;
+
+/** Words of a nickname, normalized; runs of single letters ("F u c k") are joined back up. */
+function words(raw: string): string[] {
+  const tokens = raw.split(/[\s-]+/).filter(Boolean);
+  const out: string[] = [];
+  let run = '';
+  for (const token of tokens) {
+    if (token.length === 1) {
+      run += token;
+      continue;
+    }
+    if (run) out.push(run);
+    run = '';
+    out.push(token);
+  }
+  if (run) out.push(run);
+  return out.map(normalizeForFilter).filter(Boolean);
+}
+
+function isBlocked(raw: string): boolean {
+  if (/k{3}/i.test(raw.replace(/[^a-z]/gi, ''))) return true;
+  const ws = words(raw);
+  const allowed = new Set(ALLOWED.map(normalizeForFilter));
+  const joined = ws.filter((w) => !allowed.has(w)).join('');
+  for (const stem of BLOCKED) {
+    const s = normalizeForFilter(stem);
+    if (s.length < 3) continue;
+    if (s.length >= SHORT) {
+      if (joined.includes(s)) return true;
+    } else if (
+      ws.some((w) => !allowed.has(w) && (w === s || (w.startsWith(s) && w.length - s.length <= 3)))
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function checkNickname(raw: string): NicknameProblem {
   const name = raw.trim();
   if (name.length < 2 || name.length > 16) return 'length';
   if (!/^[A-Za-z0-9 -]+$/.test(name)) return 'characters';
   if (/\d{5,}/.test(name.replace(/[ -]/g, ''))) return 'personal';
-  const lowered = name.toLowerCase();
-  let squashed = normalizeForFilter(name);
-  for (const ok of ALLOWED) {
-    if (lowered.replace(/[^a-z ]/g, '').includes(ok)) squashed = squashed.replace(normalizeForFilter(ok), '');
-  }
-  if (BLOCKED.some((stem) => squashed.includes(stem.replace(/(.)\1+/g, '$1')))) return 'blocked';
-  return null;
+  return isBlocked(name) ? 'blocked' : null;
 }

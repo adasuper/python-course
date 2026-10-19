@@ -1,15 +1,15 @@
 # Codeweald — Open Questions and Assumptions
 
 > **Status:** Resolved on 2026-10-19. The plan is approved. The project owner accepted every
-> default **except Q3 and Q5** (see the decisions table below). The original questions are
-> kept underneath for the record.
+> default **except Q3 and Q5**, and later removed all teacher features (**Q13**). The original
+> questions are kept underneath for the record.
 
 ## Decisions
 
 | Q | Decision |
 |---|---|
-| Q1 | A unit is one 45-minute lesson. Standard pacing is 23 lessons; Compact (20) and Extended (25) options. |
-| Q2 | Plain CSV (long, wide and outcomes files). No LMS-specific layout in v1. |
+| Q1 | Self-paced (see Q13): about 23 sessions of ~45 minutes (≈ 12 hours of core play); Compact (20) and Extended (25+) options in `course.yaml`. |
+| Q2 | Moot — no grading export or LMS integration (Q13). |
 | **Q3** | **Students must save their progress.** Assume managed Chromebooks may wipe local data at sign-out, so the device is never the only copy. Saving out is a first-class, Phase 1 feature: a save code, plus a progress file saved with the system "Save as" dialog (which can target Google Drive in the ChromeOS Files app). There is also "Continue from a save" on the title screen, an "unsaved progress" indicator, and save reminders. See specs §12.5. |
 | Q4 | The ~250-character copy/paste save code plus the full progress file. |
 | **Q5** | **Phaser 4** (4.2.x, pinned), still behind the `WorldView` adapter. |
@@ -17,9 +17,10 @@
 | Q7 | GitHub Pages workflow from this repo, plus school-server instructions. |
 | Q8 | MIT for code, CC BY-SA 4.0 for course content, original art CC0. CSTA standards are cited by code and paraphrased unless the project is confirmed non-commercial. |
 | Q9 | CSTA K-12 CS Standards (2017), Level 2; verify the text verbatim before the teacher guide. |
-| Q10 | Knowledge checks don't gate; hints on; side quests after core quests; free-text nickname with filter + generator; documented default teacher passphrase with a banner. |
+| Q10 | Knowledge checks don't gate; hints always on; side quests after core quests; free-text nickname with filter + generator. (No teacher passphrase — Q13.) |
 | Q11 | English only in v1; all UI strings in one file. |
 | Q12 | Build in `adasuper/python-course`; leave `AI-Engineering-Course-Prep` untouched. |
+| **Q13** | **No teacher features.** It is a self-paced course students do on their own. Removed: teacher mode, passphrase, class codes, dashboard, CSV export and the in-app teacher guide. Instructors still have the solutions: `npm run solutions` generates `docs/solutions.md` from the content, and reference solutions no longer ship inside the game. |
 
 ## A. Questions for you
 

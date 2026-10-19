@@ -3,6 +3,7 @@ node_modules
 public/pyodide
 public/assets/art
 src/generated
+schema
 docs
 *.md
 content

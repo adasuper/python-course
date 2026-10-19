@@ -1,0 +1,104 @@
+// What Byte says after a run: success, a targeted hint, or a friendly error (§9.4, §6.8).
+import { useState } from 'preact/hooks';
+import { fillRich, parseRich } from '../../content/richtext';
+import { t } from '../../i18n/en';
+import type { PyErrorInfo, RunResult } from '../../runtime/protocol';
+import { course } from '../../state/store';
+import { RichText } from '../components/RichText';
+
+export function errorTemplate(error: PyErrorInfo) {
+  const templates = course.value!.errors;
+  const tpl = templates[error.key] ?? templates.generic!;
+  const params = { ...error.params, line: error.params.line || String(error.line ?? '') };
+  return {
+    title: tpl.title,
+    message: fillRich(tpl.message, params),
+    tip: tpl.tip ? fillRich(tpl.tip, params) : null,
+  };
+}
+
+export function ErrorExplanation({ error }: { error: PyErrorInfo }) {
+  const [real, setReal] = useState(false);
+  const tpl = errorTemplate(error);
+  return (
+    <div class="error-explain">
+      <p class="error-title">
+        <span aria-hidden="true">🐛</span> <strong>{tpl.title}</strong>
+        {error.line ? <span class="line-tag">{t.quest.lineLabel(error.line)}</span> : null}
+      </p>
+      <RichText rich={tpl.message} />
+      {tpl.tip && (
+        <div class="tip">
+          <RichText rich={tpl.tip} />
+        </div>
+      )}
+      {error.raw && (
+        <>
+          <button type="button" class="small ghost" aria-expanded={real} onClick={() => setReal(!real)}>
+            {real ? t.quest.hideRealError : t.quest.showRealError}
+          </button>
+          {real && (
+            <pre class="real-error" lang="zxx">
+              {error.raw}
+            </pre>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+export interface RewardView {
+  xp: number;
+  itemName: string | null;
+  levelUp: number | null;
+}
+
+export function Feedback({
+  result,
+  passed,
+  outro,
+  reward,
+  children,
+}: {
+  result: RunResult | null;
+  passed: boolean;
+  outro?: import('../../content/richtext').Rich | null;
+  reward?: RewardView | null;
+  children?: preact.ComponentChildren;
+}) {
+  if (!result) return null;
+  if (passed) {
+    return (
+      <section class="feedback success" aria-labelledby="fb-h" tabIndex={-1} id="feedback">
+        <h2 id="fb-h">
+          <span aria-hidden="true">✓</span> {t.quest.passed}
+        </h2>
+        <RichText rich={outro} />
+        {reward && (
+          <ul class="rewards">
+            {reward.xp > 0 && <li>✨ {t.quest.xpGained(reward.xp)}</li>}
+            {reward.itemName && <li>🎒 {t.quest.itemGained(reward.itemName)}</li>}
+            {reward.levelUp && <li>⭐ {t.quest.levelUp(reward.levelUp)}</li>}
+          </ul>
+        )}
+        {children}
+      </section>
+    );
+  }
+  const fb = result.validation?.feedback;
+  const showError = result.error && (!fb || fb.source === 'error');
+  return (
+    <section class="feedback not-yet" aria-labelledby="fb-h" tabIndex={-1} id="feedback">
+      <h2 id="fb-h">
+        <span aria-hidden="true">✗</span> {result.status === 'timeout' ? t.quest.timeout : t.quest.notYet}
+      </h2>
+      {fb?.text && <RichText rich={parseRich(fb.text)} />}
+      {fb?.source === 'mistake' && result.error && <ErrorExplanation error={result.error} />}
+      {showError && <ErrorExplanation error={result.error!} />}
+      {!fb?.text && !result.error && <p>{t.quest.generic}</p>}
+      <p class="muted">{t.quest.tryAgain}</p>
+      {children}
+    </section>
+  );
+}

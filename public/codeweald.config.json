@@ -1,6 +1,5 @@
 {
   "courseId": "codeweald-intro-python",
-  "teacher": { "passphraseHash": "", "autoLockMinutes": 30 },
   "execution": {
     "timeoutSeconds": 3,
     "loopBudget": 1000000,
@@ -16,6 +15,10 @@
     "replaySpeed": 1,
     "soundEffects": false
   },
-  "features": { "workshop": true, "sideQuests": true, "knowledgeCheckGates": false, "standbyWorker": "off" },
-  "mastery": { "secureMaxHints": 1, "secureMaxAttempts": 5 }
+  "features": {
+    "workshop": true,
+    "sideQuests": true,
+    "knowledgeCheckGates": false,
+    "standbyWorker": "off"
+  }
 }

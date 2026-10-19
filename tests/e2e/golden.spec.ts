@@ -1,0 +1,26 @@
+// Brief §7: new player → character creation → complete Region 1 → item in inventory → reload → progress persists.
+import { expect, test } from '@playwright/test';
+import { content, newPlayer, skipToOverworld, solveQuest } from './helpers';
+
+const region = content.regions[0]!.data;
+
+test('a new player completes Region 1 and keeps their progress after a reload', async ({ page }) => {
+  test.setTimeout(600_000);
+  await newPlayer(page);
+  for (const id of [...region.quests, region.boss, ...region.side_quests]) {
+    await solveQuest(page, id);
+  }
+  await page.getByRole('button', { name: /Inventory/ }).click();
+  await expect(page.getByRole('heading', { name: 'Quill of Printing' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: region.fragment.name })).toBeVisible();
+
+  await page.reload();
+  await page.getByRole('button', { name: /Clever Newt/ }).click();
+  await skipToOverworld(page);
+  await page.locator('#quest-log-button').click();
+  await expect(page.locator('#quest-log-button')).toContainText(
+    `(${region.quests.length + 1}/${region.quests.length + 1})`,
+  );
+  await page.getByRole('button', { name: /Inventory/ }).click();
+  await expect(page.getByRole('heading', { name: 'Quill of Printing' })).toBeVisible();
+});

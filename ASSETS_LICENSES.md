@@ -22,8 +22,24 @@ PNG files at build time into `public/assets/art/`, which is not committed.
 
 ## Fonts
 
-No fonts are bundled yet. Each font will be listed here when it is added, with its source and
-license (e.g. SIL Open Font License 1.1).
+Fonts are installed from npm (Fontsource) and bundled into the build, so nothing is fetched
+from a font CDN at runtime.
+
+| Font | Used for | npm package | Author | License |
+|---|---|---|---|---|
+| Atkinson Hyperlegible Next | Interface text (default) | `@fontsource/atkinson-hyperlegible-next` 5.3.0 | Braille Institute of America | SIL Open Font License 1.1 |
+| Atkinson Hyperlegible Mono | Code | `@fontsource/atkinson-hyperlegible-mono` 5.3.0 | Braille Institute of America | SIL Open Font License 1.1 |
+| OpenDyslexic | Optional dyslexia-friendly font | `@fontsource/opendyslexic` 5.3.0 | Abbie Gonzalez | SIL Open Font License 1.1 |
+
+## Code libraries (bundled)
+
+| Library | License |
+|---|---|
+| Phaser 4.2.1 | MIT |
+| Pyodide 314.0.7 (CPython 3.14 and its standard library) | MPL 2.0 (Pyodide); PSF License (CPython) |
+| CodeMirror 6 | MIT |
+| Preact, @preact/signals | MIT |
+| idb-keyval | Apache 2.0 |
 
 ## Audio
 

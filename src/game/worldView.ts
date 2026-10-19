@@ -83,7 +83,7 @@ function tween(
   return new Promise((resolve) => scene.tweens.add({ ...config, duration: ms, onComplete: () => resolve() }));
 }
 
-function label(scene: Phaser.Scene, x: number, y: number, text: string, zoom: number) {
+function label(scene: Phaser.Scene, x: number, y: number, text: string, zoom: number, size = 1) {
   const t = scene.add
     .text(x, y, text, {
       fontFamily: '"Atkinson Hyperlegible Next", system-ui, sans-serif',
@@ -96,7 +96,7 @@ function label(scene: Phaser.Scene, x: number, y: number, text: string, zoom: nu
     })
     .setOrigin(0.5, 1)
     .setDepth(50);
-  t.setScale(1 / Math.max(zoom, 1) / 1.6);
+  t.setScale(size / Math.max(zoom, 1) / 1.6);
   return t;
 }
 
@@ -261,9 +261,10 @@ class OverworldScene extends Phaser.Scene {
       const t = label(
         this,
         obj.at[0] * TILE + TILE / 2,
-        obj.at[1] * TILE - 1,
+        obj.at[1] * TILE + 1,
         symbol,
         this.cameras.main.zoom || 2,
+        0.6,
       );
       t.setStyle({ backgroundColor: state === 'completed' ? '#d9f2e3' : '#ffe08a' });
       this.markerTexts.set(obj.quest, t);

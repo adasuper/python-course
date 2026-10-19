@@ -26,7 +26,6 @@ import { parseRich, termsIn, type Rich } from '../../src/content/richtext';
 import {
   BOSS_PHASE_XP,
   DEFAULT_XP,
-  obfuscate,
   SIDE_QUEST_XP,
   type Course,
   type Phase,
@@ -387,7 +386,6 @@ export function needsBaking(body: Body) {
 }
 
 export function compileBody(body: Body, baked?: ValidatorSpec[]): QuestBody {
-  const solution = solutionCode(body);
   return {
     type: body.type,
     learningOutcome: body.learning_outcome,
@@ -435,7 +433,6 @@ export function compileBody(body: Body, baked?: ValidatorSpec[]): QuestBody {
       : null,
     jarShelf: body.jar_shelf ?? body.type !== 'predict',
     bonus: body.bonus.map((b) => ({ ...b, check: b.check as ValidatorSpec })),
-    solutionEnc: obfuscate(solution),
   };
 }
 

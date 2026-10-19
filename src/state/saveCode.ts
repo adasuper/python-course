@@ -110,7 +110,7 @@ export function decodeSaveCode(code: string, course: Course, choices: Choices): 
   const cleaned = code
     .trim()
     .toUpperCase()
-    .replace(/^CW1/, '')
+    .replace(/^CW[1IL]/, '')
     .replace(/[\s-]/g, '')
     .replace(/[IL]/g, '1')
     .replace(/O/g, '0');

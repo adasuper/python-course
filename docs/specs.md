@@ -26,7 +26,7 @@ Feature IDs such as `F-EXE-03` refer to user stories in `features.md`.
 10. [Content data model and schema](#10-content-data-model-and-schema)
 11. [Game systems](#11-game-systems)
 12. [Persistence, save codes and export](#12-persistence-save-codes-and-export)
-13. [Teacher features](#13-teacher-features)
+13. [Instructor answer key (no in-app teacher features)](#13-instructor-answer-key-no-in-app-teacher-features)
 14. [Accessibility design](#14-accessibility-design)
 15. [Privacy and security](#15-privacy-and-security)
 16. [Offline and PWA](#16-offline-and-pwa)
@@ -45,15 +45,17 @@ Feature IDs such as `F-EXE-03` refer to user stories in `features.md`.
 - Teach introductory Python to grades 6–8 through a 2D top-down pixel-art RPG.
 - Students write **real Python** (CPython via Pyodide). Their code visibly drives the game.
 - Every quest has **one measurable learning outcome** and an automated check.
-- Teachers can add and edit quests by editing **YAML files**. They never touch engine code.
+- Course authors (for example, instructors) can add and edit quests by editing **YAML files**.
+  They never touch engine code.
 - Runs in a modern browser on school Chromebooks and lab PCs. It needs no install, no
   plugins and no accounts, and it works offline after the first load.
 
 ### 1.2 Non-goals (v1)
 
 - No server, accounts, cloud sync, multiplayer or chat.
-- No LMS integration over the network. CSV export only; LMS-specific layouts are an
-  open question.
+- No teacher features in the app: no teacher mode, class settings, dashboard, CSV export or
+  LMS integration. The course is **self-paced**; students work through it on their own
+  (owner decision Q13, §13). Instructors get a generated answer key instead.
 - No support for touch-only phones. Tablets with keyboards should work, but they are not
   a test target.
 - No localization in v1. All UI strings live in one file so translation can come later.
@@ -67,7 +69,7 @@ Feature IDs such as `F-EXE-03` refer to user stories in `features.md`.
 | Student code must never freeze the UI | Worker + three-layer timeout (loop budget, action budget, hard terminate) | §6.3 |
 | Code visibly drives the game | Action log recorded in the worker, replayed as animation | §7, §8 |
 | `input()` must be robust on school networks | Input queue + "replay-on-input". No SharedArrayBuffer, so no COOP/COEP headers | §6.5 |
-| Teachers edit content without code | YAML content + Zod schema + JSON Schema for editor autocomplete + `validate-content` | §10 |
+| Course authors edit content without code | YAML content + Zod schema + JSON Schema for editor autocomplete + `validate-content` | §10 |
 | COPPA/FERPA-friendly | No PII, no network after load, local storage only, user-initiated export | §15 |
 | Offline | Installable PWA; Workbox precache and a Pyodide runtime cache | §16 |
 | WCAG 2.1 AA | DOM UI over canvas, live-region narration, full keyboard, settings | §14 |
@@ -93,12 +95,11 @@ considered and rejected.
 | D8 | **DOM UI with Preact + Signals**; Phaser draws only the world | Real HTML for screen readers, focus and text scaling. Preact is tiny (~4 KB) and familiar to React developers. | Phaser-drawn UI (inaccessible); React (heavier); vanilla DOM (harder to maintain). |
 | D9 | **CodeMirror 6** with `@codemirror/lang-python` | As specified. Accessible, keyboard friendly, read-only ranges for "fill" quests. | Monaco (too heavy for Chromebooks). |
 | D10 | **YAML content, validated by Zod 4 at build time, compiled to JSON** | YAML is friendlier than JSON for multi-line code. No YAML parser ships to the browser. Zod 4 also emits JSON Schema, so VS Code can autocomplete quest files. | JSON (noisy for code blocks); JSON Schema only (worse TS typing). |
-| D11 | **Expected answers for hidden tests are computed at build time** from the reference solution (`expect: from_solution`) | Teachers do not hand-compute expected values. The runtime never needs the solution. | Shipping solutions to the worker at runtime. |
+| D11 | **Expected answers for hidden tests are computed at build time** from the reference solution (`expect: from_solution`) | Course authors do not hand-compute expected values. The runtime never needs the solution. | Shipping solutions to the worker at runtime. |
 | D12 | **IndexedDB (via `idb-keyval`) with a localStorage fallback** | Enough space for code drafts; asynchronous; works offline. | localStorage only (5 MB cap, synchronous). |
 | D13 | **Vitest for all unit tests, including Python** (Pyodide in Node) | One test runner. Tests use the exact runtime that ships. | pytest on CPython (faster, but a different interpreter build). |
 | D14 | **Original pixel art first; CC0 packs (e.g. Kenney) where available** | The build container cannot reach kenney.nl. Original art authored as code-defined pixel grids → PNG is license-clean. Kenney CC0 packs can replace it later. | — |
-| D15 | **Teacher gate = salted SHA-256 passphrase hash in `codeweald.config.json`** | No accounts. Editable after build. Honest about limits: it is a speed bump, not security. | Hard-coded passphrase (cannot change without rebuild). |
-| D16 | **Class settings travel as a short "class code"** that students type once | "Per class" settings with no server. | Separate deployments per class (impractical). |
+| D15 | **No teacher features; a generated instructor answer key instead** (owner decision Q13) | The course is self-paced. Reference solutions never ship in the app, so students can't find them in the bundle. Instructors read `docs/solutions.md`, generated from the content by `npm run solutions`. | Teacher mode, class codes and a dashboard (dropped with the requirement). |
 
 ---
 
@@ -110,7 +111,7 @@ considered and rejected.
 │  Preact UI (DOM)                         Phaser 4 (canvas)                           │
 │  ├─ Screens: title, creator, overworld   ├─ BootScene (loads art)                    │
 │  │  HUD, quest, spellbook, inventory,    ├─ OverworldScene (ASCII maps, NPCs)        │
-│  │  workshop, settings, teacher          └─ StageScene (quest grids, NPC stages)     │
+│  │  workshop, settings                   └─ StageScene (quest grids, NPC stages)     │
 │  ├─ CodeMirror 6 editor ("Spellbook")            ▲                                   │
 │  ├─ Scroll of Output, hints, feedback            │ WorldView adapter (typed API)     │
 │  └─ Live-region narrator, TTS                    │                                   │
@@ -158,7 +159,7 @@ python-course/
 ├─ package.json
 ├─ vite.config.ts                  # PWA plugin, worker bundling, base path
 ├─ tsconfig.json                   # strict
-├─ content/                        # ← teachers edit here
+├─ content/                        # ← course authors edit here
 │  ├─ course.yaml                  # which regions/quests are in the course, in order
 │  ├─ glossary.yaml
 │  ├─ items.yaml
@@ -187,14 +188,13 @@ python-course/
 │  ├─ content/                     # Zod schemas, loader, glossary linker
 │  ├─ state/                       # store, XP, badges, persistence, save codes
 │  ├─ a11y/                        # narrator, TTS, focus utilities, settings
-│  ├─ teacher/                     # gate, class code, dashboard, CSV
 │  └─ i18n/en.ts                   # every UI string
 ├─ scripts/
 │  ├─ build-content.ts             # YAML → validated JSON (+ baked expectations)
 │  ├─ validate-content.ts          # schema + cross-refs + run all solutions
 │  ├─ reading-level.ts             # Flesch–Kincaid report
-│  ├─ new-quest.ts                 # scaffolder for teachers
-│  ├─ set-passphrase.ts            # writes the teacher passphrase hash
+│  ├─ new-quest.ts                 # scaffolder for course authors
+│  ├─ solutions.ts                 # writes docs/solutions.md (instructor answer key)
 │  ├─ make-art.ts                  # renders original pixel art grids → PNG
 │  └─ size-budget.ts
 ├─ tests/
@@ -235,10 +235,9 @@ python-course/
 | Inventory / Notebook | Concept items as reference cards | §11.4 |
 | Spellbook pages | Concept cards, worked examples, "My Spells" | §11.5 |
 | Workshop | Free sandbox | §11.7 |
-| Settings | Accessibility, audio, class code, save/export | §14 |
-| For Teachers | Guide, teacher mode, dashboard | §13 |
+| Settings | Accessibility, audio, save/export | §14 |
 | Credits | Asset licenses, about | Reads `ASSETS_LICENSES.md` |
-| System check | Tests this device: service worker, IndexedDB, WebAssembly, storage quota, offline readiness, local TTS voices | Linked from Settings and the teacher guide; plain pass/fail list with fixes (§21) |
+| System check | Tests this device: service worker, IndexedDB, WebAssembly, storage quota, offline readiness, local TTS voices | Linked from Settings and the README; plain pass/fail list with fixes (§21) |
 
 Navigation is a small state machine in `state/router.ts` with hash URLs (`#/quest/r4-q3-gatekeeper`).
 Hash URLs survive reloads and need no server rewrites.
@@ -471,7 +470,7 @@ interface PyErrorInfo {
   announces "Error on line 3: …".
 - A **"Show the real Python error"** toggle shows the filtered traceback. From Region 10 on,
   Byte annotates the parts of the real traceback (file, line, error type, message).
-- Templates live in `content/errors.yaml`, so teachers can change the wording without code.
+- Templates live in `content/errors.yaml`, so course authors can change the wording without code.
 
 ---
 
@@ -520,7 +519,7 @@ stage:
 
 **Default legend:** `#` wall · `.` floor · `H` hero start · `C` chest · `E` exit · `~` water
 (solid) · `D` door (solid until opened by quest logic) · `N` NPC (solid) · `g` gem · `k` key ·
-`$` coin · `*` star. Teachers draw a map by typing it. The same grid feeds the Python
+`$` coin · `*` star. Course authors draw a map by typing it. The same grid feeds the Python
 simulation and the Phaser renderer, so they cannot drift apart.
 
 `kind: npc` stages show the hero and one or more NPCs. NPCs react to the program's output
@@ -651,7 +650,7 @@ Every validator may set `id` (so mistakes can reference it) and `fail_hint`.
 
 **Baked expectations (D11):** at build time, `build-content` runs the reference solution on
 every hidden case and stores the results. The compiled JSON holds concrete expected values.
-The solution itself ships only in obfuscated form for teacher-mode viewing (§15.4).
+The solution itself never ships in the app; instructors read it in the generated answer key (§13).
 
 ### 9.4 Common mistakes and feedback selection
 
@@ -698,8 +697,8 @@ The solution itself ships only in obfuscated form for teacher-mode viewing (§15
 
 - Three tiers per quest: **nudge → targeted explanation → near-complete example with a gap**.
 - Tiers unlock in order. They are always free and never cost XP. The UI says so.
-- Usage is recorded (`hintsUsed: 0–3`) for the teacher report only.
-- Class settings can set hints to `all`, `nudge` (tier 1 only) or `off` (§13.2).
+- Usage is recorded (`hintsUsed: 0–3`) only for the student's own progress and badges (e.g. *Clean
+  Cast*), never as a penalty.
 - Tier 3 is shown in a read-only code block with a "Copy into Spellbook" button, so students
   still type or adapt the gap.
 
@@ -728,7 +727,8 @@ phases:
 ### 9.7 Knowledge checks
 
 - 3–5 items per region, mixing `mcq` and `predict` (typed output), each with an `explain`.
-- Low-stakes: it does not gate the next region by default (teachers may turn gating on). It is
+- Low-stakes: it does not gate the next region (course authors can turn gating on with
+  `features.knowledgeCheckGates`). It is
   retakeable; the best and latest scores are stored. XP is awarded once, for the first
   completion, regardless of score.
 - Options are shuffled per attempt. Results show what was right with text and icons, never
@@ -765,7 +765,7 @@ types a short free-text answer for each line.
 
 These are regular quests with `side_quest: true`. They are optional, never block progress, and
 award bonus XP plus the "Side Questor" badge track. They appear on the region's **Quest Board**
-once the region's core quests are done (or earlier, if the teacher enables it).
+once the region's core quests are done.
 
 ### 9.10 Quest screen layout
 
@@ -954,7 +954,7 @@ bonus:
 - `src/content/schema.ts` defines Zod 4 schemas. Types are inferred (`z.infer`), so engine code
   and content share one definition.
 - `npm run schema` runs `z.toJSONSchema()` → `schema/*.schema.json`. The
-  `# yaml-language-server` line at the top of each file gives teachers autocomplete and inline
+  `# yaml-language-server` line at the top of each file gives course authors autocomplete and inline
   errors in VS Code.
 - **Cross-reference checks** (beyond the shape):
   - ids are unique and match their file name
@@ -1029,17 +1029,19 @@ pois: [old-oak, mossy-well, hidden-glade]    # secret corners for the Explorer b
 content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cross-ref checks
                                        ──► text → safe AST (glossary links resolved)
                                        ──► run solutions in Pyodide (Node) → bake hidden-test expectations
-                                       ──► obfuscate solutions (teacher view only)
+                                       ──► drop reference solutions (they never ship in the game)
                                        ──► src/generated/content/{course.json, region-01.json, …}
 ```
 
 - `npm run validate-content` = the same pipeline in check mode, plus every `wrong_solution`,
-  plus the reading-level report. It prints teacher-friendly errors with file and line
+  plus the reading-level report. It prints author-friendly errors with file and line
   (`content/regions/04…/r4-q3-gatekeeper.yaml:27 — hint 3 must contain a ____ gap`).
 - `npm run new-quest -- --region 4 --type make --slug river-ferry` scaffolds a valid file with
   TODO markers.
-- In dev, `vite` watches `content/` and hot-reloads. `#/dev/quest/<id>` opens any quest
-  directly.
+- In dev, run `npm run content` after editing YAML; the dev server reloads the compiled JSON.
+  `/?dev#/dev/quest/<quest-id>` (or `/?dev#/dev/check/<region-id>`) opens any quest or
+  knowledge check directly, with a throwaway "Dev Tester" profile. It only works with the
+  `?dev` flag, so it never appears in normal play.
 
 ---
 
@@ -1051,7 +1053,7 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
   one character per 16×16 px tile, a default legend (grass, path, water, trees, houses,
   fences, flowers…) and optional per-region legend entries. Maps are about 30×20 tiles,
   shown with integer scaling and `pixelArt: true`. This replaces the Tiled maps in the first
-  draft. Teachers can edit a map in any text editor, no extra tool is needed, and the same
+  draft. Course authors can edit a map in any text editor, no extra tool is needed, and the same
   grid code serves quests and the overworld.
 - An `objects` list places NPCs, signs, the region's **Quest Board**, POIs ("secret corners"),
   the spawn point and region exits. An NPC's `quest` property binds it to content.
@@ -1062,9 +1064,9 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
   · `✓` done. They are mirrored in the DOM **Quest Log**.
 - **Quest Log** (DOM panel, `Q`) lists all region quests with their status and a "Go" button. It
   is the keyboard and screen-reader fast path: any available quest can start without walking.
-- **Gating:** a region unlocks when the previous region's boss is defeated. Teacher mode or
-  the class code can unlock more. Quests inside a region follow their `prerequisites`.
-- **Teacher-added quests** without a map NPC appear on the Quest Board, so adding a quest
+- **Gating:** a region unlocks when the previous region's boss is defeated. Quests inside a
+  region follow their `prerequisites`.
+- **Author-added quests** without a map NPC appear on the Quest Board, so adding a quest
   never needs a map edit.
 
 ### 11.2 XP and levels
@@ -1188,8 +1190,6 @@ interface Profile {
   workshop: { name: string; code: string; mapId: string }[];
   counters: { realErrorViews: number; workshopRuns: number };
   settings: Settings;
-  classCode?: string;
-  teacherUnlocks?: { regionsThrough: number };
 }
 interface QuestRecord {
   status: 'available' | 'in_progress' | 'completed';
@@ -1208,7 +1208,7 @@ the profile.
 
 ### 12.2 Storage
 
-- **IndexedDB** database `codeweald` with stores `profiles`, `drafts` and `teacher`, accessed
+- **IndexedDB** database `codeweald` with stores `profiles` and `drafts`, accessed
   via `idb-keyval` (custom stores).
 - Saves are debounced (500 ms) and flushed on `visibilitychange` and `pagehide`.
 - `navigator.storage.persist()` is requested to reduce eviction.
@@ -1221,8 +1221,7 @@ the profile.
 
 - File name `codeweald-<nickname>-<YYYY-MM-DD>.codeweald.json`: a JSON envelope
   `{ format: "codeweald-progress", version, courseId, contentVersion, exportedOn, profile, drafts }`.
-- It holds everything, including the student's code (teachers can read solutions in the
-  dashboard).
+- It holds everything, including the student's code.
 - **Import:** user-picked file only, ≤ 5 MB, Zod-validated, never rendered as HTML.
   - Unknown quest ids (from other content versions) are kept but ignored.
   - The student chooses **Replace this profile** or **Add as new profile**. A third option,
@@ -1237,8 +1236,8 @@ an LMS text box. It needs no file handling.
 - **Format:** `CW1-` + Crockford Base32 in groups of 5, ending in a CRC-16 check group.
 - **Payload** (bit-packed, varints):
   - content version hash (16 bits)
-  - a short profile id (32 random bits, so the dashboard can tell students apart and spot
-    duplicates)
+  - a short profile id (32 random bits, so a restore can recognise the same adventurer on
+    another device)
   - export date (days since 2026-01-01, 16 bits)
   - avatar and theme
   - nickname (UTF-8)
@@ -1282,90 +1281,27 @@ only a convenience; the save code or progress file is the real copy.
 
 ---
 
-## 13. Teacher features
+## 13. Instructor answer key (no in-app teacher features)
 
-### 13.1 Teacher mode gate
+**Owner decision (Q13):** Codeweald is a **self-paced** course that students do on their own.
+The app has no teacher features: no teacher mode, passphrase, class codes, dashboard, CSV export
+or in-app teacher guide. Instructors still need the solutions to be ready for questions.
 
-- `public/codeweald.config.json` holds
-  `teacher.passphraseHash = "sha256:<salt>:<hex>"`. `npm run set-passphrase` writes it. The
-  file can also be edited after build without rebuilding.
-- The shipped default passphrase is documented in the teacher guide. Until it is changed,
-  teacher mode shows a "Change the default passphrase" banner.
-- Unlock lasts for the browser session and auto-locks after 30 minutes idle. Hashing uses
-  SubtleCrypto, which needs HTTPS or localhost (both required for the PWA anyway).
-- **Honest limits:** a client-side gate keeps students out of teacher screens. It is not
-  security. Solutions in the bundle are obfuscated, not encrypted (§15.4).
-
-**Teacher mode can:**
-
-- unlock regions on this device or profile (absent students, demos)
-- view reference solutions and answer keys (inline in each quest via a "Teacher" tab, and
-  in the guide)
-- set hints for this device, or generate a class code
-- open the dashboard and the full teacher guide
-
-### 13.2 Class code (per-class settings without a server)
-
-- **Format:** `CWC-XXXX-XXXX` (Base32 + check), encoding:
-  - version
-  - hints: `all` / `nudge` / `off`
-  - unlocked-through region
-  - enabled-regions bitmask
-  - code timeout (seconds)
-  - knowledge-check gating on/off
-- The teacher generates it in teacher mode and writes it on the board. Students enter it once
-  in Settings → Class code. The game shows "Class settings active".
-- Students cannot change locked settings without teacher mode. Clearing site data does reset
-  them, which is acceptable.
-
-### 13.3 Dashboard
-
-- **Import:** multiple progress files (picker or drag-drop) and/or pasted save codes. The data
-  stays in memory. "Remember this class on this device" optionally stores it in the `teacher`
-  IndexedDB store, with a "Forget class data" button.
-- **Duplicates:** records with the same profile id merge, keeping the newest export (by export
-  date). Two *different* profiles with the same nickname show as "Clever Newt (2)", and the
-  teacher can rename them in the dashboard.
-- **Precision:** data from save codes is bucketed. Attempts and time show as ranges
-  ("4–5 attempts", "5–10 min") with a "from save code" marker. CSV exports write the bucket's
-  lower bound plus a `precision` column (`exact` or `bucketed`).
-- **Views:**
-  1. **Class overview:** students × regions, each cell a symbol plus text
-     (`✓ 6/6`, `◐ 3/6`, `○`) and an accessible table.
-  2. **Quest detail:** completion %, median attempts, hint-tier distribution and median time.
-  3. **Student detail:** every quest record, knowledge-check scores and, from files, their
-     passing code.
-  4. **Outcome mastery:** per quest outcome, region and CSTA code.
-- **Mastery rule** (configurable thresholds):
-  - *Secure* = completed with ≤ 1 hint tier and ≤ 5 attempts, or predictions correct first try
-  - *Developing* = completed otherwise
-  - *Beginning* = in progress
-  - *Not started*
-
-  Region and CSTA mastery = the share of tagged quests at Secure or Developing, plus the
-  knowledge-check best score.
-- **CSV exports** (UTF-8 with BOM for Excel, RFC 4180 quoting, cells starting with
-  `= + - @` prefixed with `'` to stop CSV formula injection, since nicknames are student
-  input):
-  - `progress_long.csv`: nickname, profile_id, quest_id, region, type, status, attempts,
-    hints_used, active_minutes, completed_on, mastery, precision
-  - `summary_wide.csv`: one row per student: XP, level, quests completed, regions completed,
-    check scores per region, total minutes
-  - `outcomes.csv`: student × CSTA code mastery
-
-### 13.4 Teacher guide and authoring guide
-
-- `docs/teacher-guide.md` and `docs/quest-authoring.md` are authored in Markdown.
-- **Generated parts** (`npm run docs:generate`) mean they cannot drift from the content:
-  - the curriculum tables
-  - answer keys from `solution`
-  - misconceptions from the region "Watch for" lists
-- The build renders the guide to the safe text AST. It is shown in-app at **For Teachers**.
-  Answer-key sections require teacher mode.
-- **Lesson plans** use a 45-minute format: warm-up (8 min) → play (30) → discussion (7), plus
-  an unplugged prompt and misconceptions to watch for.
-
----
+- `npm run solutions` generates **`docs/solutions.md`** from the content files. For every region
+  it lists:
+  - the concepts and the concept-scene analogy
+  - per quest (and boss phase): type, learning outcome, CSTA codes, the reference solution,
+    predict/investigate answers, the common mistakes with the feedback students see, and the
+    three hints
+  - knowledge-check answers with their explanations
+- The generated file is committed, so it stays in step with the content (CI checks that it is
+  up to date).
+- **Solutions never ship in the game.** The build drops them from the compiled content. A
+  student can't find them in the app bundle.
+- **Caveat:** the YAML in `content/` and `docs/solutions.md` both contain solutions. If the
+  repository is public, students could find them there. A private repository (or keeping the
+  answer key elsewhere) avoids that.
+- `docs/quest-authoring.md` remains for anyone who edits or adds quests (§10).
 
 ## 14. Accessibility design
 
@@ -1382,14 +1318,14 @@ only a convenience; the save code or progress file is the real copy.
 | SC | How Codeweald meets it |
 |---|---|
 | 1.1.1 Non-text content | Alt text for item icons, avatars and badges; canvas description; decorative art `aria-hidden` |
-| 1.3.1 Info & relationships | Semantic headings, lists and tables; labelled form fields; dashboard uses real `<table>` |
+| 1.3.1 Info & relationships | Semantic headings, lists and tables; labelled form fields; the Jar Shelf uses a real `<table>` |
 | 1.4.1 Use of color | Status always has icon + text (✓ ◐ ○, "Passed", "Not yet"); diagnostics have gutter icons; Parsons indentation has guides + text |
 | 1.4.3 / 1.4.11 Contrast | Tokens verified ≥ 4.5:1 text, ≥ 3:1 UI and focus; checked by axe in CI and a token unit test |
 | 1.4.4 Resize text | Text scale 100–200% (rem-based); editor font separate |
 | 1.4.10 Reflow | DOM panels reflow to a single column; the canvas is a 2D game area (allowed exception) |
 | 1.4.12 Text spacing | No fixed-height text boxes |
 | 1.4.13 Content on hover/focus | Glossary toggletips are dismissible (Esc), hoverable and persistent |
-| 2.1.1 Keyboard | Everything, including movement, Parsons, editor and dashboard |
+| 2.1.1 Keyboard | Everything, including movement, Parsons and the editor |
 | 2.1.2 No keyboard trap | Editor: Esc then Tab; modals trap focus *intentionally* and close with Esc |
 | 2.1.4 Character key shortcuts | Single-key shortcuts (WASD and arrows, `E`, `L`, `Q`, and the replay keys `Space` and `.`) are active only when the world, HUD or replay toolbar has focus, and can be turned off in Settings |
 | 2.2.1 / 2.2.2 Timing; pause | No timed tasks. Dialogue never auto-advances. Replay can be paused. Ambient animation stops with reduced motion. The code timeout is a safety stop, not a user time limit. |
@@ -1456,11 +1392,11 @@ toggle, before any profile exists.
   - nicknames only, with real-name discouragement and filtering
   - no email, accounts or device identifiers
   - dates only, no timestamps of day
-- **No data leaves the device** except through a student- or teacher-initiated file
-  download/upload, or a save code the student copies.
+- **No data leaves the device** except through a student-initiated file download/upload,
+  or a save code the student copies.
 - **No analytics, trackers, external fonts or CDNs.** Every asset is bundled.
-- The teacher guide includes a short "Handling exported files" note: exported progress files
-  are education records under school control, so store them on school systems.
+- The README includes a short "Handling exported files" note: a progress file contains
+  the student's nickname and code, so keep it somewhere private.
 
 ### 15.2 Network
 
@@ -1479,15 +1415,13 @@ toggle, before any profile exists.
 |---|---|
 | Student code | Sandboxed worker (§6.4) |
 | Imported progress files / save codes | Size limit, Zod validation, checksum; values only ever rendered as text |
-| Nicknames | Filtered, length-limited, escaped; CSV-injection guard on export |
-| Content YAML | Trusted (teacher-authored) but still rendered through the safe text AST, never as HTML |
+| Nicknames | Filtered, length-limited, escaped |
+| Content YAML | Trusted (written by course authors) but still rendered through the safe text AST, never as HTML |
 
 ### 15.4 Known limits (accepted)
 
-- A student with dev tools can read obfuscated solutions, edit their IndexedDB progress or
-  skip the teacher gate.
-- This is low-stakes, formative practice. The dashboard says "self-reported progress"
-  accordingly.
+- A student with dev tools can edit their IndexedDB progress. Solutions are not in the bundle.
+- This is low-stakes, self-paced practice, so that is acceptable.
 
 ---
 
@@ -1495,8 +1429,7 @@ toggle, before any profile exists.
 
 - `vite-plugin-pwa` (Workbox) generates the service worker and the web app manifest
   (original icons, `display: standalone`, theme color).
-- **Precache:** the app shell, JS/CSS chunks, fonts, art, audio, content JSON and the teacher
-  guide.
+- **Precache:** the app shell, JS/CSS chunks, fonts, art, audio and content JSON.
 - **Pyodide** (≈ 14 MB unpacked: `pyodide.asm.wasm`, `python_stdlib.zip`, `pyodide.asm.js`,
   `pyodide.mjs`, `pyodide-lock.json`) is **runtime-cached** (CacheFirst, cache name
   `pyodide-<version>`), not precached. This avoids a double download on the first visit:
@@ -1546,7 +1479,7 @@ toggle, before any profile exists.
 - Save/load: `fake-indexeddb`, migrations, the fallback chain.
 - Progress files and save codes: round-trip, typo detection, fuzzing.
 - Schema: good and bad fixtures for every schema.
-- XP/levels, badge triggers, nickname filter, class code, CSV escaping, glossary linker,
+- XP/levels, badge triggers, nickname filter, glossary linker,
   reading-level calculator.
 - Parsons keyboard reducer, replay scheduling and narration merging.
 
@@ -1587,10 +1520,9 @@ CI fails if any quest lacks a passing solution or has fewer than 2 wrong solutio
    quest.
 6. **No third-party requests:** a request listener asserts same-origin only.
 7. **axe-core** (`@axe-core/playwright`) on every main screen: title, creator, overworld HUD,
-   quest (each type), inventory, spellbook, workshop, settings, knowledge check, teacher
-   dashboard. Zero serious/critical violations.
+   quest (each type), inventory, spellbook, workshop, settings, knowledge check. Zero
+   serious/critical violations.
 8. **Throttled smoke:** 4× CPU and slow-network profile; asserts the §17 budgets.
-9. **Teacher:** unlock → import 3 progress files → export CSV → check columns.
 
 ### 18.5 Reading level
 
@@ -1640,14 +1572,12 @@ dispatch) publishes `dist/` to GitHub Pages.
 ```json
 {
   "courseId": "codeweald-intro-python",
-  "teacher": { "passphraseHash": "sha256:<salt>:<hex>", "autoLockMinutes": 30 },
   "execution": { "timeoutSeconds": 3, "loopBudget": 100000, "workshopLoopBudget": 1000000,
                  "maxActions": 2000, "maxOutputChars": 100000 },
   "defaults": { "hints": "all", "textScale": 1, "reducedMotion": "system", "tts": false,
                 "replaySpeed": 1, "soundEffects": false },
   "features": { "workshop": true, "sideQuests": true, "knowledgeCheckGates": false,
-                "standbyWorker": "off" },
-  "mastery": { "secureMaxHints": 1, "secureMaxAttempts": 5 }
+                "standbyWorker": "off" }
 }
 ```
 
@@ -1672,7 +1602,7 @@ The build prints a pacing summary from `course.yaml`: total lessons, minutes and
 | Risk | Impact | Mitigation |
 |---|---|---|
 | **Managed Chromebooks may wipe local data at sign-out** (decided Q3: students must save progress) | Lost progress | §12.5: save code and progress file are Phase 1 features; "Continue from a save" on the title screen; unsaved-progress marker; save-point toasts; leave-page warning; lesson plans end with a save step |
-| First Pyodide download (~14 MB) on a busy school network | Slow first day | Background loading during onboarding; teacher guide suggests opening the game once per device before class; the SW keeps it cached |
+| First Pyodide download (~14 MB) on a busy school network | Slow first day | Background loading during onboarding; the README suggests opening the game once on each device before first use; the SW keeps it cached |
 | School web filters block `.wasm` or service workers | Game can't run Python | Deployment checklist and a built-in **System check** page (SW, IndexedDB, WASM, storage quota, local TTS voices) |
 | Worker restart (layer-3 timeout) takes 2–5 s on weak devices | Frustration | Layer 1 catches almost all loops without a restart; optional standby worker |
 | Phaser 4 is young (4.0 shipped April 2026) and most online examples are still v3 | Renderer bugs on weak GPUs; v3 snippets that don't work | Pinned version; `WorldView` adapter; Canvas fallback if WebGL fails; test on a throttled, low-end profile from Phase 1 |

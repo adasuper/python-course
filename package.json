@@ -24,7 +24,8 @@
     "reading-level": "tsx scripts/reading-level.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "solutions": "tsx scripts/solutions.ts"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.4",

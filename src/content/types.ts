@@ -47,8 +47,8 @@ export interface QuestBody {
   parsons: ParsonsSpec | null;
   jarShelf: boolean;
   bonus: BonusSpec[];
-  /** Obfuscated reference solution, for teacher mode only. */
-  solutionEnc: string;
+  // Reference solutions never ship in the game (owner decision Q13); instructors read
+  // them in docs/solutions.md.
 }
 
 export interface Phase extends QuestBody {
@@ -189,17 +189,3 @@ export const BOSS_PHASE_XP = 40;
 export const BOSS_DEFEAT_XP = 50;
 export const SIDE_QUEST_XP = 40;
 export const CHECK_XP = 20;
-
-/** Light obfuscation so solutions aren't readable at a glance in the bundle (not security). */
-export function obfuscate(text: string): string {
-  const bytes = new TextEncoder().encode(text).map((b, i) => b ^ (0x5a + (i % 7)));
-  let bin = '';
-  bytes.forEach((b) => (bin += String.fromCharCode(b)));
-  return btoa(bin);
-}
-
-export function deobfuscate(encoded: string): string {
-  const bin = atob(encoded);
-  const bytes = Uint8Array.from(bin, (c, i) => c.charCodeAt(0) ^ (0x5a + (i % 7)));
-  return new TextDecoder().decode(bytes);
-}

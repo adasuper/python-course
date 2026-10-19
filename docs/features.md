@@ -17,8 +17,8 @@ for each phase.
 | Role | Who |
 |---|---|
 | **Student** | A grade 6–8 learner (ages 11–14) with no coding experience |
-| **Teacher** | Runs the class; uses teacher mode, the dashboard and the guide |
-| **Content author** | A teacher (or helper) who edits quest YAML files; moderate technical skill |
+| **Instructor** | Supports students taking the self-paced course; reads the answer key to prepare for questions |
+| **Content author** | An instructor (or helper) who edits quest YAML files; moderate technical skill |
 | **School IT admin** | Deploys the static site and manages Chromebooks and lab PCs |
 | **Maintainer** | A developer who works on the engine |
 
@@ -29,7 +29,7 @@ criteria, then one metadata line:
 **Priority (MoSCoW)**
 
 - **Must** — required by the brief, or needed to meet a brief requirement.
-- **Should** — a design addition from the spec that clearly helps learners or teachers.
+- **Should** — a design addition from the spec that clearly helps learners or instructors.
 - **Could** — nice to have; may slip without harming the course.
 
 **Phases**
@@ -40,7 +40,7 @@ criteria, then one metadata line:
 | 2 | Core loop polish: all quest types incl. accessible Parsons, hints, error translation, XP/items/badges, inventory and Spellbook reference, Workshop |
 | 3 | Regions 2–6 |
 | 4 | Regions 7–11, incl. the capstone |
-| 5 | Teacher features: teacher mode, dashboard, CSV, teacher guide, authoring guide |
+| 5 | Instructor answer key and authoring guide (no in-app teacher features — owner decision Q13) |
 | 6 | Hardening: accessibility audit, offline verification, low-end performance, reading level, content review, deployment docs |
 
 **Split stories.** When a feature starts small and grows, it is split into two stories (for
@@ -69,13 +69,12 @@ must deliver all of Region 1. `fix`, `make` and `boss` are Phase 1 in any case.
 | [F-SAV](#f-sav--save-load-exportimport-and-save-codes) | Save, load, export/import and save codes | 10 | 1–2 |
 | [F-A11](#f-a11--accessibility-and-settings) | Accessibility and settings | 15 | 1–2, 6 |
 | [F-OFF](#f-off--offlinepwa-and-privacy) | Offline/PWA and privacy | 9 | 1–2, 5–6 |
-| [F-TCH](#f-tch--teacher-mode-class-code-and-guide) | Teacher mode, class code and guide | 10 | 5 |
-| [F-DSH](#f-dsh--teacher-dashboard-and-csv) | Teacher dashboard and CSV | 9 | 5 |
+| [F-INS](#f-ins--instructor-answer-key) | Instructor answer key | 2 | 5 |
 | [F-AUT](#f-aut--content-authoring-and-validation-tooling) | Content authoring and validation tooling | 11 | 1–3, 5 |
 | [F-CUR](#f-cur--curriculum-content) | Curriculum content | 11 | 1–4 |
 | [F-QA](#f-qa--testing-ci-performance-and-reading-level) | Testing, CI, performance and reading level | 19 | 1–2, 5–6 |
 | [F-DEP](#f-dep--deployment-and-documentation) | Deployment and documentation | 10 | 0–1, 5–6 |
-| | **Total** | **210** | |
+| | **Total** | **193** | |
 
 ---
 
@@ -129,7 +128,7 @@ As a Student, I want a nickname box with a "Make one for me" button, so that I n
 Priority: Must · Phase: 1 · Spec: §11.8, §15.1 · Brief: §3.1, §1
 
 ### F-ONB-06 — Block rude or personal nicknames
-As a Teacher, I want nicknames filtered for profanity and personal details, so that names on screen and in reports are safe for class.
+As an Instructor, I want nicknames filtered for profanity and personal details, so that names on screen and in reports are safe for class.
 **Acceptance criteria**
 - The filter runs locally: it lowercases, strips accents, maps leetspeak (`0→o 1→i 3→e 4→a 5→s 7→t @→a $→s`), collapses repeats and removes separators before checking a bundled blocklist.
 - An allowlist prevents false hits on innocent words (the "Scunthorpe problem").
@@ -215,7 +214,7 @@ Priority: Must · Phase: 2 · Spec: §14.1 · Brief: §1
 As a Content author, I want quests without a map NPC to appear on a region's Quest Board, so that adding a quest never needs a map edit.
 **Acceptance criteria**
 - Each region map has a Quest Board object; it lists side quests and any quest without an `npc`.
-- Side quests appear once the region's core quests are done, or earlier if the teacher enables it.
+- Side quests appear once the region's core quests are done.
 
 Priority: Must · Phase: 2 · Spec: §11.1, §9.9 · Brief: §2, §4
 
@@ -223,7 +222,7 @@ Priority: Must · Phase: 2 · Spec: §11.1, §9.9 · Brief: §2, §4
 As a Student, I want a world map that shows which regions I have unlocked, so that I can travel to the next one.
 **Acceptance criteria**
 - The world map is a DOM list plus an illustration; each region shows locked/unlocked/restored with text and an icon.
-- A region unlocks when the previous region's boss is defeated, or by teacher mode or the class code (F-TCH-03, F-TCH-07).
+- A region unlocks when the previous region's boss is defeated.
 - Quests inside a region follow their `prerequisites`.
 
 Priority: Must · Phase: 3 · Spec: §11.1 · Brief: §3.2, §4
@@ -481,7 +480,7 @@ As a Student, I want a box to pop up when my program calls `input()` in the Work
 Priority: Must · Phase: 2 · Spec: §6.5 (Mode B), D6 · Brief: §2.1
 
 ### F-EXE-14 — Checks can't be tricked from student code
-As a Teacher, I want quest checks protected from student code, so that a pass means the code really worked.
+As an Instructor, I want quest checks protected from student code, so that a pass means the code really worked.
 **Acceptance criteria**
 - Validators run from a module copy re-imported from a frozen source string *after* the student run.
 - A test shows monkeypatching `codeweald` during a run cannot fake a pass.
@@ -650,7 +649,7 @@ As a Student, I want to guess what code will print before running it, so that I 
 **Acceptance criteria**
 - The code is read-only; I answer each prompt (multiple choice or typed output) and press "Lock in prediction" before Run is enabled.
 - After the run, a wrong prediction shows a side-by-side "predicted vs. actual" view with the YAML `explain` text.
-- The quest completes when every prompt is answered and the code has run; first-try correctness is recorded for mastery data.
+- The quest completes when every prompt is answered and the code has run; first-try correctness is recorded in the student's progress.
 
 Priority: Must · Phase: 2 · Spec: §9.2 · Brief: §3.3
 
@@ -721,7 +720,7 @@ As a Student, I want to write a program from almost nothing, so that I can show 
 Priority: Must · Phase: 1 · Spec: §9.2 · Brief: §3.3
 
 ### F-QST-13 — Track attempts and time fairly
-As a Teacher, I want attempts, distinct tries and active time recorded per quest, so that I can see who is struggling.
+As a Student, I want my attempts, distinct tries and active time recorded per quest, so that badges like *Tinkerer* and *Never Give Up* can celebrate my persistence.
 **Acceptance criteria**
 - An attempt is one Run that reaches validation, or one locked-in prediction.
 - Distinct attempts count unique code hashes.
@@ -835,7 +834,7 @@ Priority: Should · Phase: 4 · Spec: §6.8 · Brief: §4
 As a Student, I want up to three hints that get more helpful, so that I can get unstuck without being given the answer.
 **Acceptance criteria**
 - Exactly 3 tiers per quest: nudge → targeted explanation → near-complete example with a gap. They unlock in order.
-- `hintsUsed` (0–3) is recorded for the teacher report only.
+- `hintsUsed` (0–3) is recorded only for the student's own progress and badges, never as a penalty.
 
 Priority: Must · Phase: 1 · Spec: §9.5 · Brief: §3.2
 
@@ -978,12 +977,12 @@ As a Student, I want a short review quiz at the end of each region that I can re
 **Acceptance criteria**
 - 3–5 items mixing multiple choice and predict-the-output, each with an `explain`.
 - Options are shuffled per attempt; results use icons and text; best and latest scores are stored.
-- It does not gate the next region by default (teacher option: F-TCH-08).
+- It does not gate the next region (course authors can change this with `features.knowledgeCheckGates`).
 
 Priority: Must · Phase: 1 · Spec: §9.7 · Brief: §4
 
 ### F-BOS-05 — Side quests for fast finishers
-As a Teacher with a mixed-ability class, I want optional side quests, so that fast finishers stay busy and challenged.
+As an Instructor, I want optional side quests, so that fast finishers stay busy and challenged.
 **Acceptance criteria**
 - Quests with `side_quest: true` never block progress and appear on the Quest Board (F-WLD-07).
 - They award bonus XP and count toward Side Questor badges.
@@ -1006,7 +1005,7 @@ Priority: Must · Phase: 4 · Spec: §9.6, §6.5 · Brief: §4
 ### F-WSH-01 — Unlock the Workshop
 As a Student, I want a Workshop that opens after the Region 1 boss, so that I can play with code freely.
 **Acceptance criteria**
-- The Workshop unlocks when the Region 1 boss is defeated (or via teacher mode).
+- The Workshop unlocks when the Region 1 boss is defeated.
 - I can pick a sandbox map from `workshop.yaml` (meadow, maze, treasure vault, empty large grid).
 
 Priority: Must · Phase: 2 · Spec: §11.7 · Brief: §3.2
@@ -1020,7 +1019,7 @@ As a Student, I want to run any code with the game API and no checks, so that I 
 Priority: Must · Phase: 2 · Spec: §11.7, §6.3 · Brief: §3.2
 
 ### F-WSH-03 — Keep my inventions
-As a Student, I want to save my Workshop programs and download them, so that I can come back to them or share them with my teacher.
+As a Student, I want to save my Workshop programs and download them, so that I can come back to them or share them.
 **Acceptance criteria**
 - Up to 20 named programs are saved locally per profile.
 - "Download .py" exports a program as a file (a local download; no network).
@@ -1041,7 +1040,7 @@ Priority: Should · Phase: 2 · Spec: §11.7 · Brief: §3.2
 ### F-SAV-01 — Progress saves itself
 As a Student, I want my progress saved automatically, so that I can close the tab and come back later.
 **Acceptance criteria**
-- Profiles are stored in IndexedDB (`codeweald` database: `profiles`, `drafts`, `teacher` stores via `idb-keyval`).
+- Profiles are stored in IndexedDB (`codeweald` database: `profiles` and `drafts` via `idb-keyval`).
 - Saves are debounced 500 ms and flushed on `visibilitychange` and `pagehide`; `navigator.storage.persist()` is requested.
 - Reloading the page restores everything (F-QA-06).
 
@@ -1105,7 +1104,7 @@ As a Student on a school Chromebook that wipes data at sign-out, I want a remind
 - The HUD shows an "Unsaved progress" marker (icon + text) whenever progress changed since my last save code or file.
 - After each completed quest and boss phase, a non-blocking "Save point" toast offers **Copy save code** and **Save file**.
 - Closing the tab with unsaved progress triggers the browser's leave-page warning.
-- The teacher guide's lesson plans end with a 2-minute "save your progress" step.
+- The title screen reminds students that school computers may forget progress, so they should save at the end of every session.
 
 Priority: Must · Phase: 1 · Spec: §12.5 · Brief: §1
 
@@ -1132,7 +1131,7 @@ Priority: Must · Phase: 1 · Spec: §12.5 · Brief: §1
 ### F-A11-01 — Play everything with a keyboard
 As a Student who uses only a keyboard, I want every part of the game to work from the keyboard, so that I'm never blocked.
 **Acceptance criteria**
-- Movement, menus, dialogue, editor, replay controls, quests, inventory and (later) the dashboard all work without a mouse, in a logical focus order.
+- Movement, menus, dialogue, editor, replay controls, quests and inventory all work without a mouse, in a logical focus order.
 - Modals trap focus on purpose and close with Esc, returning focus.
 
 Priority: Must · Phase: 1 · Spec: §14.2 (2.1.1, 2.1.2, 2.4.3) · Brief: §1
@@ -1237,7 +1236,7 @@ As a Student using zoom, I want panels to stack in one column, so that I don't s
 Priority: Should · Phase: 2 · Spec: §14.2 (1.4.10) · Brief: §1
 
 ### F-A11-15 — WCAG 2.1 AA audit
-As a Teacher, I want the game checked against WCAG 2.1 AA, so that every student in my class can use it.
+As an Instructor, I want the game checked against WCAG 2.1 AA, so that every student in my class can use it.
 **Acceptance criteria**
 - A manual audit against the §14.2 criteria (keyboard, NVDA/ChromeVox screen readers, 200% zoom, reduced motion, colorblind simulation) is done and its findings are fixed or logged in `PROGRESS.md`.
 - axe-core reports zero serious/critical violations on all main screens (F-QA-10).
@@ -1252,7 +1251,7 @@ Priority: Must · Phase: 6 · Spec: §14 · Brief: §1, §7, §8
 As a School IT admin, I want an installable app that works offline after the first load, so that flaky school Wi-Fi doesn't stop class.
 **Acceptance criteria**
 - `vite-plugin-pwa` (Workbox) generates the service worker and a manifest (original icons, `display: standalone`).
-- The app shell, JS/CSS, fonts, art, audio, content JSON and teacher guide are precached.
+- The app shell, JS/CSS, fonts, art, audio and content JSON are precached.
 
 Priority: Must · Phase: 2 · Spec: §16 · Brief: §1
 
@@ -1290,15 +1289,15 @@ As a School IT admin, I want no third-party requests and no network calls after 
 Priority: Must · Phase: 1 · Spec: §15.2 · Brief: §1
 
 ### F-OFF-06 — No personal information
-As a Teacher, I want the game to collect no personal information, so that it is COPPA/FERPA-friendly.
+As an Instructor, I want the game to collect no personal information, so that it is COPPA/FERPA-friendly.
 **Acceptance criteria**
 - Only a nickname is stored; no email, account or device identifier; dates only (no time of day).
-- No data leaves the device except a file the student or teacher chooses to download, or a save code they copy.
+- No data leaves the device except a file the student chooses to download, or a save code they copy.
 
 Priority: Must · Phase: 1 · Spec: §15.1 · Brief: §1
 
 ### F-OFF-07 — Imported files can't cause harm
-As a Teacher, I want imported files and codes treated as untrusted, so that a tampered file can't break or hijack the app.
+As an Instructor, I want imported files and codes treated as untrusted, so that a tampered file can't break or hijack the app.
 **Acceptance criteria**
 - Imports are size-limited, Zod-validated and checksummed; their values are only rendered as text.
 - Malformed files show a friendly error and change nothing.
@@ -1313,168 +1312,36 @@ As a School IT admin, I want a built-in system check, so that I can see quickly 
 Priority: Should · Phase: 6 · Spec: §21 · Brief: §1, §8
 
 ### F-OFF-09 — Honest about limits
-As a Teacher, I want the dashboard and guide to say progress is self-reported, so that I use it for formative feedback, not grading.
+As an Instructor, I want the dashboard and guide to say progress is self-reported, so that I use it for formative feedback, not grading.
 **Acceptance criteria**
-- The dashboard labels data "self-reported progress"; the teacher guide explains §15.4's known limits (dev tools can alter progress or reveal obfuscated solutions).
+- The README explains §15.4's known limits (dev tools can alter local progress); solutions are not in the bundle.
 
 Priority: Should · Phase: 5 · Spec: §15.4 · Brief: §6
 
 ---
 
-## F-TCH — Teacher mode, class code and guide
+## F-INS — Instructor answer key
 
-### F-TCH-01 — Unlock teacher mode with a passphrase
-As a Teacher, I want a local passphrase to open teacher tools, so that I get teacher features without an account.
+The course is self-paced and the app has **no teacher features** (owner decision Q13). Instructors
+still get every solution, outside the app.
+
+### F-INS-01 — A generated answer key for instructors
+As an Instructor, I want one document with every quest's solution, answers and common mistakes, so that I'm ready for students' questions.
 **Acceptance criteria**
-- The passphrase is checked against `teacher.passphraseHash` (`sha256:<salt>:<hex>`) in `public/codeweald.config.json` using SubtleCrypto.
-- Unlock lasts for the browser session and auto-locks after 30 minutes idle (`autoLockMinutes`).
-- The UI states that this keeps students out of teacher screens but is not strong security.
+- `npm run solutions` writes `docs/solutions.md` from the content files.
+- For each region it covers the concepts, and for each quest and boss phase: type, learning outcome, CSTA codes, reference solution, predict/investigate answers, common mistakes with the feedback students see, and the hints.
+- It includes knowledge-check answers with explanations.
+- CI fails if the committed file is out of date with the content.
 
-Priority: Must · Phase: 5 · Spec: §13.1, D15 · Brief: §6
+Priority: Must · Phase: 1 (Region 1), 3–4 (grows with content) · Spec: §13 · Brief: §6
 
-### F-TCH-02 — Change the passphrase
-As a School IT admin, I want to set our own passphrase without rebuilding, so that the default isn't known to students.
+### F-INS-02 — Solutions never ship in the game
+As an Instructor, I want reference solutions kept out of the app, so that students can't simply look them up in the browser.
 **Acceptance criteria**
-- `npm run set-passphrase` writes a new salted hash into `codeweald.config.json`; the file can also be edited after build.
-- While the documented default is in use, teacher mode shows a "Change the default passphrase" banner.
+- The compiled content in the build contains no reference solutions.
+- A unit test checks that the generated content JSON contains no `solution` fields.
 
-Priority: Must · Phase: 5 · Spec: §13.1 · Brief: §6
-
-### F-TCH-03 — Unlock regions for a student
-As a Teacher, I want to unlock any region on a device, so that absent students can catch up and I can demo later content.
-**Acceptance criteria**
-- In teacher mode, "Unlock through region N" applies to the current profile (stored as `teacherUnlocks`).
-
-Priority: Must · Phase: 5 · Spec: §13.1 · Brief: §6
-
-### F-TCH-04 — See solutions and answer keys
-As a Teacher, I want to see the reference solution for any quest, so that I can help students quickly.
-**Acceptance criteria**
-- In teacher mode, each quest has a "Teacher" tab showing the reference solution, hidden-test cases and knowledge-check answers.
-- Solutions are de-obfuscated only inside teacher mode.
-
-Priority: Must · Phase: 5 · Spec: §13.1, §15.4 · Brief: §6
-
-### F-TCH-05 — Turn hints on or off on this device
-As a Teacher, I want to set hints to all, nudge (tier 1 only) or off on a device, so that I can match my lesson plan.
-**Acceptance criteria**
-- The setting changes which tiers the hint panel offers; the change is announced.
-
-Priority: Must · Phase: 5 · Spec: §13.1, §9.5 · Brief: §6
-
-### F-TCH-06 — Make a class code
-As a Teacher, I want to generate a short class code with my settings, so that my whole class uses the same settings without a server.
-**Acceptance criteria**
-- Teacher mode generates `CWC-XXXX-XXXX` (Base32 + check) encoding version, hints (`all`/`nudge`/`off`), unlocked-through region, enabled-regions bitmask, code timeout and knowledge-check gating.
-- The code is shown large enough to copy onto a board.
-
-Priority: Must · Phase: 5 · Spec: §13.2, D16 · Brief: §6
-
-### F-TCH-07 — Enter the class code
-As a Student, I want to type my class code once, so that my game uses my teacher's settings.
-**Acceptance criteria**
-- Settings → Class code accepts the code; a bad check character gives a typo message.
-- Once applied, "Class settings active" shows and locked settings (e.g. hints) can't be changed without teacher mode.
-
-Priority: Must · Phase: 5 · Spec: §13.2 · Brief: §6
-
-### F-TCH-08 — Require the knowledge check
-As a Teacher, I want the option to make each region's knowledge check required, so that students review before moving on.
-**Acceptance criteria**
-- With gating on (class code or config `knowledgeCheckGates`), the next region unlocks only after the check is completed (any score).
-
-Priority: Could · Phase: 5 · Spec: §9.7, §13.2 · Brief: §4, §6
-
-### F-TCH-09 — Read the teacher guide in the app
-As a Teacher, I want the teacher guide inside the game behind a "For Teachers" link, so that I don't need another website.
-**Acceptance criteria**
-- `docs/teacher-guide.md` is rendered at build through the safe text tree and shown at **For Teachers**.
-- Answer-key sections appear only in teacher mode.
-
-Priority: Must · Phase: 5 · Spec: §13.4 · Brief: §6
-
-### F-TCH-10 — A complete teacher guide
-As a Teacher, I want lesson plans, standards and answer keys, so that I can teach the course with little prep.
-**Acceptance criteria**
-- Includes the curriculum map; learning outcomes per region aligned to CSTA K-12 CS Standards for grades 6–8 (codes cited, e.g. 2-AP-11 … 2-AP-19); 45-minute lesson plans per region (warm-up 8 · play 30 · discussion 7); answer keys; unplugged discussion prompts; common misconceptions; a "Handling exported files" note.
-- Curriculum tables, answer keys and misconceptions are generated from content with `npm run docs:generate`, so they can't drift.
-
-Priority: Must · Phase: 5 · Spec: §13.4, §15.1 · Brief: §6, §9
-
----
-
-## F-DSH — Teacher dashboard and CSV
-
-### F-DSH-01 — Load my class's progress files
-As a Teacher, I want to load many student progress files at once, so that I can see the whole class.
-**Acceptance criteria**
-- The dashboard (teacher mode) accepts multiple `.codeweald.json` files via file picker or drag-and-drop.
-- Invalid files are listed with a reason; valid ones load. Data stays in memory, on this device.
-
-Priority: Must · Phase: 5 · Spec: §13.3 · Brief: §6
-
-### F-DSH-02 — Paste save codes
-As a Teacher, I want to paste students' save codes, so that I can include students who handed in codes instead of files.
-**Acceptance criteria**
-- A text box accepts one or more `CW1-` codes; each decodes into a student row.
-- Rows from codes are marked "from save code (bucketed attempts and time)", and attempts/time show as ranges.
-- Records with the same profile id (from files or codes) merge, keeping the newest export; different profiles with the same nickname show as "Clever Newt (2)" and can be renamed.
-
-Priority: Must · Phase: 5 · Spec: §13.3, §12.4 · Brief: §6
-
-### F-DSH-03 — Remember my class on this computer
-As a Teacher, I want to keep imported data on my own device, so that I don't re-import every time.
-**Acceptance criteria**
-- "Remember this class on this device" stores data in the `teacher` IndexedDB store; "Forget class data" erases it.
-
-Priority: Should · Phase: 5 · Spec: §13.3 · Brief: §6
-
-### F-DSH-04 — Class overview
-As a Teacher, I want a students × regions grid, so that I can see who is where at a glance.
-**Acceptance criteria**
-- Each cell shows a symbol plus text (`✓ 6/6`, `◐ 3/6`, `○`) in a real `<table>` with headers.
-- Sortable and filterable by keyboard.
-
-Priority: Must · Phase: 5 · Spec: §13.3, §14.2 (1.3.1) · Brief: §6
-
-### F-DSH-05 — Quest detail
-As a Teacher, I want per-quest statistics, so that I can spot quests the class finds hard.
-**Acceptance criteria**
-- Shows completion %, median attempts, hint-tier distribution and median active time.
-
-Priority: Must · Phase: 5 · Spec: §13.3 · Brief: §6
-
-### F-DSH-06 — Student detail
-As a Teacher, I want one student's full record, so that I can support them one-on-one.
-**Acceptance criteria**
-- Shows every quest record (status, attempts, hints, time), knowledge-check scores and, from files, their passing code (read-only, rendered as text).
-
-Priority: Must · Phase: 5 · Spec: §13.3 · Brief: §6
-
-### F-DSH-07 — Mastery by learning outcome
-As a Teacher, I want mastery shown per learning outcome, region and CSTA standard, so that I know what to reteach.
-**Acceptance criteria**
-- Per quest: *Secure* (completed with ≤ 1 hint tier and ≤ 5 attempts, or predictions correct first try), *Developing* (completed otherwise), *Beginning* (in progress), *Not started*.
-- Region/CSTA mastery = share of tagged quests at Secure or Developing, plus the knowledge-check best score.
-- Thresholds come from `mastery` in `codeweald.config.json`.
-
-Priority: Must · Phase: 5 · Spec: §13.3, §20 · Brief: §6
-
-### F-DSH-08 — Export to CSV
-As a Teacher, I want CSV files of the data, so that I can use them in a spreadsheet or gradebook.
-**Acceptance criteria**
-- Exports `progress_long.csv`, `summary_wide.csv` and `outcomes.csv` with the columns in §13.3, including a `precision` column (`exact` from files, `bucketed` from save codes).
-- UTF-8 with BOM (opens cleanly in Excel) and RFC 4180 quoting.
-- Nothing is uploaded; files are local downloads.
-
-Priority: Must · Phase: 5 · Spec: §13.3 · Brief: §6
-
-### F-DSH-09 — Safe CSV files
-As a Teacher, I want CSV exports protected against formula injection, so that a mischievous nickname can't run anything in my spreadsheet.
-**Acceptance criteria**
-- Any cell starting with `=`, `+`, `-` or `@` is prefixed with `'`; unit tests cover each case.
-
-Priority: Must · Phase: 5 · Spec: §13.3, §15.3 · Brief: §6
+Priority: Must · Phase: 1 · Spec: §13, §10.6 · Brief: §2.2
 
 ---
 
@@ -1515,7 +1382,7 @@ Priority: Must · Phase: 1 · Spec: §10.3 · Brief: §4, §5
 As a Content author, I want `npm run validate-content`, so that I know my quest works before anyone plays it.
 **Acceptance criteria**
 - Runs schema and cross-ref checks, runs every reference solution through its validators, runs every `wrong_solution` and checks its expected mistake, and prints the reading-level report.
-- Exits non-zero on any failure, with a summary teachers can read.
+- Exits non-zero on any failure, with a summary authors can read.
 
 Priority: Must · Phase: 1 · Spec: §10.6 · Brief: §6, §7
 
@@ -1523,7 +1390,7 @@ Priority: Must · Phase: 1 · Spec: §10.6 · Brief: §6, §7
 As a Maintainer, I want YAML compiled to small JSON files at build, so that the browser loads fast and needs no YAML parser.
 **Acceptance criteria**
 - `build-content.ts` emits `src/generated/content/{course.json, region-NN.json}`; regions load lazily.
-- Text is compiled to the safe AST (F-DLG-02); solutions are obfuscated for teacher view only.
+- Text is compiled to the safe AST (F-DLG-02); reference solutions are dropped from the game bundle (they appear only in the instructor answer key).
 
 Priority: Must · Phase: 1 · Spec: §10.6, D10 · Brief: §2
 
@@ -1539,7 +1406,7 @@ Priority: Should · Phase: 2 · Spec: §10.4 · Brief: §2, §6
 As a Content author, I want the game to reload when I save a YAML file and a link straight to my quest, so that I can test quickly.
 **Acceptance criteria**
 - In `npm run dev`, changes under `content/` hot-reload.
-- `#/dev/quest/<id>` opens any quest directly (dev builds only).
+- `/?dev#/dev/quest/<id>` (or `/?dev#/dev/check/<region>`) opens any quest or knowledge check directly, only with the `?dev` flag.
 
 Priority: Should · Phase: 1 · Spec: §10.6 · Brief: §6
 
@@ -1558,7 +1425,7 @@ As a Content author, I want a step-by-step quest-writing guide, so that I can ad
 Priority: Must · Phase: 5 · Spec: §13.4, §10 · Brief: §6, §9
 
 ### F-AUT-11 — Make the course longer or shorter
-As a Teacher, I want to choose which regions and side quests are in the course, so that it fits my schedule.
+As an Instructor, I want to choose which regions and side quests are in the course, so that it fits the time students have.
 **Acceptance criteria**
 - `content/course.yaml` lists regions in order with `enabled` and `lessons`, plus `side_quests` on/off.
 - The build prints a pacing summary (total lessons, minutes and quests); disabled regions are skipped in gating.
@@ -1600,35 +1467,35 @@ As a Student, I want a final region where I rebuild the Great Script by making m
 Priority: Must · Phase: 4 · Spec: §9.6 · Brief: §4, §3.1
 
 ### F-CUR-05 — One measurable outcome per quest
-As a Teacher, I want every quest to state one measurable learning outcome with CSTA codes, so that I know exactly what each quest teaches.
+As an Instructor, I want every quest to state one measurable learning outcome with CSTA codes, so that I know exactly what each quest teaches.
 **Acceptance criteria**
 - Every quest and boss phase has one `learning_outcome` (action verb first) and ≥ 1 CSTA code (enforced by F-AUT-04).
 
 Priority: Must · Phase: 1–4 · Spec: §10.3 · Brief: §4, §5
 
 ### F-CUR-06 — A healthy mix of quest types
-As a Teacher, I want each region to mix PRIMM quest types, with at least one fix-the-bug quest, so that students predict, run, investigate, modify and make.
+As an Instructor, I want each region to mix PRIMM quest types, with at least one fix-the-bug quest, so that students predict, run, investigate, modify and make.
 **Acceptance criteria**
 - Each region mixes types as in the curriculum map's coverage matrix; ≥ 1 `fix` quest per region (enforced by F-AUT-03).
 
 Priority: Must · Phase: 1–4 · Spec: §9.2, §10.4 · Brief: §3.3, §4
 
 ### F-CUR-07 — Revisit earlier ideas
-As a Teacher, I want each region from Region 3 on to revisit an earlier concept, so that students remember what they learned.
+As an Instructor, I want each region from Region 3 on to revisit an earlier concept, so that students remember what they learned.
 **Acceptance criteria**
 - Each region ≥ 3 has ≥ 1 quest tagged `retrieval: rN` (enforced by F-AUT-03).
 
 Priority: Must · Phase: 3–4 · Spec: §10.4 · Brief: §4
 
 ### F-CUR-08 — Side quests in every region
-As a Teacher, I want 1–2 side quests per region, so that fast finishers always have something meaningful to do.
+As an Instructor, I want 1–2 side quests per region, so that fast finishers always have something meaningful to do.
 **Acceptance criteria**
 - Each region has the side quests listed in the curriculum map, using the F-BOS-05 mechanism.
 
 Priority: Must · Phase: 2–4 · Spec: §9.9 · Brief: §4
 
 ### F-CUR-09 — Debugging all the way through
-As a Teacher, I want debugging taught from Region 1 and consolidated in Region 10, so that students see errors as normal and fixable.
+As an Instructor, I want debugging taught from Region 1 and consolidated in Region 10, so that students see errors as normal and fixable.
 **Acceptance criteria**
 - Region 10 covers reading tracebacks, syntax vs. runtime vs. logic errors, tracing with `print`, rubber-duck debugging with Byte and testing edge cases.
 - Rubber-duck debugging is an interaction where the student explains their code line by line to Byte (and earns Duck Whisperer).
@@ -1637,7 +1504,7 @@ As a Teacher, I want debugging taught from Region 1 and consolidated in Region 1
 Priority: Must · Phase: 4 · Spec: §6.8, §11.6 · Brief: §4
 
 ### F-CUR-10 — An original, kind story
-As a Teacher, I want an original story with a warm, funny tone and only cartoonish "defeats", so that it suits ages 11–14 and avoids copyright problems.
+As an Instructor, I want an original story with a warm, funny tone and only cartoonish "defeats", so that it suits ages 11–14 and avoids copyright problems.
 **Acceptance criteria**
 - No copyrighted characters, franchises or recognizable game IP; Bugs are glitches that turn into fireflies.
 - Student-facing text targets grade 6 and is checked by F-QA-15.
@@ -1645,7 +1512,7 @@ As a Teacher, I want an original story with a warm, funny tone and only cartooni
 Priority: Must · Phase: 1–4 · Spec: §9.6, §18.5 · Brief: §3.1, §2
 
 ### F-CUR-11 — Quests and regions fit a class period
-As a Teacher, I want quests of 5–15 minutes and regions of about 30–60 minutes of core play, so that the course fits my lessons.
+As an Instructor, I want quests of 5–15 minutes and regions of about 30–60 minutes of core play, so that the course fits short self-paced study sessions.
 **Acceptance criteria**
 - `estimated_minutes` is 5–15 per quest (5–10 per boss phase), enforced by the schema.
 - The pacing summary (F-AUT-11) reports per-region minutes; regions outside 30–60 core minutes are flagged.
@@ -1666,7 +1533,7 @@ Priority: Must · Phase: 1 · Spec: §19.1, D1 · Brief: §2, General rules
 ### F-QA-02 — TypeScript unit tests
 As a Maintainer, I want Vitest unit tests for the core logic, so that changes don't break saves, schemas or scoring.
 **Acceptance criteria**
-- Covers save/load (`fake-indexeddb`, fallbacks, migrations), export/import, save-code round-trip/typo/fuzz, schema fixtures, XP/levels, badge triggers, nickname filter, class code, CSV escaping, glossary linker, reading-level calculator, Parsons keyboard reducer and replay scheduling/narration.
+- Covers save/load (`fake-indexeddb`, fallbacks, migrations), export/import, save-code round-trip/typo/fuzz, schema fixtures, XP/levels, badge triggers, nickname filter, glossary linker, reading-level calculator, Parsons keyboard reducer and replay scheduling/narration.
 
 Priority: Must · Phase: 1 (grows each phase) · Spec: §18.1 · Brief: §7
 
@@ -1678,7 +1545,7 @@ As a Maintainer, I want the `codeweald` package tested in Pyodide under Node, so
 Priority: Must · Phase: 1 (grows each phase) · Spec: §18.2, D13 · Brief: §7
 
 ### F-QA-04 — Every quest is proven solvable
-As a Teacher, I want every quest tested automatically, so that no student meets a quest that can't be passed.
+As an Instructor, I want every quest tested automatically, so that no student meets a quest that can't be passed.
 **Acceptance criteria**
 - Per quest: the reference solution passes all validators (each boss phase separately); each of ≥ 2 `wrong_solutions` fails with its declared mistake or feedback; the starter code does not pass (except predict/investigate); predict and investigate answers match the real output.
 - CI fails if any quest lacks a passing solution or has fewer than 2 wrong solutions.
@@ -1725,7 +1592,7 @@ Priority: Must · Phase: 2 · Spec: §18.4 (4) · Brief: §7
 ### F-QA-10 — Automated accessibility checks
 As a Maintainer, I want axe-core run on every main screen in CI, so that accessibility bugs are caught early.
 **Acceptance criteria**
-- `@axe-core/playwright` scans title, creator, overworld HUD, quest (each type), inventory, Spellbook, Workshop, settings, knowledge check and teacher dashboard as each exists; zero serious/critical violations.
+- `@axe-core/playwright` scans title, creator, overworld HUD, quest (each type), inventory, Spellbook, Workshop, settings, and knowledge check as each exists; zero serious/critical violations.
 
 Priority: Must · Phase: 1 (grows each phase) · Spec: §18.4 (7) · Brief: §7
 
@@ -1751,7 +1618,7 @@ As a Maintainer, I want CI to enforce download sizes, so that the game stays fas
 Priority: Must · Phase: 1 · Spec: §17 · Brief: §7
 
 ### F-QA-14 — Works on a slow Chromebook
-As a Teacher, I want the game tested under a Chromebook-class slowdown, so that it runs well on our devices.
+As an Instructor, I want the game tested under a Chromebook-class slowdown, so that it runs well on our devices.
 **Acceptance criteria**
 - Playwright with CDP `Emulation.setCPUThrottlingRate` 4× and a slow-network profile asserts: cold start → title ≤ 2 s; cached Pyodide → ready ≤ 8 s; typical run → result ≤ 300 ms; replay ≥ 30 fps.
 
@@ -1767,21 +1634,21 @@ As a Content author, I want a reading-level report on all student text, so that 
 Priority: Must · Phase: 1 · Spec: §18.5 · Brief: §7, §1
 
 ### F-QA-16 — Reading-level pass
-As a Teacher, I want all student text revised to the target level, so that every student can read it.
+As an Instructor, I want all student text revised to the target level, so that every student can read it.
 **Acceptance criteria**
 - No text above grade 7 remains unless listed with a reason in `PROGRESS.md`; a manual read-through of technical terms is done.
 
 Priority: Must · Phase: 6 · Spec: §18.5, §21 · Brief: §8, §1
 
-### F-QA-17 — E2E: teacher workflow
-As a Maintainer, I want the teacher flow tested end to end, so that reports keep working.
+### F-QA-17 — E2E: restore progress on a fresh device
+As a Maintainer, I want saving out and restoring tested end to end, so that students never lose progress when a Chromebook forgets everything.
 **Acceptance criteria**
-- Unlock teacher mode → import 3 progress files → export CSV → check the columns of all three files.
+- Make progress → copy the save code → open a fresh browser profile → Continue from a save → the same quests, XP and items are back.
 
-Priority: Must · Phase: 5 · Spec: §18.4 (9) · Brief: §6, §7
+Priority: Must · Phase: 1 · Spec: §12.5 · Brief: §1
 
 ### F-QA-18 — Final content review
-As a Teacher, I want every quest reviewed by a person before release, so that the content is accurate, kind and fun.
+As an Instructor, I want every quest reviewed by a person before release, so that the content is accurate, kind and fun.
 **Acceptance criteria**
 - Each region is play-tested end to end; tone, accuracy, timing estimates and CSTA mapping are checked; findings are fixed or logged in `PROGRESS.md`.
 
@@ -1808,7 +1675,7 @@ As a School IT admin, I want `npm run build` to produce plain static files, so t
 Priority: Must · Phase: 1 · Spec: §19.2, §5.2 · Brief: §9
 
 ### F-DEP-02 — Change settings without rebuilding
-As a School IT admin, I want a config file I can edit after building, so that I can adjust timeouts, defaults and the passphrase on my own.
+As a School IT admin, I want a config file I can edit after building, so that I can adjust timeouts and defaults on my own.
 **Acceptance criteria**
 - `public/codeweald.config.json` holds the §20 settings and is read at startup; it is served with `Cache-Control: no-cache`.
 
@@ -1861,7 +1728,7 @@ As a reviewer, I want a demo build with run instructions at the end of Phase 1, 
 Priority: Must · Phase: 1 · Spec: §19 · Brief: §8
 
 ### F-DEP-09 — One-click GitHub Pages deploy
-As a Teacher using GitHub, I want an optional workflow that publishes the game to GitHub Pages, so that hosting is easy.
+As a Maintainer using GitHub, I want an optional workflow that publishes the game to GitHub Pages, so that hosting is easy.
 **Acceptance criteria**
 - `deploy-pages.yml` (manual dispatch) builds with the right base path and publishes `dist/`.
 
@@ -1871,9 +1738,9 @@ Priority: Could · Phase: 6 · Spec: §19.1 · Brief: §8
 As a reviewer, I want the planning and teaching documents kept current, so that the project is understandable and maintainable.
 **Acceptance criteria**
 - Phase 0: `docs/features.md`, `docs/specs.md`, `docs/curriculum-map.md`, `docs/build-plan.md`, `docs/open-questions.md`.
-- Phase 5: `docs/teacher-guide.md`, `docs/quest-authoring.md`; curriculum map regions → quests → outcomes → CSTA kept in sync by `docs:generate`.
+- Phase 5: `docs/solutions.md` (generated instructor answer key) and `docs/quest-authoring.md`.
 
-Priority: Must · Phase: 0, 5 · Spec: §13.4 · Brief: §9
+Priority: Must · Phase: 0, 5 · Spec: §13 · Brief: §9
 
 ---
 
@@ -1893,7 +1760,7 @@ Brief section → stories that implement it. "Your role" = the brief's opening i
 | 3.3 | Quest types (PRIMM) incl. keyboard-accessible Parsons | F-QST-04–12, F-API-10, F-CUR-06 |
 | 4 | 11 regions, one outcome per quest, fix per region, spaced retrieval, concept scenes, knowledge checks, side quests | F-CUR-01–11, F-QST-14, F-DLG-05, F-DLG-06, F-BOS-04–06, F-WLD-07, F-AUT-03, F-AUT-04, F-FBK-10, F-TCH-08 |
 | 5 | Quest schema, glossary | F-AUT-01–07, F-API-05, F-DLG-02–04, F-FBK-03, F-FBK-05, F-CUR-05 |
-| 6 | Teacher guide, teacher mode, progress report + dashboard + CSV, authoring guide, `validate-content` | F-TCH-01–10, F-DSH-01–09, F-AUT-05, F-AUT-09, F-AUT-10, F-SAV-04, F-SAV-06, F-OFF-09, F-QA-17 |
+| 6 | Teacher features — **removed by owner decision Q13** (self-paced course); instructors get a generated answer key; authoring guide, `validate-content` | F-INS-01–02, F-AUT-05, F-AUT-09, F-AUT-10, F-SAV-04, F-SAV-06, F-OFF-09, F-QA-17 |
 | 7 | Content tests, unit tests, E2E, axe, performance, Pyodide loading screen, reading level | F-QA-02–17, F-ONB-08, F-SAV-03, F-EXE-15, F-AUT-05 |
 | 8 | Phased delivery | Phase tags on every story; F-DEP-08 (Phase 1 demo), F-A11-15, F-OFF-08, F-QA-14, F-QA-16, F-QA-18, F-QA-19, F-DEP-03, F-DEP-09 (Phase 6) |
-| 9 | Deliverables: static build, README, docs, ASSETS_LICENSES, PROGRESS, CI | F-DEP-01–10, F-QA-05, F-TCH-10, F-AUT-10 |
+| 9 | Deliverables: static build, README, docs, ASSETS_LICENSES, PROGRESS, CI | F-DEP-01–10, F-QA-05, F-INS-01, F-AUT-10 |

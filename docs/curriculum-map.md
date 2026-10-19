@@ -10,21 +10,22 @@ This map lists every region, quest, boss, side quest, and knowledge check in the
 
 **Learning outcomes.** Each quest and each boss phase has **one** measurable learning outcome. Read every outcome as if it starts with *"Students will be able to …"*. For example, "Use if/else to choose between two actions" means *"Students will be able to use if/else to choose between two actions."*
 
-**Pacing model.**
+**Pacing model (self-paced).** Codeweald is a self-paced course: students work through it on their own (owner decision Q13). Times below are estimates for a typical 11–14-year-old who is new to coding.
 
-- 1 lesson = 45 minutes: warm-up (~8 min), play (~30 min), discussion (~7 min).
-- Regions 1–10 take about **2 lessons** each. Region 11 (the capstone) takes about **3 lessons**. That is **23 lessons** in all.
+- A **session** is about 45 minutes of play.
+- Regions 1–10 take about **2 sessions** each. Region 11 (the capstone) takes about **3 sessions**. That is about **23 sessions** in all (≈ 12 hours of core play).
 - Each region has a concept scene (3–5 min), 6 core quests (5–12 min each), a boss (10–20 min, or 40 min in Region 11), and a knowledge check (~5 min).
-- The concept scene fits into the first lesson's warm-up. The knowledge check fits into the second lesson's discussion time. Core quests plus the boss fill the ~60 minutes of play.
-- Minutes are estimates for a typical 11–14-year-old who is new to coding. Side quests are extra time for fast finishers. They are not counted in the totals for each region.
+- Side quests are optional extras for students who want more. They are not counted in the region totals.
 
-**Pacing options** (set in the course config file):
+**Course length options** (set in `content/course.yaml`):
 
-| Option | Lessons | How |
+| Option | Sessions | How |
 |---|---|---|
-| Compact | 20 | Regions 1 + 2 share 3 lessons. Region 10 gets 1 lesson (q1–q3 + boss). Region 11 gets 2 lessons (skip q2 and q4, shorter free build). |
+| Compact | 20 | Turn off side quests. Turn off Region 10 q4–q6 and Region 11 q2 and q4. |
 | **Standard** | **23** | As mapped below. |
-| Extended | 25 | Add a side-quest / catch-up lesson after Region 6 and a game showcase lesson after Region 11. |
+| Extended | 25+ | Everything, including all side quests. |
+
+**"Watch for" lists.** Each region ends with the misconceptions students most often hit. They help instructors get ready for students' questions, together with the generated answer key (`docs/solutions.md`).
 
 **ID convention.**
 
@@ -67,7 +68,7 @@ This map lists every region, quest, boss, side quest, and knowledge check in the
 
 ## Course at a glance
 
-| # | Region | Core concepts | Lessons | Core quests | Est. min (core + boss) | Main item(s) | Boss |
+| # | Region | Core concepts | Sessions | Core quests | Est. min (core + boss) | Main item(s) | Boss |
 |---|---|---|---|---|---|---|---|
 | 1 | Hearthvale Village | programs as ordered steps; `print()`; strings; comments; reading an error | 2 | 6 | 54 | Quill of Printing | The Village Crier Bug |
 | 2 | Whispering Library | variables; assignment; naming rules; reassignment; `+` joining; f-strings | 2 | 6 | 60 | Jar of Labels | The Mislabeled Archive |
@@ -725,7 +726,7 @@ print(f"Gems per bag: {gems / bags}")
 
 | ID | Title | Type | Learning outcome | CSTA | Min | Notes |
 |---|---|---|---|---|---|---|
-| ⭐ `r10-side1-the-bug-zoo` | The Bug Zoo | make | Use a partner's feedback to improve a hint for a program with one planted bug. | 2-AP-15, 2-AP-17 | 10 | Classroom pair activity. Partners swap code by copy-paste (no network). |
+| ⭐ `r10-side1-the-bug-zoo` | The Bug Zoo | make | Use test results as feedback to improve a program with a planted bug and its hint. | 2-AP-15, 2-AP-17 | 10 | Plant one bug in a working program and write a hint for it. Byte's checker reports whether the bug really breaks the program and whether the fixed version passes; use that feedback to improve the hint. Optional: ask a friend or family member to try it. |
 | ⭐ `r10-side2-bytes-truth-spells` | Byte's Truth Spells | investigate | Use `assert` to check that a function returns what you expect. | 2-AP-17 | 7 | |
 
 **Knowledge check (`r10-check`)**
@@ -783,7 +784,7 @@ if roll == 6:
 | 1. Choose and plan | Pick a starter (number guessing, grid treasure hunt, or choose-your-path story). Write the plan as comments. | Plan a program by writing its steps as comments before coding. | 2-AP-10, 2-AP-19 |
 | 2. Build the core | Write the main loop and at least one function. | Use a loop and a function to build the main part of a game. | 2-AP-13, 2-AP-14 |
 | 3. Add chance and choices | Use `random` and if/elif/else so the game is different each time. | Use `random` and conditionals to make a program act differently on each run. | 2-AP-12, 2-AP-16 |
-| 4. Playtest and polish (free part) | Make it your own. Only light rules are checked: it uses a loop, an `if`, a function, and `random`, and it runs without errors on 3 test runs. Optional: a classmate playtests it, and you change one thing. | Test a program and improve it based on a playtester's feedback. | 2-AP-15, 2-AP-17 |
+| 4. Playtest and polish (free part) | Make it your own. Only light rules are checked: it uses a loop, an `if`, a function, and `random`, and it runs without errors on 3 test runs. Optional: ask a friend or family member to playtest it, and change one thing. | Test a program and improve it based on test runs and playtest feedback. | 2-AP-15, 2-AP-17 |
 
 **Side quests**
 
@@ -874,7 +875,7 @@ Boss phases per region: R1 3, R2 3, R3 4, R4 4, R5 3, R6 3, R7 4, R8 4, R9 3, R1
 | 2-AP-15 | R10 (side), R11 (boss) |
 | 2-AP-16 | R8 (side), R11 |
 | 2-AP-17 | All 11 regions |
-| 2-AP-18 | Not auto-checked. The teacher guide will offer optional pair roles and a milestone checklist for the Region 11 build. |
+| 2-AP-18 | Not covered. Teamwork and project timelines don't fit a solo, self-paced course. |
 | 2-AP-19 | R1, R10, R11 |
 | 2-DA-07 | R3, R9 (side) |
 
@@ -893,4 +894,4 @@ Boss phases per region: R1 3, R2 3, R3 4, R4 4, R5 3, R6 3, R7 4, R8 4, R9 3, R1
 
   All five are now specified in [specs.md](specs.md): `branch_coverage` and `runs_ok` session validators and `hidden_tests` `mode: stages` (§9.3), `mode: seed` (§9.3, §6.7), and the rubber-duck dialog (§9.8a). Comment-based quests (R1 q4, R1 boss phase 3, R10) use the `style` validator, and the R11 blueprint Parsons uses `check: order` (§9.2).
 - **`r4-q3-gatekeeper`** matches the schema example in the brief: the same ID, outcome, and hidden cases.
-- **2-AP-18** (teamwork and timelines) isn't checked by any quest. It is covered by the teacher-led pair work in Region 11 only.
+- **2-AP-18** (teamwork and timelines) isn't covered: it doesn't fit a solo, self-paced course.

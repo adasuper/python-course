@@ -1,7 +1,6 @@
 // Deploy-time settings from public/codeweald.config.json (docs/specs.md §20).
 export interface AppConfig {
   courseId: string;
-  teacher: { passphraseHash: string; autoLockMinutes: number };
   execution: {
     timeoutSeconds: number;
     loopBudget: number;
@@ -16,12 +15,10 @@ export interface AppConfig {
     knowledgeCheckGates: boolean;
     standbyWorker: 'off' | 'auto' | 'on';
   };
-  mastery: { secureMaxHints: number; secureMaxAttempts: number };
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
   courseId: 'codeweald-intro-python',
-  teacher: { passphraseHash: '', autoLockMinutes: 30 },
   execution: {
     timeoutSeconds: 3,
     loopBudget: 1_000_000,
@@ -31,7 +28,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   },
   defaults: { hints: 'all', replaySpeed: 1 },
   features: { workshop: true, sideQuests: true, knowledgeCheckGates: false, standbyWorker: 'off' },
-  mastery: { secureMaxHints: 1, secureMaxAttempts: 5 },
 };
 
 export async function loadConfig(): Promise<AppConfig> {

@@ -15,7 +15,9 @@ The brief has two numbers that don't quite fit together:
 
 **My assumption:** a "unit" is one **45-minute lesson** (warm-up ~8, play ~30, discussion ~7).
 Each region takes about **2 lessons** and the capstone 3, for **~23 lessons** in total. Each
-region has 45–65 minutes of core play (5–6 quests + boss), plus side quests for fast finishers.
+region has about 55–65 minutes of core play (6 quests + boss; the capstone ~90), plus side
+quests for fast finishers. Compact (20) and Extended (25) pacing options are in the
+curriculum map.
 Length stays configurable in `content/course.yaml` (enable/disable regions and side quests;
 lessons per region).
 
@@ -152,7 +154,7 @@ I'm building in **`adasuper/python-course`**, branch `claude/new-session-aahe56`
 | A4 | Each student has their own profile (nickname). Several profiles can live on one device. There are no passwords on profiles, which is acceptable for low-stakes practice. |
 | A5 | Progress data is **self-reported** (client-side), so it is fine for formative feedback but not for high-stakes grading. The dashboard says so. |
 | A6 | Content authors either have Node.js (to run `npm run validate-content` locally) **or** edit YAML on github.com and let CI validate their pull request. The authoring guide documents both. |
-| A7 | About **90 quest entries** in total (~60 core quests, 11 bosses, ~15–20 side quests), plus 11 knowledge checks. |
+| A7 | **95 quest entries** in total, per the curriculum map: 66 core quests (6 per region), 11 bosses with 39 phases, and 18 side quests. There are also 11 knowledge checks with 46 items. |
 | A8 | Narrative and dialogue target grade ≤ 7 on Flesch–Kincaid. Glossary-defined technical terms are reported separately, because words like "variable" inflate the score. |
 | A9 | No `input()` blocking via SharedArrayBuffer. Quests use an input queue, and interactive input uses replay-on-input (spec §6.5). No special server headers are needed. |
 | A10 | Loop iteration budget of 100,000 in quests and 1,000,000 in the Workshop, plus a 3 s wall clock; calibrated in Phase 1 on a throttled CPU. |

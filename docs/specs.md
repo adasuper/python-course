@@ -433,6 +433,7 @@ interface PyErrorInfo {
 | `Missing parentheses in call to 'print'` | `syntax.print_no_parens` | |
 | `invalid character '“' (U+201C)` | `syntax.smart_quotes` | "Curly quotes sneaked in (from copying?). Use straight quotes." |
 | `invalid decimal literal` | `syntax.name_starts_with_digit` | "Names can't start with a number." |
+| `cannot assign to expression here` where the target has a `-`, or `invalid syntax` on a line shaped `word word = …` | `syntax.bad_variable_name` | "Variable names can't have spaces or dashes. Try `book_count`." Checked **before** `assign_in_condition`, because Python 3.14 adds "Maybe you meant '=='" to this message too. |
 | `cannot assign to literal` / `to expression` | `syntax.assign_to_value` | |
 | other `SyntaxError` | `syntax.generic` | |
 | `IndentationError: expected an indented block after 'if'…` | `indent.expected` | "The line after `if …:` must be pushed in (indented)." |
@@ -612,7 +613,7 @@ locked ──(prerequisites met)──► available ──(opened)──► in_p
 | `investigate` | Runs given code, answers questions | Questions: MCQ, number, short text (accepted-answers list), or "change X and run, what happens?" | All questions answered correctly (unlimited retries, per-question hints). |
 | `fix` | Repairs buggy code | Story says how many bugs ("This spell has 2 glitches") | All validators pass. |
 | `fill` | Completes gaps | Gaps marked `____` render as highlighted widgets. Optional `locked: true` makes non-gap lines read-only (CodeMirror read-only ranges). | All validators pass. |
-| `parsons` | Orders and indents shuffled lines | Two lists, "Spell scraps" and "Your spell", plus optional distractors. Keyboard model in §14.3. | The assembled program passes validators. Any correct order is accepted. |
+| `parsons` | Orders and indents shuffled lines | Two lists, "Spell scraps" and "Your spell", plus optional distractors. Keyboard model in §14.3. | `check: run` (default): the assembled program passes validators, and any correct order is accepted. `check: order`: the order matches the solution or a listed alternative; used for comment-only plans (Region 11 blueprint). |
 | `modify` | Changes working code to meet a new requirement | Starter is a working program | All validators pass (usually behavior + "still uses a loop"-type AST checks). |
 | `make` | Writes code from (near) scratch | Minimal starter | All validators pass. |
 | `boss` | Multi-phase mini-project | Bug Boss health bar = phases left; phase tabs | Each phase completes independently and is saved. The boss is defeated when all phases pass. |
@@ -630,7 +631,21 @@ message (§9.4).
 | `variable` | `name`, `equals`, `type: int\|float\|str\|bool\|list\|dict`, `matches` (regex for strings) | Top-level variables in the student namespace. |
 | `ast` | `require: [For, If, …]`, `forbid: [While]`, `require_calls: [print]`, `min_count: {print: 3}`, `require_else: true`, `function: {name: heal, params: 1, returns: true}`, `no_literal: [42]`, `uses_names: [gold]`, `max_lines` | Code structure via Python's `ast` module. `no_literal` catches hard-coded answers. |
 | `hidden_tests` | `mode: vars \| inputs \| call \| seed`, `cases: [...]`, `compare: [output, returns, said, state, vars:<name>]`, `expect: from_solution` or explicit per case | Re-runs the program (each case gets a fresh namespace and world). `vars` rewrites the first top-level assignment of each named variable to the case value. `inputs` runs with that input queue. `call` calls the student's function with `args` and compares the return value and/or output. `seed` runs with fixed random seeds. |
-| `custom` | `python: \|` a `check(ctx)` function | Escape hatch. `ctx` has `.source .tree .output .lines .vars .world .run(vars=, inputs=, seed=) .call(name, *args)`. Returns `Pass()` or `Fail("hint")`. |
+| `style` | `min_comments`, `comment_above: [lines matching a regex]`, `max_line_length` | Uses `tokenize` (the `ast` module drops comments). Used for the "document your code" quests (2-AP-19). |
+| `custom` | `python: \|` a `check(ctx)` function | Escape hatch. `ctx` has `.source .tree .output .lines .vars .world .run(vars=, inputs=, seed=, stage=) .call(name, *args)`. Returns `Pass()` or `Fail("hint")`. |
+
+`hidden_tests` also supports `mode: stages`, which re-runs the program on **hidden maps**
+(`cases: [{ grid: | … }]`). Use it, for example, to check that a `world.look()` loop solves
+any cave, not just the visible one.
+
+**Session validators** (`scope: session`) look across *all of the student's runs* in this quest
+or phase, not just the last one. The main thread keeps a small run history per quest session
+(line coverage, status, inputs used) and saves it with the draft.
+
+| `type` | Fields | Checks |
+|---|---|---|
+| `branch_coverage` | `min: all` or a number | Every `if`/`elif`/`else` body has run in at least one of the student's runs ("light a lamp for every door"). Line coverage comes from `sys.monitoring` `LINE` events, recorded only when a quest asks for it. |
+| `runs_ok` | `min_runs: 3`, `distinct_inputs: true` | The program finished without an error in N of the student's own runs (e.g. "play your game 3 times without a crash"). |
 
 Every validator may set `id` (so mistakes can reference it) and `fail_hint`.
 
@@ -734,6 +749,17 @@ phases:
   plus Esc) and replayable from the Spellbook.
 - Dialogue never auto-advances (no timing pressure). There is a "Read aloud" button per line,
   plus an optional auto-read setting (§14.5).
+
+### 9.8a Rubber-duck dialog (Region 10)
+
+A quest may add a `duck:` block. Before (or while) editing, a "Talk to the Duck" panel walks
+through the program one line at a time and asks "What should this line do?". The student
+types a short free-text answer for each line.
+
+- Answers are **not graded**, and they are stored only in the local draft.
+- They are **excluded from exports** by default, because they are free text.
+- Finishing the walk-through unlocks the duck's closing question ("Did you spot anything
+  odd?") and counts toward the *Duck Whisperer* badge.
 
 ### 9.9 Side quests
 
@@ -986,7 +1012,9 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 - Bonus challenges award +10–20 XP.
 - XP is granted once per quest. **XP never decreases.**
 - **Level curve:** the cumulative XP for level *n* is `25·n·(n−1)`, so L2 = 50, L3 = 150,
-  L5 = 500 and L10 = 2,250. The full course is ≈ 3,500–4,000 XP, which reaches about level 12.
+  L5 = 500 and L10 = 2,250. With the curriculum map's 66 core quests, 39 boss phases, 18
+  side quests and 11 checks, the full course is ≈ 5,000–5,500 XP, which reaches about
+  level 15. Core content alone reaches about level 13.
 - **Titles:** Apprentice (1–2) · Scribe (3–4) · Spellwright (5–7) · Scriptwright (8–10) ·
   Master Scriptwright (11+).
 

@@ -22,6 +22,10 @@
   - three hints
   - the reading level is reported
   - it is playable from the Quest Log
+- **Reading level** runs from Phase 1 on. Text above Flesch–Kincaid grade 7 is **flagged** as a
+  CI warning (the brief's rule). CI **fails** only above grade 9 (configurable), so a single
+  hard technical sentence can't block a build. Phase 6 clears all warnings or documents why
+  each one stays.
 - Every phase ends with a **demo build** (`npm run build && npm run preview`) and "how to try
   it" notes in `PROGRESS.md`.
 

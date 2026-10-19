@@ -239,6 +239,7 @@ python-course/
 | Settings | Accessibility, audio, class code, save/export | §14 |
 | For Teachers | Guide, teacher mode, dashboard | §13 |
 | Credits | Asset licenses, about | Reads `ASSETS_LICENSES.md` |
+| System check | Tests this device: service worker, IndexedDB, WebAssembly, storage quota, offline readiness, local TTS voices | Linked from Settings and the teacher guide; plain pass/fail list with fixes (§21) |
 
 Navigation is a small state machine in `state/router.ts` with hash URLs (`#/quest/r4-q3-gatekeeper`).
 Hash URLs survive reloads and need no server rewrites.
@@ -340,7 +341,7 @@ we contain the worst case anyway. The layers are:
    `exec`, `compile`, `breakpoint`, `help`, `memoryview`, `__loader__`. It replaces
    `__import__`, `input`, `exit` and `quit` with safe versions.
 2. **Import allowlist.** `__import__` permits only `random`, `math`, `time` and
-   `codeweald` (and `string` and `collections`, if a quest opts in). Anything else raises
+   `codeweald`, exactly as the brief specifies. Anything else raises
    `ImportError` with the message "That spellbook isn't in Codeweald's library."
 3. **Wrapped modules.** `time.sleep(s)` records a `wait` action instead of blocking (capped at
    3 s per call and 15 s per run). `time.time()` and `time.monotonic()` return the virtual clock.
@@ -699,7 +700,7 @@ The solution itself ships only in obfuscated form for teacher-mode viewing (§15
 - Three tiers per quest: **nudge → targeted explanation → near-complete example with a gap**.
 - Tiers unlock in order. They are always free and never cost XP. The UI says so.
 - Usage is recorded (`hintsUsed: 0–3`) for the teacher report only.
-- Class settings can set hints to `all`, `nudge only` or `off` (§13.2).
+- Class settings can set hints to `all`, `nudge` (tier 1 only) or `off` (§13.2).
 - Tier 3 is shown in a read-only code block with a "Copy into Spellbook" button, so students
   still type or adapt the gap.
 
@@ -932,7 +933,7 @@ bonus:
 | `solution` | ✔ | Must pass all validators |
 | `validators` | ✔ | ≥ 1 (not for `predict`/`investigate`, which use `prompts`/`questions`) |
 | `common_mistakes` | — | §9.4 |
-| `wrong_solutions` | ✔ | ≥ 2, each with `expect_mistake` (a mistake id) or `expect_feedback_contains` |
+| `wrong_solutions` | ✔ (code-checked types) | ≥ 2 for `fix`, `fill`, `modify`, `make` and side quests, and ≥ 2 **per boss phase**. Each has `code` plus `expect_mistake` (a mistake id) or `expect_feedback_contains`. For `parsons`, a wrong solution is a line order (`order: [3, 1, 2, …]`) instead of code. `predict`/`investigate` have no code to get wrong. Instead, every MCQ needs ≥ 2 distractors, and the content tests check that the declared answers match the real output and that the distractors don't. |
 | `hints` | ✔ | Exactly 3 |
 | `rewards` | — | `xp` defaults by type (§11.2), `item`, `badge` |
 | `bonus` | — | Optional challenges, extra XP |
@@ -945,6 +946,9 @@ bonus:
 | `side_quest` | — | Default `false` |
 | `api_extras` | — | Extra API helpers for this quest |
 | `vocabulary` | — | Glossary terms (must exist) |
+| `retrieval` | — | Earlier regions this quest revisits, e.g. `[r2, r6]` (spaced retrieval; checked per region by §10.4) |
+| `duck` | — | Rubber-duck dialog (§9.8a) |
+| `track_coverage` | — | `true` turns on line-coverage recording for session validators (§9.3) |
 
 ### 10.4 Schema implementation
 
@@ -959,12 +963,58 @@ bonus:
   - glossary links and `vocabulary` exist
   - items and badges exist
   - every region has ≥ 1 `fix` quest
-  - regions ≥ 3 have ≥ 1 quest tagged `retrieval: rN`
+  - regions ≥ 3 have ≥ 1 quest whose `retrieval` names an earlier region
   - every boss has 2–4 phases
   - knowledge checks have 3–5 items
   - `____` gaps appear only in `fill` starters and tier-3 hints
 
-### 10.5 Content pipeline
+### 10.5 Region file and other content files
+
+```yaml
+# content/regions/04-forked-road-forest/region.yaml
+id: forked-road-forest
+number: 4
+name: "Forked Road Forest"
+concepts: [booleans, comparisons, if/elif/else, and/or/not, indentation]
+map: maps/r4-forked-road-forest.tmj       # Tiled map; NPC objects carry `npc` ids
+music: null
+npcs:
+  gatekeeper: { name: "Gatekeeper Moss", sprite: npc_gatekeeper, greeting: "Halt! …" }
+concept_scene:
+  analogy: "An if statement is a signpost at a fork in the road…"
+  lines:
+    - { speaker: byte, text: "Every path here splits in two. Let's teach the signposts to choose." }
+  worked_example:
+    stage: { kind: none }
+    code: |
+      gold = 12
+      if gold >= 10:
+          print("The gatekeeper waves you through.")
+      else:
+          print("Come back with more gold!")
+    explain:                                 # shown step by step during the replay
+      - { line: 2, text: "Python checks the [[condition]]: is 12 >= 10? True!" }
+quests: [r4-q1-talking-signpost, r4-q2-true-or-false, r4-q3-gatekeeper, …]   # core order
+boss: r4-boss-riddle-gate
+side_quests: [r4-side1-leap-year-lanterns, r4-side2-rock-paper-mushroom]
+knowledge_check:
+  items:
+    - { kind: predict, code: "print(5 > 3 and 2 > 4)", answer: "False", explain: "…" }
+    - { kind: mcq, question: "What is the difference between = and ==?",
+        options: ["…", "…", "…"], answer: 1, explain: "…" }
+fragment: { id: fragment-choices, name: "Script Fragment: Choices", description: "…" }
+pois: [old-oak, mossy-well, hidden-glade]    # secret corners for the Explorer badge
+```
+
+| File | Shape (one entry) |
+|---|---|
+| `items.yaml` | `{ id, name, icon, description, concept_card, region, example?: code }` |
+| `badges.yaml` | `{ id, name, icon, description, trigger: { kind: first_fix \| no_hints \| distinct_attempts \| failed_then_passed \| all_pois \| real_error_views \| duck_used \| boss_defeated \| all_checks \| side_quests \| workshop_runs \| capstone, n?: number, region?: id } }` |
+| `glossary.yaml` | `{ term, definition (≤ 2 sentences), example?, related?: [term] }` |
+| `errors.yaml` | `{ key: { title, message, tip?, glossary?: [term] } }` with `{line}`, `{name}`, `{suggestion}` placeholders |
+| `workshop.yaml` | `{ id, name, description, stage }` (same stage format as quests) |
+
+### 10.6 Content pipeline
 
 ```
 content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cross-ref checks
@@ -1042,6 +1092,19 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 - **Keyboard:** Tab indents. **Esc, then Tab** leaves the editor (CodeMirror's escape
   convention, explained in a visible hint under the editor), which satisfies "no keyboard
   trap". `Ctrl+Enter` runs.
+
+### 11.5a Jar Shelf (variables panel)
+
+From Region 2 on, a **Jar Shelf** panel under the editor shows the program's top-level
+variables after each run. Each one is a labelled jar with its name, value and type ("`gold`
+→ `7` (whole number)"), using the `vars` snapshot from §6.1.
+
+- Long values are truncated, and lists and dictionaries are shown one level deep.
+- During a stepped replay, jars show the value *at the end of the run* and say so ("after the
+  program finished"). Live per-step values are out of scope for v1.
+- It is a real `<table>`, so screen readers can read it. It can be collapsed, and it is
+  hidden in quests that set `jar_shelf: false` (for example, predict quests where it would
+  give away the answer).
 
 ### 11.6 Badges
 
@@ -1161,6 +1224,9 @@ an LMS text box. It needs no file handling.
 - **Format:** `CW1-` + Crockford Base32 in groups of 5, ending in a CRC-16 check group.
 - **Payload** (bit-packed, varints):
   - content version hash (16 bits)
+  - a short profile id (32 random bits, so the dashboard can tell students apart and spot
+    duplicates)
+  - export date (days since 2026-01-01, 16 bits)
   - avatar and theme
   - nickname (UTF-8)
   - XP
@@ -1171,7 +1237,7 @@ an LMS text box. It needs no file handling.
   - a special-badge bitset
 
   Items and most badges are re-derived from completions.
-- **Size:** about 95 quests × 10 bits + header ≈ 150 bytes ≈ **240 characters**. That is fine
+- **Size:** about 95 quests × 10 bits + header ≈ 155 bytes ≈ **250 characters**. That is fine
   to copy and paste, too long to type by hand. Code drafts are not included (use the file
   for those).
 - Typos are caught by the check group: "That code has a typo — check the characters again."
@@ -1220,6 +1286,12 @@ an LMS text box. It needs no file handling.
 - **Import:** multiple progress files (picker or drag-drop) and/or pasted save codes. The data
   stays in memory. "Remember this class on this device" optionally stores it in the `teacher`
   IndexedDB store, with a "Forget class data" button.
+- **Duplicates:** records with the same profile id merge, keeping the newest export (by export
+  date). Two *different* profiles with the same nickname show as "Clever Newt (2)", and the
+  teacher can rename them in the dashboard.
+- **Precision:** data from save codes is bucketed. Attempts and time show as ranges
+  ("4–5 attempts", "5–10 min") with a "from save code" marker. CSV exports write the bucket's
+  lower bound plus a `precision` column (`exact` or `bucketed`).
 - **Views:**
   1. **Class overview:** students × regions, each cell a symbol plus text
      (`✓ 6/6`, `◐ 3/6`, `○`) and an accessible table.
@@ -1239,7 +1311,7 @@ an LMS text box. It needs no file handling.
   `= + - @` prefixed with `'` to stop CSV formula injection, since nicknames are student
   input):
   - `progress_long.csv`: nickname, profile_id, quest_id, region, type, status, attempts,
-    hints_used, active_minutes, completed_on, mastery
+    hints_used, active_minutes, completed_on, mastery, precision
   - `summary_wide.csv`: one row per student: XP, level, quests completed, regions completed,
     check scores per region, total minutes
   - `outcomes.csv`: student × CSTA code mastery
@@ -1282,7 +1354,7 @@ an LMS text box. It needs no file handling.
 | 1.4.13 Content on hover/focus | Glossary toggletips are dismissible (Esc), hoverable and persistent |
 | 2.1.1 Keyboard | Everything, including movement, Parsons, editor and dashboard |
 | 2.1.2 No keyboard trap | Editor: Esc then Tab; modals trap focus *intentionally* and close with Esc |
-| 2.1.4 Character key shortcuts | Single-key shortcuts (WASD, `L`, `Q`) are active only when the world/HUD has focus, and can be turned off in Settings |
+| 2.1.4 Character key shortcuts | Single-key shortcuts (WASD and arrows, `E`, `L`, `Q`, and the replay keys `Space` and `.`) are active only when the world, HUD or replay toolbar has focus, and can be turned off in Settings |
 | 2.2.1 / 2.2.2 Timing; pause | No timed tasks. Dialogue never auto-advances. Replay can be paused. Ambient animation stops with reduced motion. The code timeout is a safety stop, not a user time limit. |
 | 2.3.1 Flashes | No flashing > 3/s; bonk and celebration effects audited |
 | 2.4.1 Bypass blocks | Skip links on quest and overworld screens |
@@ -1424,8 +1496,9 @@ toggle, before any profile exists.
 - Phaser runs with `powerPreference: 'low-power'`, a 30 fps cap when idle and the loop
   sleeping on non-world screens.
 - Texture atlases; audio as OGG; region content and maps lazy-loaded.
-- No standby worker by default. A setting enables one on devices reporting
-  `deviceMemory ≥ 8`, to make layer-3 restarts instant.
+- No standby worker by default (`features.standbyWorker: "off"`). `"auto"` keeps a second,
+  warm worker on devices reporting `deviceMemory ≥ 8`, and `"on"` always does. Either makes
+  layer-3 restarts instant. Phase 6 decides the default from measurements.
 
 ---
 
@@ -1536,7 +1609,7 @@ dispatch) publishes `dist/` to GitHub Pages.
   "defaults": { "hints": "all", "textScale": 1, "reducedMotion": "system", "tts": false,
                 "replaySpeed": 1, "soundEffects": false },
   "features": { "workshop": true, "sideQuests": true, "knowledgeCheckGates": false,
-                "standbyWorker": "auto" },
+                "standbyWorker": "off" },
   "mastery": { "secureMaxHints": 1, "secureMaxAttempts": 5 }
 }
 ```

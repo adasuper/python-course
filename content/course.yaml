@@ -35,4 +35,6 @@ regions:
     lessons: 2
   - id: whispering-library
     lessons: 2
+  - id: the-endless-mines
+    lessons: 2
 side_quests: true

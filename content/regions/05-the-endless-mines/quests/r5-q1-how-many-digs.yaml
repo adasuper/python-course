@@ -1,0 +1,111 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-q1-how-many-digs
+region: the-endless-mines
+title: How Many Digs?
+type: predict
+npc: dot-digwell
+learning_outcome: Predict how many times a while loop runs and what it prints.
+csta: [2-AP-12]
+estimated_minutes: 7
+vocabulary: [loop, while loop]
+
+story_intro: |
+  Dot Digwell spins her pickaxe. "I dig until my count says stop. But how many digs is that? I always lose track!"
+
+  Her program uses a [[while loop]]. Before every repeat, Python checks the `while` line. If the check is True, the indented lines run again. If it is False, Python skips past the [[loop]].
+goal: Read Dot's program and predict what it does. Then run it to check.
+concept_card: |
+  A `while` loop checks its condition **before each repeat**. True: the indented lines run again. False: Python skips past the loop. If the check is False the very first time, the loop runs **0 times**.
+  ```python
+  digs = 0
+  while digs < 3:
+      print("Dig!")
+      digs = digs + 1
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_miner_dot, name: Dot Digwell }
+
+starter_code: |
+  digs = 0
+  while digs < 3:
+      print("Dig!")
+      digs = digs + 1
+  print("Lunch break!")
+  rocks = 5
+  while rocks < 3:
+      print("Smash a rock!")
+      rocks = rocks + 1
+  print("Home time.")
+
+prompts:
+  - kind: mcq
+    question: How many times does the first loop print `Dig!`?
+    options:
+      - 3 times
+      - 2 times
+      - 4 times
+      - Forever
+    answer: 0
+    verify: { kind: none }
+    explain: >-
+      digs is 0, then 1, then 2, and each time `digs < 3` is True. Then digs becomes 3, and
+      `3 < 3` is False. So the loop runs 3 times.
+  - kind: mcq
+    question: How many times does the second loop print `Smash a rock!`?
+    options:
+      - 0 times
+      - 3 times
+      - 5 times
+      - 2 times
+    answer: 0
+    verify: { kind: none }
+    explain: >-
+      rocks starts at 5. Is `5 < 3`? No! The check is False the very first time, so the loop
+      runs 0 times. Python skips right past it.
+    twin:
+      kind: mcq
+      code: |
+        lanterns = 4
+        while lanterns < 2:
+            print("Light a lantern!")
+            lanterns = lanterns + 1
+        print("Bright enough.")
+      question: Try this one. What does it print?
+      options:
+        - Bright enough.
+        - |-
+          Light a lantern!
+          Bright enough.
+        - |-
+          Light a lantern!
+          Light a lantern!
+          Bright enough.
+      answer: 0
+      explain: Is `4 < 2`? No. The loop runs 0 times, so only the last line prints.
+  - kind: text
+    question: Now type everything the Scroll of Output will show, one line at a time.
+    answer: |
+      Dig!
+      Dig!
+      Dig!
+      Lunch break!
+      Home time.
+    explain: Three digs, then a lunch break, then straight to home time. The rock loop never ran.
+
+hints:
+  - Put your finger on line 1. Each time you reach a `while` line, ask, "Is this True right now?"
+  - Keep a little table. digs is 0, then 1, then 2, then 3. The loop stops when `digs < 3` turns False. For the second loop, check `rocks < 3` when rocks is 5.
+  - |
+    ```text
+    digs = 0:  0 < 3 is True   -> Dig!
+    digs = 1:  1 < 3 is True   -> Dig!
+    digs = 2:  2 < 3 is True   -> Dig!
+    digs = 3:  3 < 3 is ____   -> the loop stops
+    rocks = 5: 5 < 3 is False  -> the rock loop runs 0 times
+    ```
+
+story_outro: |
+  Dot grins. "Three digs, then lunch! And zero rocks smashed. That's my favorite number of rocks to smash."

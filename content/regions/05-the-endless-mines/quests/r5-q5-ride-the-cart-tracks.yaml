@@ -1,0 +1,185 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-q5-ride-the-cart-tracks
+region: the-endless-mines
+title: Ride the Cart Tracks
+type: modify
+npc: rosa-railwright
+learning_outcome: Use break to stop a loop as soon as the hero reaches the exit.
+csta: [2-AP-12]
+estimated_minutes: 8
+prerequisites: [r5-q4-the-endless-tunnel]
+vocabulary: [break, while loop, infinite loop]
+rewards: { item: escape-rope }
+
+story_intro: |
+  Rosa Railwright taps the cart. "My old program rides 4 steps, then hops off at the exit. But the cave-in moved the tracks! Today they're longer. Tomorrow? Who knows!"
+
+  `while True:` makes a loop that never stops on its own. To get out, use [[break]]. It jumps out of the loop right away. On the tracks, `world.look()` says `"track"`. At the end, it says `"exit"`.
+goal: Change the counting loop to `while True:`. Inside it, `break` as soon as the exit is in front of the hero. After the loop, the hero hops off onto the exit.
+concept_card: |
+  `while True:` repeats forever, unless something stops it. `break` jumps out of the loop **right away**. Then Python runs the first line after the loop.
+  ```python
+  while True:
+      if world.look() == "exit":
+          break
+      hero.move("right")
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    ###########
+    #H=======E#
+    ###########
+  facing: right
+  legend:
+    "#": { tile: mine_wall, solid: true, look: wall }
+    "=": { tile: mine_track, look: track }
+    H: { tile: mine_track, hero: true, look: track }
+    E: { tile: mine_exit, look: exit }
+
+starter_code: |
+  from codeweald import hero, world
+  rides = 0
+  while rides < 4:
+      hero.move("right")
+      rides = rides + 1
+  # Hop off the cart onto the exit.
+  hero.move("right")
+
+solution: |
+  from codeweald import hero, world
+  while True:
+      if world.look() == "exit":
+          break
+      hero.move("right")
+  # Hop off the cart onto the exit.
+  hero.move("right")
+
+validators:
+  - id: uses-break
+    type: ast
+    require: [While, Break]
+    fail_hint: Use `while True:` and `break`, so the cart stops at the exit on any track.
+  - id: on-exit
+    type: state
+    hero_on: exit
+    fail_hint: The hero should end up standing on the exit.
+  - id: no-bonks
+    type: state
+    max_bonks: 0
+    fail_hint: The hero bumped into the wall. Hop off the cart only once.
+  # Tomorrow's tracks: a short one and a long one.
+  - id: any-track
+    type: hidden_tests
+    mode: stages
+    compare: [state]
+    cases:
+      - stage:
+          kind: grid
+          grid: |
+            #######
+            #H===E#
+            #######
+          legend:
+            "=": { tile: mine_track, look: track }
+      - stage:
+          kind: grid
+          grid: |
+            ###############
+            #H===========E#
+            ###############
+          legend:
+            "=": { tile: mine_track, look: track }
+    fail_hint: It works on this track, but not on a shorter or longer one.
+
+common_mistakes:
+  - id: no-break-forever
+    detect: { kind: detector, name: infinite_while_true_without_break }
+    feedback: >-
+      `while True:` never stops on its own, and your loop has no `break`. Inside the loop, check
+      `if world.look() == "exit":` and `break` when it's True.
+  - id: cart-crash
+    detect: { kind: error, key: limits.actions }
+    feedback: >-
+      The cart never stopped! Check the word in your `if`. `world.look()` says `"exit"`, all in
+      small letters.
+  - id: no-break
+    detect: { kind: validator_failed, id: uses-break }
+    feedback: >-
+      That works on today's track. But the tracks keep changing! Use `while True:` with an `if`
+      and `break`, so the cart stops at the exit on any track.
+  - id: bonked
+    detect: { kind: state, min_bonks: 1 }
+    feedback: >-
+      Bonk! The hero walked past the exit into the wall. If you already step onto the exit
+      inside the loop, you don't need to hop off again after it.
+  - id: stopped-early
+    detect: { kind: validator_failed, id: on-exit }
+    feedback: >-
+      The hero isn't standing on the exit. Did the loop stop too soon? After the loop, the hero
+      still needs one more step to hop off onto the exit.
+  - id: other-tracks
+    detect: { kind: validator_failed, id: any-track }
+    feedback: >-
+      It works on this track, but not on a shorter or longer one. Let `world.look()` decide when
+      to stop, not a number.
+
+wrong_solutions:
+  - expect_mistake: no-break
+    note: Just counts more rides.
+    code: |
+      from codeweald import hero, world
+      rides = 0
+      while rides < 7:
+          hero.move("right")
+          rides = rides + 1
+      # Hop off the cart onto the exit.
+      hero.move("right")
+  - expect_mistake: no-break-forever
+    code: |
+      from codeweald import hero, world
+      while True:
+          hero.move("right")
+      hero.move("right")
+  - expect_mistake: cart-crash
+    code: |
+      from codeweald import hero, world
+      while True:
+          if world.look() == "Exit":
+              break
+          hero.move("right")
+      hero.move("right")
+  - expect_mistake: stopped-early
+    note: Forgets to hop off.
+    code: |
+      from codeweald import hero, world
+      while True:
+          if world.look() == "exit":
+              break
+          hero.move("right")
+  - expect_mistake: bonked
+    code: |
+      from codeweald import hero, world
+      while True:
+          if world.look() == "exit":
+              hero.move("right")
+              break
+          hero.move("right")
+      hero.move("right")
+
+hints:
+  - "`while True:` never stops by itself. What should happen when `world.look()` says `\"exit\"`?"
+  - "Replace the counting loop with `while True:`. Inside it, first check `if world.look() == \"exit\":` and `break`. Otherwise, move right one step."
+  - |
+    ```python
+    while True:
+        if world.look() == "exit":
+            ____
+        hero.move("right")
+    # Hop off the cart onto the exit.
+    hero.move("right")
+    ```
+
+story_outro: |
+  "Wheee!" The cart rolls up to the station and stops right on time. Rosa hands you a coil of rope. "Every miner needs a way out of a loop." You earned the **Escape Rope**. `break` jumps out of a loop right away.

@@ -1,0 +1,504 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-boss-cave-in
+region: the-endless-mines
+title: The Cave-In
+type: boss
+npc: rumblebug
+learning_outcome: Use while loops, counters, if/elif and break with world.look() to guide the hero out of any cave.
+csta: [2-AP-10, 2-AP-11, 2-AP-12]
+estimated_minutes: 18
+prerequisites:
+  - r5-q1-how-many-digs
+  - r5-q2-lantern-down-the-tunnel
+  - r5-q3-the-gem-tally
+  - r5-q4-the-endless-tunnel
+  - r5-q5-ride-the-cart-tracks
+  - r5-q6-the-depth-gauge
+vocabulary: [bug, while loop, counter, break]
+
+boss:
+  name: The Cave-In
+  bug: Rumblebug
+  sprite: bug_rumblebug
+
+story_intro: |
+  RUMBLE! A round, rocky [[bug]] named Rumblebug shakes the whole mine. Rocks crash down, and the lanterns flicker out. "Find your way out NOW, Scriptwright! Ha!"
+
+  The way out is dark and twisty. Your hero can only see one tile ahead, with `world.look()`. Beat Rumblebug in three steps: walk, count, escape.
+goal: Beat Rumblebug in three phases. Then it turns back into a friendly firefly.
+concept_card: |
+  A `while` loop with `world.look()` lets the hero handle *any* tunnel, not just one. Count with a counter. Stop with `break`.
+
+phases:
+  - id: walk-to-the-rocks
+    title: Walk to the rocks
+    type: make
+    learning_outcome: Use a while loop with world.look() to move until something blocks the way.
+    csta: [2-AP-12]
+    estimated_minutes: 5
+    story_intro: |
+      Rocks fell somewhere down this tunnel. But where? Rumblebug keeps shaking more of them loose, so counting steps won't help.
+    goal: Use a `while` loop to walk right as long as the way ahead is floor. Stop right in front of the rocks.
+    stage:
+      kind: grid
+      grid: |
+        ###########
+        #H.....o..#
+        ###########
+      facing: right
+      legend:
+        "#": { tile: mine_wall, solid: true, look: wall }
+        ".": { tile: mine_floor, look: floor }
+        H: { tile: mine_floor, hero: true, look: floor }
+        o: { tile: mine_floor, object: mine_rocks, look: rock }
+    starter_code: |
+      from codeweald import hero, world
+      # Walk right while the way ahead is floor.
+    solution: |
+      from codeweald import hero, world
+      # Walk right while the way ahead is floor.
+      while world.look() == "floor":
+          hero.move("right")
+    validators:
+      - id: uses-while
+        type: ast
+        require: [While]
+        fail_hint: Use a `while` loop, so the hero can stop at the rocks wherever they fall.
+      - id: at-rocks
+        type: state
+        hero_at: [6, 1]
+        fail_hint: The hero should stop right in front of the rocks.
+      - id: no-bonks
+        type: state
+        max_bonks: 0
+        fail_hint: The hero bumped into the rocks. Look before you step.
+      # Rumblebug shakes the rocks closer, then farther away.
+      - id: any-tunnel
+        type: hidden_tests
+        mode: stages
+        compare: [state]
+        cases:
+          - stage:
+              kind: grid
+              grid: |
+                ######
+                #H..o#
+                ######
+              legend:
+                o: { tile: floor, object: mine_rocks, look: rock }
+          - stage:
+              kind: grid
+              grid: |
+                ###############
+                #H..........o.#
+                ###############
+              legend:
+                o: { tile: floor, object: mine_rocks, look: rock }
+        fail_hint: It works here, but not when the rocks fall closer or farther away.
+    common_mistakes:
+      - id: forever
+        detect: { kind: detector, name: infinite_while_true_without_break }
+        feedback: >-
+          `while True:` never stops on its own, so the hero walks into the rocks again and again.
+          Try `while world.look() == "floor":` instead.
+      - id: no-loop
+        detect: { kind: validator_failed, id: uses-while }
+        feedback: >-
+          That works today, but Rumblebug will shake the rocks somewhere else! Use a `while`
+          loop that keeps walking as long as `world.look()` says `"floor"`.
+      - id: bonked
+        detect: { kind: state, min_bonks: 1 }
+        feedback: Bonk! The hero walked into the rocks. Check `world.look()` before each step.
+      - id: not-there
+        detect: { kind: validator_failed, id: at-rocks }
+        feedback: >-
+          The hero didn't reach the rocks. Check the word in your loop. `world.look()` says
+          `"floor"`, all in small letters.
+      - id: other-tunnels
+        detect: { kind: validator_failed, id: any-tunnel }
+        feedback: It works here, but not when the rocks fall closer or farther away. Let `world.look()` decide when to stop.
+    wrong_solutions:
+      - expect_mistake: no-loop
+        code: |
+          from codeweald import hero, world
+          hero.move("right", 5)
+      - expect_mistake: forever
+        code: |
+          from codeweald import hero, world
+          while True:
+              hero.move("right")
+      - expect_mistake: not-there
+        code: |
+          from codeweald import hero, world
+          while world.look() == "Floor":
+              hero.move("right")
+    hints:
+      - Rumblebug might shake more rocks down. Don't count the steps. Let `world.look()` tell you when to stop.
+      - "`while world.look() == \"floor\":` keeps going while the way is clear. Inside the loop, move right one step."
+      - |
+        ```python
+        while world.look() == ____:
+            hero.move("right")
+        ```
+    story_outro: |
+      The hero stops right in front of the rock pile. Rumblebug grumbles. "Lucky! But can you COUNT?"
+
+  - id: count-the-steps
+    title: Count the steps
+    type: modify
+    carry_code: true
+    learning_outcome: Use a counter to report how many times a loop ran.
+    csta: [2-AP-11]
+    estimated_minutes: 5
+    story_intro: |
+      The miners outside want to know how far in you are. Rumblebug laughs. "Nobody counts in the dark!"
+    goal: |
+      Add a counter called `steps`. It goes up by 1 for every step. After the loop, print the count like this: `Steps to the rocks: 5`
+    stage:
+      kind: grid
+      grid: |
+        ###########
+        #H.....o..#
+        ###########
+      facing: right
+      legend:
+        "#": { tile: mine_wall, solid: true, look: wall }
+        ".": { tile: mine_floor, look: floor }
+        H: { tile: mine_floor, hero: true, look: floor }
+        o: { tile: mine_floor, object: mine_rocks, look: rock }
+    starter_code: |
+      from codeweald import hero, world
+      # Walk right while the way ahead is floor.
+      while world.look() == "floor":
+          hero.move("right")
+    solution: |
+      from codeweald import hero, world
+      steps = 0
+      # Walk right while the way ahead is floor.
+      while world.look() == "floor":
+          hero.move("right")
+          steps = steps + 1
+      print("Steps to the rocks:", steps)
+    validators:
+      - id: report
+        type: output
+        expect: "Steps to the rocks: 5"
+        fail_hint: "After the loop, print the count: `Steps to the rocks: 5`"
+      - id: at-rocks
+        type: state
+        hero_at: [6, 1]
+        fail_hint: Keep the walking part. The hero should still stop in front of the rocks.
+      - id: any-tunnel
+        type: hidden_tests
+        mode: stages
+        compare: [output]
+        cases:
+          - stage:
+              kind: grid
+              grid: |
+                ######
+                #H..o#
+                ######
+              legend:
+                o: { tile: floor, object: mine_rocks, look: rock }
+          - stage:
+              kind: grid
+              grid: |
+                ###############
+                #H..........o.#
+                ###############
+              legend:
+                o: { tile: floor, object: mine_rocks, look: rock }
+        fail_hint: The count is right here, but not in other tunnels. Let the counter count.
+    common_mistakes:
+      - id: print-in-loop
+        detect: { kind: output_regex, pattern: 'Steps to the rocks: \d+\nSteps to the rocks' }
+        feedback: >-
+          The count prints after every step! The `print` line is inside the loop. Move it after
+          the loop, with no indent, so it prints once at the end.
+      - id: stuck-at-zero
+        detect: { kind: output_regex, pattern: '^Steps to the rocks: 0$' }
+        feedback: >-
+          The count says 0, but the hero walked! Inside the loop, add 1 for each step:
+          `steps = steps + 1`.
+      - id: stuck-at-one
+        detect: { kind: output_regex, pattern: '^Steps to the rocks: 1$' }
+        feedback: >-
+          The count is stuck at 1. `steps = 1` sets it to 1 every time. Add 1 to the old value
+          instead: `steps = steps + 1`.
+      - id: no-report
+        detect: { kind: output_regex, pattern: 'Steps to the rocks', expect: absent }
+        feedback: "After the loop, print the count: `print(\"Steps to the rocks:\", steps)`"
+      - id: wrong-report
+        detect: { kind: validator_failed, id: report }
+        feedback: "Check the words and the number. It should say `Steps to the rocks: 5`."
+      - id: other-tunnels
+        detect: { kind: validator_failed, id: any-tunnel }
+        feedback: The count is right here, but not in other tunnels. Count with `steps`. Don't type the number.
+    wrong_solutions:
+      - expect_mistake: print-in-loop
+        code: |
+          from codeweald import hero, world
+          steps = 0
+          while world.look() == "floor":
+              hero.move("right")
+              steps = steps + 1
+              print("Steps to the rocks:", steps)
+      - expect_mistake: stuck-at-zero
+        code: |
+          from codeweald import hero, world
+          steps = 0
+          while world.look() == "floor":
+              hero.move("right")
+          print("Steps to the rocks:", steps)
+      - expect_mistake: stuck-at-one
+        code: |
+          from codeweald import hero, world
+          steps = 0
+          while world.look() == "floor":
+              hero.move("right")
+              steps = 1
+          print("Steps to the rocks:", steps)
+      - expect_mistake: other-tunnels
+        code: |
+          from codeweald import hero, world
+          while world.look() == "floor":
+              hero.move("right")
+          print("Steps to the rocks: 5")
+    hints:
+      - A counter starts at 0 before the loop. Where should it go up by 1?
+      - Put `steps = 0` before the loop. Inside the loop, after the move, add `steps = steps + 1`. After the loop, with no indent, print the count.
+      - |
+        ```python
+        steps = 0
+        while world.look() == "floor":
+            hero.move("right")
+            steps = ____
+        print("Steps to the rocks:", steps)
+        ```
+    story_outro: |
+      "Five steps in!" the miners call back. Rumblebug's rocky shell cracks a little. "Rumble... rumble?"
+
+  - id: find-the-way-out
+    title: Find the way out
+    type: modify
+    learning_outcome: Use if/elif and break inside a while loop to solve a path problem.
+    csta: [2-AP-10, 2-AP-12]
+    estimated_minutes: 8
+    story_intro: |
+      Rumblebug gives one last, huge shake. Now the cave twists up and to the right, all the way to the ladder out. And Rumblebug can change the cave whenever it likes!
+
+      The rule for the way out: walk right until the way is blocked, then climb up. When up is blocked, go right again. Keep going until you step onto the exit.
+    goal: |
+      Finish the loop. When `world.look()` says `"exit"`, step onto it and `break`. When the way is blocked, change direction: `"right"` becomes `"up"`, and `"up"` becomes `"right"`. It must work in any cave.
+    stage:
+      kind: grid
+      grid: |
+        ############
+        ########E###
+        ########.###
+        ####.....o##
+        ####.#######
+        #....o######
+        #.##########
+        #H##########
+        ############
+      facing: right
+      legend:
+        "#": { tile: mine_wall, solid: true, look: wall }
+        ".": { tile: mine_floor, look: floor }
+        H: { tile: mine_floor, hero: true, look: floor }
+        o: { tile: mine_floor, object: mine_rocks, look: rock }
+        E: { tile: mine_exit, look: exit }
+    starter_code: |
+      from codeweald import hero, world
+      direction = "right"
+      while True:
+          hero.face(direction)
+          ahead = world.look()
+          if ahead == "floor":
+              hero.move(direction)
+          # Add an elif: if the exit is ahead, step onto it and break.
+          # Add an else: the way is blocked, so change direction.
+          #   ("right" becomes "up", and "up" becomes "right")
+      hero.say("I'm out!")
+    solution: |
+      from codeweald import hero, world
+      direction = "right"
+      while True:
+          hero.face(direction)
+          ahead = world.look()
+          if ahead == "floor":
+              hero.move(direction)
+          elif ahead == "exit":
+              hero.move(direction)
+              break
+          elif direction == "right":
+              direction = "up"
+          else:
+              direction = "right"
+      hero.say("I'm out!")
+    validators:
+      - id: uses-break
+        type: ast
+        require: [While, Break]
+        fail_hint: Use the `while True:` loop with `world.look()`, and `break` at the exit.
+      - id: out
+        type: state
+        hero_on: exit
+        fail_hint: The hero must end up standing on the exit.
+      - id: no-bonks
+        type: state
+        max_bonks: 0
+        fail_hint: The hero bumped into something. Look before you step.
+      # Three more caves that Rumblebug might shake up.
+      - id: any-cave
+        type: hidden_tests
+        mode: stages
+        compare: [state]
+        cases:
+          - stage:
+              kind: grid
+              grid: |
+                #########
+                #####E###
+                #####.###
+                #H....o##
+                #########
+              legend:
+                o: { tile: floor, object: mine_rocks, look: rock }
+          - stage:
+              kind: grid
+              grid: |
+                ############
+                ############
+                #######...E#
+                ###.....o###
+                ###.########
+                ###.########
+                #...o#######
+                #.##########
+                #H##########
+                ############
+              legend:
+                o: { tile: floor, object: mine_rocks, look: rock }
+          - stage:
+              kind: grid
+              grid: |
+                ######
+                ###E##
+                ###.##
+                #o#.##
+                #...o#
+                #.####
+                #H####
+                ######
+              legend:
+                o: { tile: floor, object: mine_rocks, look: rock }
+        fail_hint: You got out of this cave, but not out of every cave.
+    common_mistakes:
+      - id: no-break-forever
+        detect: { kind: detector, name: infinite_while_true_without_break }
+        feedback: >-
+          Your `while True:` loop has no `break`, so it can never end. When `world.look()` says
+          `"exit"`, step onto the exit, then `break`.
+      - id: stuck
+        detect: { kind: error, key: limits.actions }
+        feedback: >-
+          The hero is stuck, looking at the same wall again and again! When the way is blocked,
+          change direction. If `direction` is `"right"`, make it `"up"`. Otherwise, make it
+          `"right"`.
+      - id: no-loop
+        detect: { kind: validator_failed, id: uses-break }
+        feedback: >-
+          Rumblebug will shake the cave again, so a list of moves won't work for long. Use the
+          `while True:` loop with `world.look()` and `break`.
+      - id: bonked
+        detect: { kind: state, min_bonks: 1 }
+        feedback: Bonk! The hero walked into something. Only move when the look says `"floor"` or `"exit"`.
+      - id: not-out
+        detect: { kind: validator_failed, id: out }
+        feedback: >-
+          The hero stopped before the exit. Did the loop break too soon? Only `break` after the
+          look says `"exit"` and the hero steps onto it.
+      - id: other-caves
+        detect: { kind: validator_failed, id: any-cave }
+        feedback: >-
+          You got out of this cave, but not out of every cave. Make sure the hero only uses what
+          `world.look()` sees, not a list of moves for this one cave.
+    wrong_solutions:
+      - expect_mistake: no-break-forever
+        note: The starter code, unchanged.
+        code: |
+          from codeweald import hero, world
+          direction = "right"
+          while True:
+              hero.face(direction)
+              ahead = world.look()
+              if ahead == "floor":
+                  hero.move(direction)
+          hero.say("I'm out!")
+      - expect_mistake: no-loop
+        note: Moves that only fit this one cave.
+        code: |
+          from codeweald import hero, world
+          hero.move("up", 2)
+          hero.move("right", 3)
+          hero.move("up", 2)
+          hero.move("right", 4)
+          hero.move("up", 2)
+          hero.say("I'm out!")
+      - expect_mistake: not-out
+        note: Breaks at the first wall instead of turning.
+        code: |
+          from codeweald import hero, world
+          direction = "right"
+          while True:
+              hero.face(direction)
+              ahead = world.look()
+              if ahead == "floor":
+                  hero.move(direction)
+              elif ahead == "exit":
+                  hero.move(direction)
+                  break
+              else:
+                  break
+          hero.say("I'm out!")
+      - expect_mistake: stuck
+        note: Turns up, but never back to the right.
+        code: |
+          from codeweald import hero, world
+          direction = "right"
+          while True:
+              hero.face(direction)
+              ahead = world.look()
+              if ahead == "floor":
+                  hero.move(direction)
+              elif ahead == "exit":
+                  hero.move(direction)
+                  break
+              else:
+                  direction = "up"
+          hero.say("I'm out!")
+    hints:
+      - The loop already walks on floor. What should happen when the look says `"exit"`? And when it says anything else?
+      - "Add `elif ahead == \"exit\":` with a move and a `break`. Then add `elif direction == \"right\":` that sets `direction = \"up\"`, and an `else:` that sets `direction = \"right\"`."
+      - |
+        ```python
+            if ahead == "floor":
+                hero.move(direction)
+            elif ahead == "exit":
+                hero.move(direction)
+                ____
+            elif direction == "right":
+                direction = "up"
+            else:
+                direction = "right"
+        ```
+    story_outro: |
+      The hero climbs the ladder into the daylight. "I'm out!"
+
+story_outro: |
+  Rumblebug wobbles, rumbles... and glows. With a tiny *pop*, it turns into a friendly firefly that lights up the whole tunnel. "Ooh. I'm a lantern now," it hums.
+
+  You found **Script Fragment: Repeating**! From the entrance, Byte calls out, "Well done, apprentice! I knew you could do it. I was guarding the sky the whole time."

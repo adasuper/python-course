@@ -975,3 +975,594 @@ Ada reads Maps.
    In an f-string, each `{jar}` is replaced by the value inside the jar.
 
 4. What is the difference between `print(name)` and `print("name")`? → **The first shows what is inside the jar `name`. The second shows the word name.**. Without quotes, Python looks inside the jar. With quotes, it's just text.
+
+## Region 5 — The Endless Mines
+
+**Concepts:** while loops; counters; loop conditions; infinite loops; break
+
+**Byte's analogy:** A while loop is like a miner who says, "While my lantern is lit, keep digging." Before each dig, the miner checks the lantern. If the lantern never runs out, the miner digs forever. That's an infinite loop.
+
+### How Many Digs?
+
+`r5-q1-how-many-digs`
+
+- **Type:** predict
+- **Learning outcome:** Predict how many times a while loop runs and what it prints.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Read Dot's program and predict what it does. Then run it to check.
+
+**Code students read:**
+
+```python
+digs = 0
+while digs < 3:
+    print("Dig!")
+    digs = digs + 1
+print("Lunch break!")
+rocks = 5
+while rocks < 3:
+    print("Smash a rock!")
+    rocks = rocks + 1
+print("Home time.")
+```
+
+**Answers:**
+
+- How many times does the first loop print `Dig!`? → **3 times**. digs is 0, then 1, then 2, and each time `digs < 3` is True. Then digs becomes 3, and `3 < 3` is False. So the loop runs 3 times.
+- How many times does the second loop print `Smash a rock!`? → **0 times**. rocks starts at 5. Is `5 < 3`? No! The check is False the very first time, so the loop runs 0 times. Python skips right past it.
+- Now type everything the Scroll of Output will show, one line at a time. → **Dig! Dig! Dig! Lunch break! Home time.**. Three digs, then a lunch break, then straight to home time. The rock loop never ran.
+
+**Hints (free, in this order):**
+
+1. Put your finger on line 1. Each time you reach a `while` line, ask, "Is this True right now?"
+2. Keep a little table. digs is 0, then 1, then 2, then 3. The loop stops when `digs < 3` turns False. For the second loop, check `rocks < 3` when rocks is 5.
+3. (code example)
+
+```text
+digs = 0:  0 < 3 is True   -> Dig!
+digs = 1:  1 < 3 is True   -> Dig!
+digs = 2:  2 < 3 is True   -> Dig!
+digs = 3:  3 < 3 is ____   -> the loop stops
+rocks = 5: 5 < 3 is False  -> the rock loop runs 0 times
+```
+
+### Lantern Down the Tunnel
+
+`r5-q2-lantern-down-the-tunnel`
+
+- **Type:** investigate
+- **Learning outcome:** Explain how a while loop checks its condition before each repeat.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Run Wick's program and answer his questions. Use the **Step** button to watch each look, one at a time.
+
+**Code students run:**
+
+```python
+from codeweald import hero, world
+while world.look() == "floor":
+    hero.move("right")
+    print("Step!")
+hero.say("Rocks ahead!")
+```
+
+**Answers:**
+
+- Run the program. How many `Step!` lines appear on the Scroll of Output? → **5**. The hero took 5 steps, and each step printed `Step!` once.
+- Press **Step** in the replay to watch one action at a time. When does Python check `world.look() == "floor"`? → **Once before each repeat, at the top of the loop**. Python checks the `while` line, runs the indented lines, then goes back up and checks again.
+- How many times did the hero look ahead? Count the last look too, the one that saw the rocks. → **6**. Five looks said `"floor"`, and the sixth said `"rock"`. That False check is what ended the loop.
+- Change `"floor"` on line 2 to `"rock"`, then run it. What happens? → **The hero doesn't move at all.**. The very first check is False, so the loop runs 0 times. The hero just says "Rocks ahead!"
+- Put `"floor"` back. Now delete line 3, `hero.move("right")`, and run it. What happens? → **The loop never stops, so Byte has to stop it.**. Without a step, the hero always sees floor, so the check stays True. That's an infinite loop. Put line 3 back when you're done!
+
+**Hints (free, in this order):**
+
+1. Press Run first. Then use the **Step** button to watch one action at a time.
+2. Each time around, the hero looks ahead *first*. If the look says `"floor"`, the hero steps and prints. The last look sees the rocks, so the loop stops.
+3. (code example)
+
+```text
+look: floor -> step, print Step!   (1)
+look: floor -> step, print Step!   (2)
+... three more steps ...
+look: ____  -> the loop stops
+```
+
+### The Gem Tally
+
+`r5-q3-the-gem-tally`
+
+- **Type:** fill
+- **Learning outcome:** Use a counter variable in a while loop to count the gems the hero picks up.
+- **CSTA:** 2-AP-11, 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Fill the three gaps. The hero walks along the vein, picks up every gem, and counts them. Then the program prints the tally.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+gems = ____
+while world.look() == ____:
+    hero.move("right")
+    hero.pick_up()
+    gems = ____
+print("Gems in the tally:", gems)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+gems = 0
+while world.look() == "gem":
+    hero.move("right")
+    hero.pick_up()
+    gems = gems + 1
+print("Gems in the tally:", gems)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *wrong-word* — The hero didn't pick up the gems. What does `world.look()` say when a gem is in front of the hero? It says `"gem"`, in quotes, with no s.
+- *never-counted* — The tally says 0, but the hero picked up gems! Each time around the loop, add 1 to the old count: `gems = gems + 1`.
+- *stuck-at-one* — The tally is stuck at 1. `gems = 1` puts 1 in the jar every time. Add 1 to what is already there: `gems = gems + 1`.
+- *start-at-zero* — So close! Check where the tally starts. Before the hero picks up any gems, the count should be 0.
+- *other-tunnels* — It works in this tunnel. But Gemma's other tunnels have a different number of gems. Let the counter count them. Don't type the number yourself.
+
+**Hints (free, in this order):**
+
+1. There are three gaps. What number should a tally start at? What does `world.look()` say when a gem is ahead?
+2. Start with `gems = 0`. The loop keeps going while the look says `"gem"`. Inside the loop, add 1 to the old count with `gems = gems + 1`.
+3. (code example)
+
+```python
+gems = 0
+while world.look() == "gem":
+    hero.move("right")
+    hero.pick_up()
+    gems = ____
+```
+
+### The Tunnel That Never Ends
+
+`r5-q4-the-endless-tunnel`
+
+- **Type:** fix
+- **Learning outcome:** Fix an infinite loop by making sure its condition can become False.
+- **CSTA:** 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix the loop so it stops after 6 steps. The program prints the report, and the hero walks the new tunnel to Digby.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+steps = 0
+buckets = 0
+while steps < 6:
+    buckets = buckets + 3
+print("Dug", steps, "steps of tunnel.")
+print("Filled", buckets, "buckets with dirt.")
+hero.move("right", steps)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+steps = 0
+buckets = 0
+while steps < 6:
+    buckets = buckets + 3
+    steps = steps + 1
+print("Dug", steps, "steps of tunnel.")
+print("Filled", buckets, "buckets with dirt.")
+hero.move("right", steps)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *still-forever* — The loop still runs forever! The `while` line checks `steps`, but nothing *inside* the loop changes `steps`. Add `steps = steps + 1` inside the loop, indented under `buckets = buckets + 3`.
+- *wrong-way* — Now `steps` changes, but it never reaches 6, so `steps < 6` stays True. Make it go up by 1 each time: `steps = steps + 1`.
+- *one-too-many* — One step too many! The machine dug 7 steps. Check the `while` line. `steps < 6` stops at 6, but `steps <= 6` keeps going one more time.
+- *wrong-report* — The loop stops now. Great! But the report doesn't match. It should say 6 steps and 18 buckets. Only add the missing line. Don't change the others.
+- *not-there* — The report is right, but the hero didn't walk all 6 steps to Digby. Keep the last line as it was.
+
+**Hints (free, in this order):**
+
+1. Run it and read Byte's message. Which variable does the `while` line check? Does anything inside the loop change it?
+2. The loop checks `steps < 6`, but `steps` stays 0 forever. Add a line *inside* the loop (indented) that adds 1 to `steps`.
+3. (code example)
+
+```python
+while steps < 6:
+    buckets = buckets + 3
+    ____
+```
+
+### Ride the Cart Tracks
+
+`r5-q5-ride-the-cart-tracks`
+
+- **Type:** modify
+- **Learning outcome:** Use break to stop a loop as soon as the hero reaches the exit.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Change the counting loop to `while True:`. Inside it, `break` as soon as the exit is in front of the hero. After the loop, the hero hops off onto the exit.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+rides = 0
+while rides < 4:
+    hero.move("right")
+    rides = rides + 1
+# Hop off the cart onto the exit.
+hero.move("right")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+while True:
+    if world.look() == "exit":
+        break
+    hero.move("right")
+# Hop off the cart onto the exit.
+hero.move("right")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *no-break-forever* — `while True:` never stops on its own, and your loop has no `break`. Inside the loop, check `if world.look() == "exit":` and `break` when it's True.
+- *cart-crash* — The cart never stopped! Check the word in your `if`. `world.look()` says `"exit"`, all in small letters.
+- *no-break* — That works on today's track. But the tracks keep changing! Use `while True:` with an `if` and `break`, so the cart stops at the exit on any track.
+- *bonked* — Bonk! The hero walked past the exit into the wall. If you already step onto the exit inside the loop, you don't need to hop off again after it.
+- *stopped-early* — The hero isn't standing on the exit. Did the loop stop too soon? After the loop, the hero still needs one more step to hop off onto the exit.
+- *other-tracks* — It works on this track, but not on a shorter or longer one. Let `world.look()` decide when to stop, not a number.
+
+**Hints (free, in this order):**
+
+1. `while True:` never stops by itself. What should happen when `world.look()` says `"exit"`?
+2. Replace the counting loop with `while True:`. Inside it, first check `if world.look() == "exit":` and `break`. Otherwise, move right one step.
+3. (code example)
+
+```python
+while True:
+    if world.look() == "exit":
+        ____
+    hero.move("right")
+# Hop off the cart onto the exit.
+hero.move("right")
+```
+
+### The Depth Gauge
+
+`r5-q6-the-depth-gauge`
+
+- **Type:** make
+- **Learning outcome:** Write a while loop that keeps asking until the answer is right, counting the tries.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Use a while loop that asks for a guess until it equals `depth`. Print "Deeper!" or "Not so deep!" after a wrong guess, and count the tries.
+
+**Starter code:**
+
+```python
+depth = 40
+tries = 0
+guess = 0
+# Ottie's plan:
+# 1. While the guess is not the depth:
+#      ask: guess = int(input("How deep is the crystal cave? "))
+#      add 1 to tries
+#      print "Deeper!" if the guess is too small,
+#      or "Not so deep!" if it is too big
+# 2. After the loop: print("Found it! Tries:", tries)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+depth = 40
+tries = 0
+guess = 0
+while guess != depth:
+    guess = int(input("How deep is the crystal cave? "))
+    tries = tries + 1
+    if guess < depth:
+        print("Deeper!")
+    elif guess > depth:
+        print("Not so deep!")
+print("Found it! Tries:", tries)
+```
+
+**Input values the quest provides:** `25`, `60`, `40`
+
+**Common mistakes and the feedback students get:**
+
+- *no-loop* — Ottie needs a loop that keeps asking. Start with `while guess != depth:` and put the `input()` line inside it.
+- *ask-inside* — Your program asks only once, so the loop goes round and round with the same guess. Move the `input()` line *inside* the loop, so every try asks again.
+- *text-not-number* — `input()` always gives you text, like `"25"`. Python can't compare text with the number 40. Turn the answer into a number: `int(input(...))`.
+- *ran-out* — The loop kept asking after the right answer. Is the guess a number? The text `"40"` is not the number 40, so wrap the answer in `int(...)`.
+- *hint-when-right* — When the guess is right, Ottie shouldn't shout a hint. Use `if guess < depth:` and then `elif guess > depth:`, so nothing prints for the right answer.
+- *tries-zero* — The tries never went up. Inside the loop, add 1 each time: `tries = tries + 1`.
+- *wrong-output* — Almost! Compare your Scroll with Ottie's example, line by line. The words must match: `Deeper!`, `Not so deep!` and `Found it! Tries: 3`
+
+**Hints (free, in this order):**
+
+1. What should happen again and again? Asking, counting, and giving a hint. That's the inside of your loop.
+2. Start with `while guess != depth:`. Inside, ask with `guess = int(input("How deep is the crystal cave? "))`, then add 1 to `tries`. Use `if` and `elif` to print the hint.
+3. (code example)
+
+```python
+while guess != depth:
+    guess = int(input("How deep is the crystal cave? "))
+    tries = tries + 1
+    if guess < depth:
+        print("Deeper!")
+    elif ____:
+        print("Not so deep!")
+print("Found it! Tries:", tries)
+```
+
+### The Cave-In 🐛 boss
+
+`r5-boss-cave-in`
+
+**Boss:** The Cave-In (Rumblebug). Beat Rumblebug in three phases. Then it turns back into a friendly firefly.
+
+#### Phase 1: Walk to the rocks
+
+- **Type:** make
+- **Learning outcome:** Use a while loop with world.look() to move until something blocks the way.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Use a `while` loop to walk right as long as the way ahead is floor. Stop right in front of the rocks.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+# Walk right while the way ahead is floor.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+# Walk right while the way ahead is floor.
+while world.look() == "floor":
+    hero.move("right")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *forever* — `while True:` never stops on its own, so the hero walks into the rocks again and again. Try `while world.look() == "floor":` instead.
+- *no-loop* — That works today, but Rumblebug will shake the rocks somewhere else! Use a `while` loop that keeps walking as long as `world.look()` says `"floor"`.
+- *bonked* — Bonk! The hero walked into the rocks. Check `world.look()` before each step.
+- *not-there* — The hero didn't reach the rocks. Check the word in your loop. `world.look()` says `"floor"`, all in small letters.
+- *other-tunnels* — It works here, but not when the rocks fall closer or farther away. Let `world.look()` decide when to stop.
+
+**Hints (free, in this order):**
+
+1. Rumblebug might shake more rocks down. Don't count the steps. Let `world.look()` tell you when to stop.
+2. `while world.look() == "floor":` keeps going while the way is clear. Inside the loop, move right one step.
+3. (code example)
+
+```python
+while world.look() == ____:
+    hero.move("right")
+```
+
+#### Phase 2: Count the steps
+
+- **Type:** modify
+- **Learning outcome:** Use a counter to report how many times a loop ran.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Add a counter called `steps`. It goes up by 1 for every step. After the loop, print the count like this: `Steps to the rocks: 5`
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+# Walk right while the way ahead is floor.
+while world.look() == "floor":
+    hero.move("right")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+steps = 0
+# Walk right while the way ahead is floor.
+while world.look() == "floor":
+    hero.move("right")
+    steps = steps + 1
+print("Steps to the rocks:", steps)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *print-in-loop* — The count prints after every step! The `print` line is inside the loop. Move it after the loop, with no indent, so it prints once at the end.
+- *stuck-at-zero* — The count says 0, but the hero walked! Inside the loop, add 1 for each step: `steps = steps + 1`.
+- *stuck-at-one* — The count is stuck at 1. `steps = 1` sets it to 1 every time. Add 1 to the old value instead: `steps = steps + 1`.
+- *no-report* — After the loop, print the count: `print("Steps to the rocks:", steps)`
+- *wrong-report* — Check the words and the number. It should say `Steps to the rocks: 5`.
+- *other-tunnels* — The count is right here, but not in other tunnels. Count with `steps`. Don't type the number.
+
+**Hints (free, in this order):**
+
+1. A counter starts at 0 before the loop. Where should it go up by 1?
+2. Put `steps = 0` before the loop. Inside the loop, after the move, add `steps = steps + 1`. After the loop, with no indent, print the count.
+3. (code example)
+
+```python
+steps = 0
+while world.look() == "floor":
+    hero.move("right")
+    steps = ____
+print("Steps to the rocks:", steps)
+```
+
+#### Phase 3: Find the way out
+
+- **Type:** modify
+- **Learning outcome:** Use if/elif and break inside a while loop to solve a path problem.
+- **CSTA:** 2-AP-10, 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Finish the loop. When `world.look()` says `"exit"`, step onto it and `break`. When the way is blocked, change direction: `"right"` becomes `"up"`, and `"up"` becomes `"right"`. It must work in any cave.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+direction = "right"
+while True:
+    hero.face(direction)
+    ahead = world.look()
+    if ahead == "floor":
+        hero.move(direction)
+    # Add an elif: if the exit is ahead, step onto it and break.
+    # Add an else: the way is blocked, so change direction.
+    #   ("right" becomes "up", and "up" becomes "right")
+hero.say("I'm out!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+direction = "right"
+while True:
+    hero.face(direction)
+    ahead = world.look()
+    if ahead == "floor":
+        hero.move(direction)
+    elif ahead == "exit":
+        hero.move(direction)
+        break
+    elif direction == "right":
+        direction = "up"
+    else:
+        direction = "right"
+hero.say("I'm out!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *no-break-forever* — Your `while True:` loop has no `break`, so it can never end. When `world.look()` says `"exit"`, step onto the exit, then `break`.
+- *stuck* — The hero is stuck, looking at the same wall again and again! When the way is blocked, change direction. If `direction` is `"right"`, make it `"up"`. Otherwise, make it `"right"`.
+- *no-loop* — Rumblebug will shake the cave again, so a list of moves won't work for long. Use the `while True:` loop with `world.look()` and `break`.
+- *bonked* — Bonk! The hero walked into something. Only move when the look says `"floor"` or `"exit"`.
+- *not-out* — The hero stopped before the exit. Did the loop break too soon? Only `break` after the look says `"exit"` and the hero steps onto it.
+- *other-caves* — You got out of this cave, but not out of every cave. Make sure the hero only uses what `world.look()` sees, not a list of moves for this one cave.
+
+**Hints (free, in this order):**
+
+1. The loop already walks on floor. What should happen when the look says `"exit"`? And when it says anything else?
+2. Add `elif ahead == "exit":` with a move and a `break`. Then add `elif direction == "right":` that sets `direction = "up"`, and an `else:` that sets `direction = "right"`.
+3. (code example)
+
+```python
+    if ahead == "floor":
+        hero.move(direction)
+    elif ahead == "exit":
+        hero.move(direction)
+        ____
+    elif direction == "right":
+        direction = "up"
+    else:
+        direction = "right"
+```
+
+### The Crystal Bloom ⭐ side quest
+
+`r5-side1-crystal-bloom`
+
+- **Type:** make
+- **Learning outcome:** Use a while loop to find how many days it takes doubling crystals to fill a cave.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Use a while loop. Each day, double the crystals and add 1 to `days`. Stop when the crystals fill the cave, then print `The cave is full after 7 days!` (with the right number of days).
+
+**Starter code:**
+
+```python
+cave = int(input("How many crystals fit in the cave? "))
+crystals = 1
+days = 0
+# Each day, the crystals double (times 2).
+# Count the days until the crystals fill the cave.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+cave = int(input("How many crystals fit in the cave? "))
+crystals = 1
+days = 0
+# Each day, the crystals double (times 2).
+# Count the days until the crystals fill the cave.
+while crystals < cave:
+    crystals = crystals * 2
+    days = days + 1
+print("The cave is full after", days, "days!")
+```
+
+**Input values the quest provides:** `100`
+
+**Common mistakes and the feedback students get:**
+
+- *no-loop* — You need a loop that keeps going until the cave is full. Try `while crystals < cave:` and put the doubling and the day count inside it.
+- *plus-two* — Doubling means times 2, not plus 2. Use `crystals = crystals * 2`.
+- *days-zero* — The days never went up. Inside the loop, add 1 for each day: `days = days + 1`.
+- *full-is-full* — Try a cave for 64 crystals. On day 6 there are exactly 64, so the cave is full! Keep going only while `crystals < cave`, not `<=`.
+- *wrong-words* — Compare your Scroll with the example, word for word. It should say `The cave is full after 7 days!` for a cave of 100.
+
+**Hints (free, in this order):**
+
+1. Start with 1 crystal on day 0. What happens each day? When should you stop?
+2. `while crystals < cave:` keeps going until the cave is full. Inside, double the crystals with `crystals = crystals * 2`, and add 1 to `days`.
+3. (code example)
+
+```python
+while crystals < cave:
+    crystals = ____
+    days = days + 1
+print("The cave is full after", days, "days!")
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+count = 1
+while count <= 3:
+    print(count)
+    count = count + 1
+```
+
+   Answer:
+
+```text
+1
+2
+3
+```
+
+   count goes 1, 2, 3. When count is 4, `4 <= 3` is False, so the loop stops.
+
+2. This loop never stops. Which line is missing inside it? → **lamps = lamps + 1**. Nothing inside the loop changes `lamps`, so `lamps < 4` stays True forever. Adding 1 each time lets it reach 4.
+3. What does `break` do? → **It jumps out of the loop right away.**. `break` stops the loop at once. Python goes on with the first line after the loop.
+4. How many times does this loop run? Type what the program prints.
+
+```python
+while 5 < 3:
+    print("Dig!")
+print("Done")
+```
+
+   Answer:
+
+```text
+Done
+```
+
+   Is 5 less than 3? No. The check is False the very first time, so the loop runs 0 times.

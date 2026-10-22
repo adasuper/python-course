@@ -112,3 +112,35 @@
   definition: A string with an `f` before the first quote. Each `{name}` inside it is replaced by that variable's value.
   example: '`f"Hi {name}!"` shows `Hi Ada!` when `name` is `"Ada"`.'
   related: [string, variable]
+# Region 5: The Endless Mines
+- term: loop
+  definition: Code that repeats. A loop runs the same lines again and again, so you don't have to write them many times.
+  example: '`while digs < 3:` repeats the lines under it.'
+  related: [while loop, infinite loop]
+- term: while loop
+  definition: A loop that repeats its indented lines as long as its condition is True. Python checks the condition before each repeat.
+  example: |
+    ```python
+    digs = 0
+    while digs < 3:
+        print("Dig!")
+        digs = digs + 1
+    ```
+  related: [loop, counter, break]
+- term: counter
+  definition: A variable that counts things. It usually starts at 0 and goes up by 1 each time something happens.
+  example: '`gems = gems + 1`'
+  related: [while loop]
+- term: infinite loop
+  definition: A loop that never stops, because its condition never turns False. Something inside the loop must change, so the loop can end.
+  example: '`while True:` with no `break` runs forever.'
+  related: [while loop, break]
+- term: break
+  definition: An instruction that jumps out of a loop right away. Python goes on with the first line after the loop.
+  example: |
+    ```python
+    while True:
+        print("Dig!")
+        break
+    ```
+  related: [loop, while loop]

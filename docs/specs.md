@@ -1097,8 +1097,9 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 - `npm run new-quest -- --region 4 --type make --slug river-ferry` scaffolds a valid file with
   TODO markers.
 - In dev, run `npm run content` after editing YAML; the dev server reloads the compiled JSON.
-  `/?dev#/dev/quest/<quest-id>` (or `/?dev#/dev/check/<region-id>`) opens any quest or
-  knowledge check directly, with a throwaway "Dev Tester" profile. It only works with the
+  `/?dev#/dev/quest/<quest-id>` (or `/?dev#/dev/check/<region-id>`,
+  `/?dev#/dev/concept/<region-id>`, `/?dev#/dev/region/<region-id>`) opens any quest, knowledge
+  check, concept scene or region map directly, with a throwaway "Dev Tester" profile. It only works with the
   `?dev` flag, so it never appears in normal play. With `?dev`, end-to-end tests can also open
   a compiled quest from `tests/e2e/fixtures/` (`window.__codewealdTest.openQuest`). That is how
   quest types the content doesn't use yet are tested through the real UI.

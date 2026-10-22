@@ -20,6 +20,7 @@ import {
   profile,
   profiles,
   regions,
+  update,
 } from './state/store';
 import { App } from './ui/App';
 import { applySettings } from './ui/flow';
@@ -58,20 +59,31 @@ async function boot() {
   await openDevQuest();
 }
 
-/** Authors and tests can open any quest or knowledge check directly:
- *  /?dev#/dev/quest/<quest-id> or /?dev#/dev/check/<region-id> (specs §10.6). */
+/** Authors and tests can open any quest, knowledge check, concept scene or region map
+ *  directly (specs §10.6): /?dev#/dev/quest/<quest-id>, /?dev#/dev/check/<region-id>,
+ *  /?dev#/dev/concept/<region-id> or /?dev#/dev/region/<region-id>. */
 async function openDevQuest() {
   if (!new URLSearchParams(location.search).has('dev')) return;
   exposeTestHooks();
-  const match = /^#\/dev\/(quest|check)\/(.+)$/.exec(location.hash);
+  const match = /^#\/dev\/(quest|check|concept|region)\/(.+)$/.exec(location.hash);
   if (!match) return;
-  const target = decodeURIComponent(match[2]!);
+  const [, kind, raw] = match as unknown as [string, 'quest' | 'check' | 'concept' | 'region', string];
+  const target = decodeURIComponent(raw);
   const course = loadCourse();
-  const regionId = match[1] === 'check' ? target : course.questInfo[target]?.region;
+  const regionId = kind === 'quest' ? course.questInfo[target]?.region : target;
   if (!regionId || !course.regions.some((r) => r.id === regionId)) return;
   useDevProfile();
   await loadRegion(regionId);
-  go(match[1] === 'check' ? { name: 'check', regionId } : { name: 'quest', questId: target });
+  if (kind === 'concept' || kind === 'region') {
+    update((x) => {
+      x.location.region = regionId;
+      x.location.at = null;
+    });
+  }
+  if (kind === 'check') go({ name: 'check', regionId });
+  else if (kind === 'concept') go({ name: 'concept', regionId, next: { name: 'overworld' } });
+  else if (kind === 'region') go({ name: 'overworld' });
+  else go({ name: 'quest', questId: target });
 }
 
 /** End-to-end tests play quest types that the real content doesn't have yet by handing

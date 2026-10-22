@@ -51,8 +51,9 @@ Open <http://localhost:4173> in Chrome or Edge. The first load downloads Python 
 | `npm run lint` · `npm run typecheck` · `npm run format` | Code quality |
 
 **Open any quest directly:** `http://localhost:4173/?dev#/dev/quest/r1-q5-criers-crooked-announcement`
-(or `/?dev#/dev/check/hearthvale-village` for a knowledge check). This uses a throwaway
-"Dev Tester" profile.
+(or `/?dev#/dev/check/hearthvale-village` for a knowledge check, `/?dev#/dev/concept/…` for a
+concept scene, `/?dev#/dev/region/…` for a region's map). This uses a throwaway "Dev Tester"
+profile.
 
 ### Editing content
 

@@ -1,0 +1,218 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-q6-the-depth-gauge
+region: the-endless-mines
+title: The Depth Gauge
+type: make
+npc: ottie-gauge
+learning_outcome: Write a while loop that keeps asking until the answer is right, counting the tries.
+csta: [2-AP-12]
+estimated_minutes: 8
+prerequisites: [r5-q5-ride-the-cart-tracks]
+vocabulary: [while loop, counter]
+# Spaced retrieval: if/elif from Region 4, int(input()) from Region 3.
+retrieval: [r3, r4]
+
+story_intro: |
+  Ottie Gauge taps a stuck dial. "The crystal cave is exactly 40 steps down. My helpers keep guessing, and I keep shouting hints. Can your program do the shouting for me?"
+
+  Your program should keep asking until the guess is right. After a wrong guess, give a hint. At the end, say how many tries it took. If the helpers guess 25, then 60, then 40, the Scroll should show:
+  ```text
+  How deep is the crystal cave? 25
+  Deeper!
+  How deep is the crystal cave? 60
+  Not so deep!
+  How deep is the crystal cave? 40
+  Found it! Tries: 3
+  ```
+goal: Use a while loop that asks for a guess until it equals `depth`. Print "Deeper!" or "Not so deep!" after a wrong guess, and count the tries.
+concept_card: |
+  A `while` loop can keep asking until the answer is right. Ask **inside** the loop, so every try gets a new answer. A counter like `tries = tries + 1` counts how many times the loop ran.
+  ```python
+  while guess != depth:
+      guess = int(input("Guess: "))
+      tries = tries + 1
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_miner_ottie, name: Ottie Gauge }
+
+# Ottie's helpers: two wrong guesses, then the right one.
+inputs: ["25", "60", "40"]
+interactive_input: true
+
+starter_code: |
+  depth = 40
+  tries = 0
+  guess = 0
+  # Ottie's plan:
+  # 1. While the guess is not the depth:
+  #      ask: guess = int(input("How deep is the crystal cave? "))
+  #      add 1 to tries
+  #      print "Deeper!" if the guess is too small,
+  #      or "Not so deep!" if it is too big
+  # 2. After the loop: print("Found it! Tries:", tries)
+
+solution: |
+  depth = 40
+  tries = 0
+  guess = 0
+  while guess != depth:
+      guess = int(input("How deep is the crystal cave? "))
+      tries = tries + 1
+      if guess < depth:
+          print("Deeper!")
+      elif guess > depth:
+          print("Not so deep!")
+  print("Found it! Tries:", tries)
+
+validators:
+  - id: uses-while
+    type: ast
+    require: [While]
+    require_calls: [input]
+    fail_hint: Use a `while` loop that asks with `input()` until the guess is right.
+  # Other helpers, other guesses: right away, and after five wrong guesses.
+  - id: gauge
+    type: hidden_tests
+    mode: inputs
+    compare: [output]
+    cases:
+      - { inputs: ["25", "60", "40"] }
+      - { inputs: ["40"] }
+      - { inputs: ["10", "20", "50", "45", "39", "40"] }
+    fail_hint: Compare your Scroll with Ottie's example, line by line.
+
+common_mistakes:
+  - id: no-loop
+    detect: { kind: validator_failed, id: uses-while }
+    feedback: >-
+      Ottie needs a loop that keeps asking. Start with `while guess != depth:` and put the
+      `input()` line inside it.
+  - id: ask-inside
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            if ctx.tree is None:
+                return False
+            asks = [n for n in ast.walk(ctx.tree) if isinstance(n, ast.Call) and getattr(n.func, "id", "") == "input"]
+            if not asks:
+                return False
+            for loop in ast.walk(ctx.tree):
+                if isinstance(loop, ast.While):
+                    for n in ast.walk(loop):
+                        if isinstance(n, ast.Call) and getattr(n.func, "id", "") == "input":
+                            return False
+            return True
+    feedback: >-
+      Your program asks only once, so the loop goes round and round with the same guess. Move
+      the `input()` line *inside* the loop, so every try asks again.
+  - id: text-not-number
+    detect: { kind: error, type: TypeError }
+    feedback: >-
+      `input()` always gives you text, like `"25"`. Python can't compare text with the number
+      40. Turn the answer into a number: `int(input(...))`.
+  - id: ran-out
+    detect: { kind: error, key: input.empty }
+    feedback: >-
+      The loop kept asking after the right answer. Is the guess a number? The text `"40"` is not
+      the number 40, so wrap the answer in `int(...)`.
+  - id: hint-when-right
+    detect: { kind: output_regex, pattern: '(Deeper|Not so deep)!\nFound it!' }
+    feedback: >-
+      When the guess is right, Ottie shouldn't shout a hint. Use `if guess < depth:` and then
+      `elif guess > depth:`, so nothing prints for the right answer.
+  - id: tries-zero
+    detect: { kind: output_regex, pattern: '^Found it! Tries: 0$' }
+    feedback: >-
+      The tries never went up. Inside the loop, add 1 each time: `tries = tries + 1`.
+  - id: wrong-output
+    detect: { kind: validator_failed, id: gauge }
+    feedback: >-
+      Almost! Compare your Scroll with Ottie's example, line by line. The words must match:
+      `Deeper!`, `Not so deep!` and `Found it! Tries: 3`
+
+wrong_solutions:
+  - expect_mistake: ask-inside
+    code: |
+      depth = 40
+      tries = 0
+      guess = int(input("How deep is the crystal cave? "))
+      while guess != depth:
+          tries = tries + 1
+          if guess < depth:
+              print("Deeper!")
+          elif guess > depth:
+              print("Not so deep!")
+      print("Found it! Tries:", tries)
+  - expect_mistake: text-not-number
+    code: |
+      depth = 40
+      tries = 0
+      guess = 0
+      while guess != depth:
+          guess = input("How deep is the crystal cave? ")
+          tries = tries + 1
+          if guess < depth:
+              print("Deeper!")
+          elif guess > depth:
+              print("Not so deep!")
+      print("Found it! Tries:", tries)
+  - expect_mistake: hint-when-right
+    code: |
+      depth = 40
+      tries = 0
+      guess = 0
+      while guess != depth:
+          guess = int(input("How deep is the crystal cave? "))
+          tries = tries + 1
+          if guess < depth:
+              print("Deeper!")
+          else:
+              print("Not so deep!")
+      print("Found it! Tries:", tries)
+  - expect_mistake: tries-zero
+    code: |
+      depth = 40
+      tries = 0
+      guess = 0
+      while guess != depth:
+          guess = int(input("How deep is the crystal cave? "))
+          if guess < depth:
+              print("Deeper!")
+          elif guess > depth:
+              print("Not so deep!")
+      print("Found it! Tries:", tries)
+  - expect_mistake: wrong-output
+    note: Hard-codes the answer for today's helpers.
+    code: |
+      depth = 40
+      tries = 0
+      guess = 0
+      while guess != depth:
+          guess = int(input("How deep is the crystal cave? "))
+          if guess < depth:
+              print("Deeper!")
+          elif guess > depth:
+              print("Not so deep!")
+      print("Found it! Tries: 3")
+
+hints:
+  - What should happen again and again? Asking, counting, and giving a hint. That's the inside of your loop.
+  - "Start with `while guess != depth:`. Inside, ask with `guess = int(input(\"How deep is the crystal cave? \"))`, then add 1 to `tries`. Use `if` and `elif` to print the hint."
+  - |
+    ```python
+    while guess != depth:
+        guess = int(input("How deep is the crystal cave? "))
+        tries = tries + 1
+        if guess < depth:
+            print("Deeper!")
+        elif ____:
+            print("Not so deep!")
+    print("Found it! Tries:", tries)
+    ```
+
+story_outro: |
+  "Forty steps down, found in three tries!" Ottie taps the gauge, and the needle finally moves. "And it works for any guess, right or wrong. Brilliant!"

@@ -1,0 +1,219 @@
+# yaml-language-server: $schema=../../../schema/region.schema.json
+# Region 5: The Endless Mines. while loops, counters, loop conditions, infinite loops
+# and break. See docs/curriculum-map.md.
+id: the-endless-mines
+number: 5
+name: The Endless Mines
+concepts:
+  - while loops
+  - counters
+  - loop conditions
+  - infinite loops
+  - break
+
+intro:
+  - speaker: byte
+    text: Welcome to the Endless Mines! The tunnels go on, and on, and on. A bit like my speeches.
+  - speaker: byte
+    text: The miners need help with digging and counting gems. Most of all, they need help knowing when to **stop**.
+  - speaker: byte
+    text: I will wait right here at the entrance. Owls prefer the sky. It has nothing to do with the dark. Or the bats. Or the dark bats.
+
+# The mine map. One character is one tile. Outside at the top, the tunnels below.
+# See docs/specs.md §11.1 for the default legend.
+overworld:
+  grid: |
+    TTTTTTTTTTTTTTTTTTTTTTTTT=TTTT
+    T..,."..o..T.......b.....=.,.T
+    ==========================..oT
+    T.b.,....L...,==.L......".,..T
+    mmmmmmmmmmmmmmAammmmmmmmmmmmmm
+    XXXXXXXXXXXXXlxxlXXXXXXXXXXXXX
+    XcxxxxxxXXXxxxxxxxxXXXxxxxxxxX
+    XxxxxxxxxxxxxxxxxxxxxxxxxxxxxX
+    XxxxxxxcXZXxxxxxxxxXZXxxxxxxxX
+    XXXxXXXXXXXXXXxxXXXXXXXXXXxXXX
+    XttttttkttttttttttttttttttttxX
+    XXXxXXXXxXXXXxxXXXXXXXXXXxxXXX
+    XGGxxxxXXXXXXxxXXXXXXxxxxxxxxX
+    XGxxxxxXXXXXXxxXXXXXXxxxSSxxxX
+    XGxxxxxXXXXXXxxXXXXXXxxxSSxxxX
+    XXXxXXXXXXXXXxxXXXXXXxxxxxxxcX
+    XrxxxrrXXXXXXxxXXXXXXXXXXXXXXX
+    XxxxxxrXXXXXXxxxxxxxxXXXXXXXXX
+    XrxrxxrXXXXXXXXXXXXXXXXXXXXXXX
+    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  legend:
+    m: { tile: mine_cliff, solid: true }
+    A: { tile: mine_entrance_left }
+    a: { tile: mine_entrance_right }
+    X: { tile: mine_wall, solid: true }
+    Z: { tile: mine_beam_wall, solid: true }
+    G: { tile: mine_gem_wall, solid: true }
+    x: { tile: mine_floor }
+    t: { tile: mine_track }
+    k: { tile: mine_track, over: mine_cart, solid: true }
+    l: { tile: mine_floor, over: mine_lantern, solid: true }
+    r: { tile: mine_floor, over: mine_rocks, solid: true }
+    c: { tile: mine_floor, over: mine_crystal, solid: true }
+    S: { tile: mine_shaft, solid: true }
+  objects:
+    - { kind: spawn, at: [14, 3] }
+    - { kind: npc, id: byte, at: [13, 3] }
+    - { kind: npc, id: dot-digwell, at: [4, 6], quest: r5-q1-how-many-digs }
+    - { kind: npc, id: old-wick, at: [25, 6], quest: r5-q2-lantern-down-the-tunnel }
+    - { kind: npc, id: gemma-glint, at: [4, 13], quest: r5-q3-the-gem-tally }
+    - { kind: npc, id: digby-burrows, at: [14, 16], quest: r5-q4-the-endless-tunnel }
+    - { kind: npc, id: rosa-railwright, at: [28, 10], quest: r5-q5-ride-the-cart-tracks }
+    - { kind: npc, id: ottie-gauge, at: [23, 13], quest: r5-q6-the-depth-gauge }
+    - { kind: npc, id: rumblebug, at: [5, 17], quest: r5-boss-cave-in }
+    - { kind: npc, id: nell-pickett, at: [8, 11] }
+    - { kind: board, at: [12, 6] }
+    - { kind: sign, at: [16, 3], text: "The Endless Mines. Helmets on, please! No owls allowed. (An owl wrote this sign.)" }
+    - { kind: sign, at: [18, 6], text: "Lost? Follow the cart track. If the track is lost too, ask a miner." }
+    - { kind: sign, at: [5, 14], text: "DANGER! Cave-in ahead. Also a very rude Bug." }
+    - { kind: poi, id: owl-lookout, at: [1, 1] }
+    - { kind: poi, id: crystal-nook, at: [1, 8] }
+    - { kind: poi, id: bat-roost, at: [28, 6] }
+    - { kind: poi, id: tunnel-end, at: [20, 17] }
+    - { kind: exit, at: [25, 0], text: "The road to Clocktower Peaks. It goes up, up, up. Byte approves." }
+
+npcs:
+  byte:
+    name: Byte
+    sprite: byte
+    greeting: Me? Go in there? Ha! Owls prefer the sky. I will guard the entrance. It's a very important job.
+  dot-digwell:
+    name: Dot Digwell
+    sprite: npc_miner_dot
+    greeting: Dig, dig, dig! I love digging. I just never know how many times I've dug.
+  old-wick:
+    name: Old Wick
+    sprite: npc_miner_wick
+    greeting: Hold your lantern up high. Down here, you can only see one step ahead.
+  gemma-glint:
+    name: Gemma Glint
+    sprite: npc_miner_gemma
+    greeting: Gems, gems, gems! I lost count again. Can you help me keep a tally?
+  digby-burrows:
+    name: Digby Burrows
+    sprite: npc_miner_digby
+    greeting: My digging machine won't stop! It's been digging since Tuesday. Which Tuesday? Good question.
+  rosa-railwright:
+    name: Rosa Railwright
+    sprite: npc_miner_rosa
+    greeting: All aboard! Well, all aboard if the cart knows where to stop.
+  ottie-gauge:
+    name: Ottie Gauge
+    sprite: npc_miner_ottie
+    greeting: My depth gauge is stuck. Now nobody can guess how deep the crystal cave is!
+  nell-pickett:
+    name: Old Nell
+    sprite: npc_miner_nell
+    greeting: Sixty years I've worked these mines. I never found the end of a single tunnel.
+  rumblebug:
+    name: Rumblebug
+    sprite: bug_rumblebug
+    greeting: RUMBLE RUMBLE! I shook the tunnels, and the rocks fell down. Find your way out of THAT!
+
+concept_scene:
+  title: What is a while loop?
+  analogy: >-
+    A [[while loop]] is like a miner who says, "While my lantern is lit, keep digging." Before
+    each dig, the miner checks the lantern. If the lantern never runs out, the miner digs
+    forever. That's an [[infinite loop]].
+  lines:
+    - speaker: byte
+      text: Hello from out here! I'll teach this one from the entrance. The sky needs me.
+    - speaker: byte
+      text: A [[loop]] repeats some lines of code. A `while` loop repeats its indented lines as long as its check is True.
+    - speaker: byte
+      text: Python checks once **before each repeat**. True? Run the lines again. False? Jump to the line after the loop.
+    - speaker: byte
+      text: So something inside the loop must change. If nothing changes, the check stays True, and the loop never ends.
+    - speaker: byte
+      text: Watch the miner's torches run out, one at a time. Then the quests are yours. I'll be out here. Being brave. In the sunshine.
+  worked_example:
+    stage: { kind: none }
+    code: |
+      torches = 3
+      while torches > 0:
+          print("Light a torch and dig!")
+          torches = torches - 1
+      print("Out of torches. Time to rest.")
+    explain:
+      - line: 1
+        text: The miner starts with 3 torches.
+      - line: 2
+        text: Python checks `torches > 0`. Is 3 more than 0? True! So the indented lines run.
+      - line: 3
+        text: Light a torch and dig! This line runs once each time around the loop.
+      - line: 4
+        text: One torch is used up. This change is what lets the loop end.
+      - line: 5
+        text: When torches is 0, `0 > 0` is False. The loop stops, and Python runs this line.
+
+quests:
+  - r5-q1-how-many-digs
+  - r5-q2-lantern-down-the-tunnel
+  - r5-q3-the-gem-tally
+  - r5-q4-the-endless-tunnel
+  - r5-q5-ride-the-cart-tracks
+  - r5-q6-the-depth-gauge
+boss: r5-boss-cave-in
+side_quests:
+  - r5-side1-crystal-bloom
+
+knowledge_check:
+  items:
+    - kind: predict
+      question: What will this print?
+      code: |
+        count = 1
+        while count <= 3:
+            print(count)
+            count = count + 1
+      answer: |
+        1
+        2
+        3
+      explain: count goes 1, 2, 3. When count is 4, `4 <= 3` is False, so the loop stops.
+    - kind: mcq
+      question: This loop never stops. Which line is missing inside it?
+      code: |
+        lamps = 0
+        while lamps < 4:
+            print("Light!")
+      options:
+        - lamps = lamps + 1
+        - lamps = 0
+        - print(lamps)
+      answer: 0
+      explain: Nothing inside the loop changes `lamps`, so `lamps < 4` stays True forever. Adding 1 each time lets it reach 4.
+    - kind: mcq
+      question: What does `break` do?
+      options:
+        - It jumps out of the loop right away.
+        - It pauses the loop for a moment.
+        - It starts the loop again from the top.
+      answer: 0
+      explain: "`break` stops the loop at once. Python goes on with the first line after the loop."
+    - kind: predict
+      question: How many times does this loop run? Type what the program prints.
+      code: |
+        while 5 < 3:
+            print("Dig!")
+        print("Done")
+      answer: Done
+      explain: Is 5 less than 3? No. The check is False the very first time, so the loop runs 0 times.
+
+fragment:
+  id: fragment-repeating
+  name: "Script Fragment: Repeating"
+  description: The piece of the Great Script that keeps going until the job is done.
+
+pois:
+  - owl-lookout
+  - crystal-nook
+  - bat-roost
+  - tunnel-end

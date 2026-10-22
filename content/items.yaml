@@ -23,3 +23,34 @@
   example: |
     print("Hi)
     # SyntaxError on line 1: the quote never closed.
+# Region 5: The Endless Mines
+- id: miners-lantern
+  name: Miner's Lantern
+  icon: miner_lantern
+  region: the-endless-mines
+  description: "A `while` loop repeats its indented lines as long as its condition stays True."
+  example: |
+    torches = 3
+    while torches > 0:
+        print("Dig!")
+        torches = torches - 1
+- id: tally-stones
+  name: Tally Stones
+  icon: tally_stones
+  region: the-endless-mines
+  description: "A [[counter]] is a variable that goes up by 1 each time something happens: `count = count + 1`."
+  example: |
+    gems = 0
+    gems = gems + 1
+    gems = gems + 1
+    print(gems)
+- id: escape-rope
+  name: Escape Rope
+  icon: escape_rope
+  region: the-endless-mines
+  description: "`break` jumps out of a loop right away."
+  example: |
+    while True:
+        print("Dig!")
+        break
+    print("Out of the loop!")

@@ -48,3 +48,14 @@
   emoji: 🧭
   description: You found every secret corner of Hearthvale.
   trigger: { kind: pois_visited, region: hearthvale-village }
+# Region 5: The Endless Mines
+- id: restorer-the-endless-mines
+  name: "Region Restorer: Endless Mines"
+  emoji: ⛏️
+  description: You beat the Cave-In and saved the Endless Mines.
+  trigger: { kind: boss_defeated, region: the-endless-mines }
+- id: explorer-the-endless-mines
+  name: "Explorer: Endless Mines"
+  emoji: 🔦
+  description: You found every secret corner of the Endless Mines.
+  trigger: { kind: pois_visited, region: the-endless-mines }

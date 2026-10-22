@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-side1-crystal-bloom
+region: the-endless-mines
+title: The Crystal Bloom
+type: make
+side_quest: true
+learning_outcome: Use a while loop to find how many days it takes doubling crystals to fill a cave.
+csta: [2-AP-12]
+estimated_minutes: 8
+prerequisites: [r5-boss-cave-in]
+vocabulary: [while loop, counter]
+
+story_intro: |
+  A note on the Quest Board says: *"Magic crystals! Plant 1 today, and tomorrow there are 2. The next day, 4. Then 8! How many days until a cave is full? Ask Old Nell. She knows the caves."*
+
+  Old Nell tells you how many crystals fit in the cave. Your program counts the days until the crystals fill it. With a cave for 100 crystals, the Scroll should show:
+  ```text
+  How many crystals fit in the cave? 100
+  The cave is full after 7 days!
+  ```
+goal: "Use a while loop. Each day, double the crystals and add 1 to `days`. Stop when the crystals fill the cave, then print `The cave is full after 7 days!` (with the right number of days)."
+concept_card: |
+  A `while` loop is great when you don't know how many repeats you need. It just keeps going until the job is done. Doubling means times 2: `crystals = crystals * 2`.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_miner_nell, name: Old Nell }
+
+inputs: ["100"]
+interactive_input: true
+
+starter_code: |
+  cave = int(input("How many crystals fit in the cave? "))
+  crystals = 1
+  days = 0
+  # Each day, the crystals double (times 2).
+  # Count the days until the crystals fill the cave.
+
+solution: |
+  cave = int(input("How many crystals fit in the cave? "))
+  crystals = 1
+  days = 0
+  # Each day, the crystals double (times 2).
+  # Count the days until the crystals fill the cave.
+  while crystals < cave:
+      crystals = crystals * 2
+      days = days + 1
+  print("The cave is full after", days, "days!")
+
+validators:
+  - id: uses-while
+    type: ast
+    require: [While]
+    fail_hint: Use a `while` loop that keeps going until the cave is full.
+  # Old Nell's other caves: one that fills up exactly, a tiny one and a huge one.
+  - id: full
+    type: hidden_tests
+    mode: inputs
+    compare: [output]
+    cases:
+      - { inputs: ["100"] }
+      - { inputs: ["64"] }
+      - { inputs: ["1"] }
+      - { inputs: ["1000"] }
+    fail_hint: Check your count of days with a cave for 64 crystals. It should be 6 days.
+
+common_mistakes:
+  - id: no-loop
+    detect: { kind: validator_failed, id: uses-while }
+    feedback: >-
+      You need a loop that keeps going until the cave is full. Try `while crystals < cave:` and
+      put the doubling and the day count inside it.
+  - id: plus-two
+    detect: { kind: code_regex, pattern: 'crystals\s*(=\s*crystals\s*\+|\+=)\s*2\b' }
+    feedback: >-
+      Doubling means times 2, not plus 2. Use `crystals = crystals * 2`.
+  - id: days-zero
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            return "after 0 days" in ctx.run(inputs=["100"]).output
+    feedback: >-
+      The days never went up. Inside the loop, add 1 for each day: `days = days + 1`.
+  - id: full-is-full
+    detect: { kind: hidden_case_fails, validator: full, case: 1 }
+    feedback: >-
+      Try a cave for 64 crystals. On day 6 there are exactly 64, so the cave is full! Keep going
+      only while `crystals < cave`, not `<=`.
+  - id: wrong-words
+    detect: { kind: hidden_case_fails, validator: full, case: 0 }
+    feedback: >-
+      Compare your Scroll with the example, word for word. It should say
+      `The cave is full after 7 days!` for a cave of 100.
+
+wrong_solutions:
+  - expect_mistake: plus-two
+    code: |
+      cave = int(input("How many crystals fit in the cave? "))
+      crystals = 1
+      days = 0
+      while crystals < cave:
+          crystals = crystals + 2
+          days = days + 1
+      print("The cave is full after", days, "days!")
+  - expect_mistake: full-is-full
+    code: |
+      cave = int(input("How many crystals fit in the cave? "))
+      crystals = 1
+      days = 0
+      while crystals <= cave:
+          crystals = crystals * 2
+          days = days + 1
+      print("The cave is full after", days, "days!")
+  - expect_mistake: days-zero
+    code: |
+      cave = int(input("How many crystals fit in the cave? "))
+      crystals = 1
+      days = 0
+      while crystals < cave:
+          crystals = crystals * 2
+      print("The cave is full after", days, "days!")
+  - expect_mistake: no-loop
+    code: |
+      cave = int(input("How many crystals fit in the cave? "))
+      print("The cave is full after 7 days!")
+
+hints:
+  - Start with 1 crystal on day 0. What happens each day? When should you stop?
+  - "`while crystals < cave:` keeps going until the cave is full. Inside, double the crystals with `crystals = crystals * 2`, and add 1 to `days`."
+  - |
+    ```python
+    while crystals < cave:
+        crystals = ____
+        days = days + 1
+    print("The cave is full after", days, "days!")
+    ```
+
+story_outro: |
+  The crystals bloom until the cave sparkles from wall to wall. Old Nell whistles. "Seven days! In my day, we counted crystals by hand. It took weeks."

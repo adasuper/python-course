@@ -1,0 +1,128 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-q2-lantern-down-the-tunnel
+region: the-endless-mines
+title: Lantern Down the Tunnel
+type: investigate
+npc: old-wick
+learning_outcome: Explain how a while loop checks its condition before each repeat.
+csta: [2-AP-12]
+estimated_minutes: 7
+prerequisites: [r5-q1-how-many-digs]
+vocabulary: [while loop, loop, infinite loop]
+rewards: { item: miners-lantern }
+
+story_intro: |
+  Old Wick holds up his lantern. "In the mines, you can only see one step ahead. So a good miner looks, then steps. Looks, then steps."
+
+  `world.look()` tells you what is on the tile in front of the hero, like `"floor"` or `"rock"`. Wick's [[while loop]] keeps walking while the way ahead is floor.
+goal: Run Wick's program and answer his questions. Use the **Step** button to watch each look, one at a time.
+concept_card: |
+  A `while` loop checks its condition **once before each repeat**, never in the middle. When the check is False, the loop ends and Python runs the next line.
+  ```python
+  while world.look() == "floor":
+      hero.move("right")
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    #########
+    #H.....o#
+    #########
+  facing: right
+  legend:
+    "#": { tile: mine_wall, solid: true, look: wall }
+    ".": { tile: mine_floor, look: floor }
+    H: { tile: mine_floor, hero: true, look: floor }
+    o: { tile: mine_floor, object: mine_rocks, look: rock }
+
+starter_code: |
+  from codeweald import hero, world
+  while world.look() == "floor":
+      hero.move("right")
+      print("Step!")
+  hero.say("Rocks ahead!")
+
+questions:
+  - kind: number
+    question: Run the program. How many `Step!` lines appear on the Scroll of Output?
+    answer: 5
+    hint: Count the lines on the Scroll after the hero stops. Each step prints one line.
+    explain: The hero took 5 steps, and each step printed `Step!` once.
+    verify: { kind: output_lines }
+  - kind: mcq
+    question: Press **Step** in the replay to watch one action at a time. When does Python check `world.look() == "floor"`?
+    options:
+      - Once before each repeat, at the top of the loop
+      - All the time, even in the middle of the loop
+      - Only once, at the very start
+    answer: 0
+    hint: Watch for the hero's look in the replay. Does it come before the step, or in the middle of it?
+    explain: Python checks the `while` line, runs the indented lines, then goes back up and checks again.
+  - kind: number
+    question: How many times did the hero look ahead? Count the last look too, the one that saw the rocks.
+    answer: 6
+    hint: There was one look before each of the 5 steps. Then one more look found the rocks.
+    explain: Five looks said `"floor"`, and the sixth said `"rock"`. That False check is what ended the loop.
+    # Proves the answer: one look before each step, plus the last one.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        from codeweald import hero, world
+        looks = 1
+        while world.look() == "floor":
+            hero.move("right")
+            looks = looks + 1
+        print(looks)
+      output: "6"
+  - kind: mcq
+    question: Change `"floor"` on line 2 to `"rock"`, then run it. What happens?
+    options:
+      - The hero doesn't move at all.
+      - The hero walks to the rocks.
+      - The hero walks forever.
+    answer: 0
+    hint: The first look sees floor. Is `"floor" == "rock"` True or False?
+    explain: The very first check is False, so the loop runs 0 times. The hero just says "Rocks ahead!"
+    verify:
+      kind: try
+      outcome: ok
+      output: ""
+      code: |
+        from codeweald import hero, world
+        while world.look() == "rock":
+            hero.move("right")
+            print("Step!")
+        hero.say("Rocks ahead!")
+  - kind: mcq
+    question: Put `"floor"` back. Now delete line 3, `hero.move("right")`, and run it. What happens?
+    options:
+      - The loop never stops, so Byte has to stop it.
+      - The hero walks to the rocks.
+      - Python skips the loop.
+    answer: 0
+    hint: If the hero never moves, what does `world.look()` see every single time?
+    explain: Without a step, the hero always sees floor, so the check stays True. That's an infinite loop. Put line 3 back when you're done!
+    verify:
+      kind: try
+      outcome: error
+      code: |
+        from codeweald import hero, world
+        while world.look() == "floor":
+            print("Step!")
+        hero.say("Rocks ahead!")
+
+hints:
+  - Press Run first. Then use the **Step** button to watch one action at a time.
+  - Each time around, the hero looks ahead *first*. If the look says `"floor"`, the hero steps and prints. The last look sees the rocks, so the loop stops.
+  - |
+    ```text
+    look: floor -> step, print Step!   (1)
+    look: floor -> step, print Step!   (2)
+    ... three more steps ...
+    look: ____  -> the loop stops
+    ```
+
+story_outro: |
+  Old Wick hands you a lantern. "Look first, then step. That's the miner's way." You earned the **Miner's Lantern**. A while loop repeats as long as its check stays True.

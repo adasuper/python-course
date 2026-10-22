@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { setCode } from './helpers';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/?dev#/dev/quest/r1-q6-welcome-sign');
+  await page.goto('./?dev#/dev/quest/r1-q6-welcome-sign');
   await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
 });
 

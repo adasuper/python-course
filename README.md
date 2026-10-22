@@ -45,7 +45,7 @@ Open <http://localhost:4173> in Chrome or Edge. The first load downloads Python 
 | `npm run solutions` | Regenerate the instructor answer key `docs/solutions.md` |
 | `npm run new-quest` | *(Phase 5)* Scaffold a new quest file |
 | `npm test` | Unit, Python-runtime and content tests (Vitest; Python runs in Pyodide on Node) |
-| `npm run test:e2e` | End-to-end, keyboard and accessibility tests (Playwright + axe) — run `npm run build` first |
+| `npm run test:e2e` | End-to-end, keyboard and accessibility tests (Playwright + axe) — run `npm run build` first (with the same `CODEWEALD_BASE`, if you set one) |
 | `npm run lint` · `npm run typecheck` · `npm run format` | Code quality |
 
 **Open any quest directly:** `http://localhost:4173/?dev#/dev/quest/r1-q5-criers-crooked-announcement`
@@ -78,12 +78,38 @@ actions as animation, highlighting the line of code that caused each one. Infini
 stopped by a loop budget inside Python, naming the line, and a hard wall-clock timeout
 restarts the worker as a backstop. Details: [docs/specs.md](docs/specs.md).
 
+## CI/CD
+
+[`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) runs on every push and pull
+request, in three stages:
+
+1. **Build:** `npm run build` runs once. That includes type-checking and the size budget.
+   The result is saved as the `site` artifact.
+2. **Test:** three jobs run in parallel: lint and format; unit, Python and content tests
+   (every reference and wrong solution, and the answer key being up to date); and
+   end-to-end plus accessibility tests that play **that same build** in Chromium.
+3. **Deploy:** on the default branch only, after every test passes, the same tested files
+   are published to GitHub Pages. You can also deploy by hand: **Actions → CI/CD → Run
+   workflow** on the default branch.
+
+**Turning deploys on:** in the repository, go to **Settings → Pages** and set **Source** to
+**GitHub Actions**. Until then, the deploy job is skipped with a warning. Keep in mind:
+
+- GitHub Pages for a **private** repository needs a paid GitHub plan, and the published
+  site is public.
+- The site is built for `https://<owner>.github.io/<repo-name>/`. For a custom domain, set
+  the repository variable `SITE_BASE_PATH` to `/` (Settings → Secrets and variables →
+  Actions → Variables).
+- To approve each deploy by hand, add a required reviewer to the `github-pages` environment
+  (Settings → Environments).
+
 ## Deploying
 
 `npm run build` produces a static site in `dist/` that works on any static host (GitHub
 Pages, a school web server). Use `CODEWEALD_BASE=/repo-name/ npm run build` for a sub-path.
-No special headers are needed, but serve `.wasm` as `application/wasm` and use HTTPS.
-Full deployment notes arrive in Phase 6.
+No special headers are needed, but serve `.wasm` as `application/wasm` and use HTTPS. On
+GitHub, the CI/CD pipeline above does all of this for you. Notes for other servers arrive
+in Phase 6.
 
 **Handling exported files:** a progress file contains the student's nickname and their code.
 Keep it somewhere private, such as the student's own Google Drive.
@@ -104,7 +130,7 @@ Keep it somewhere private, such as the student's own Google Drive.
 
 Vite + TypeScript (strict) · Phaser 4 · Preact + Signals · Pyodide 314 (CPython 3.14) in a
 Web Worker · CodeMirror 6 · YAML content validated with Zod · Vitest + Playwright + axe-core
-· GitHub Actions.
+· GitHub Actions CI/CD to GitHub Pages.
 
 ## License
 

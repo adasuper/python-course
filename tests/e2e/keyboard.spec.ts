@@ -40,7 +40,7 @@ test('play the first quest using only the keyboard', async ({ page }) => {
 });
 
 test('the editor never traps the keyboard: Esc, then Tab, leaves it', async ({ page }) => {
-  await page.goto('/?dev#/dev/quest/r1-q6-welcome-sign');
+  await page.goto('./?dev#/dev/quest/r1-q6-welcome-sign');
   await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
   await page.locator('.cm-content').focus();
   await page.keyboard.type('print("Hi")');

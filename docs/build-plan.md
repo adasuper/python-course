@@ -194,7 +194,7 @@ completeness check (every region has a lesson plan and an answer key).
 | M6.3 Low-end performance | 4× CPU / slow network profiles; Pyodide-ready and run-latency budgets; memory on a 4 GB device; calibrate loop budget; standby-worker decision |
 | M6.4 Reading level | Full report; rewrite flagged text; glossary completeness |
 | M6.5 Content review | Every quest played; hints sanity; misconceptions; tone; bias/inclusion review of art and names |
-| M6.6 Deployment | GitHub Pages workflow; Apache/Nginx/IIS snippets; system-check page; final README |
+| M6.6 Deployment | GitHub Pages deploy (the pipeline's `deploy` stage already exists; verify the live site); Apache/Nginx/IIS snippets; system-check page; final README |
 
 **Exit criteria:** every CI job green; zero serious/critical axe violations; all §17 budgets met
 on the throttled profile; deployment verified on GitHub Pages and on one plain static server.

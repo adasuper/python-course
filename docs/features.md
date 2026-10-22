@@ -1555,7 +1555,7 @@ Priority: Must · Phase: 1 · Spec: §18.3 · Brief: §7
 ### F-QA-05 — CI on every push
 As a Maintainer, I want a GitHub Actions workflow, so that every change is checked automatically.
 **Acceptance criteria**
-- `.github/workflows/ci.yml` runs jobs `checks`, `unit`, `content`, `build` (+ size budget, `dist/` artifact), `e2e` and `reading-level`, with npm and Pyodide caches.
+- `.github/workflows/ci-cd.yml` runs on every push and pull request in stages: **Build** (`build`: size budget, `site` artifact), then **Test** (`checks`, `unit` with content validation, `e2e` against that same build, and `reading-level` from Phase 2), then **Deploy** (F-DEP-09). It uses the npm cache, which includes Pyodide.
 - A phase is done only when CI is green (General rules).
 
 Priority: Must · Phase: 1 · Spec: §19.1 · Brief: §7, §9
@@ -1727,12 +1727,13 @@ As a reviewer, I want a demo build with run instructions at the end of Phase 1, 
 
 Priority: Must · Phase: 1 · Spec: §19 · Brief: §8
 
-### F-DEP-09 — One-click GitHub Pages deploy
-As a Maintainer using GitHub, I want an optional workflow that publishes the game to GitHub Pages, so that hosting is easy.
+### F-DEP-09 — Automatic GitHub Pages deploy
+As a Maintainer using GitHub, I want the pipeline to publish the game to GitHub Pages, so that hosting is easy.
 **Acceptance criteria**
-- `deploy-pages.yml` (manual dispatch) builds with the right base path and publishes `dist/`.
+- The `deploy` stage of `ci-cd.yml` publishes the tested `site` artifact (built with the right base path) from the default branch, on push or by manual run, only after every test job passes.
+- When GitHub Pages is not turned on, the job is skipped with a warning that says how to turn it on.
 
-Priority: Could · Phase: 6 · Spec: §19.1 · Brief: §8
+Priority: Could · Phase: 1 (delivered early; verified on Pages in Phase 6) · Spec: §19.1 · Brief: §8
 
 ### F-DEP-10 — Design and course documents
 As a reviewer, I want the planning and teaching documents kept current, so that the project is understandable and maintainable.

@@ -76,8 +76,10 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
     - keyboard-only quest from the map, and Esc+Tab leaving the editor
     - save code restoring in a fresh browser
     - axe scans of all main screens: no serious or critical violations
-- **CI:** `.github/workflows/ci.yml` runs lint, format, types, content validation, the
-  answer-key check, unit tests, the build with its size budget, and E2E plus axe.
+- **CI/CD:** `.github/workflows/ci-cd.yml` runs Build → Test → Deploy. It builds the site
+  once (types and size budget included), then runs lint and format, content validation, the
+  answer-key check, unit tests, and E2E plus axe against that same build. On the default
+  branch it then publishes the tested build to GitHub Pages (see the README).
 - **Size:** the app is 0.99 MB gzipped excluding Pyodide (budget 4 MB).
 
 ### Fixed after the demo
@@ -87,6 +89,12 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   game now sizes the canvas itself, in whole pixels, and moves the camera only when the size
   really changes. This also fixes the map staying small after returning from a quest on large
   screens.
+
+### Added after the demo
+
+- **CI/CD pipeline** (requested): one workflow in three stages, Build → Test → Deploy to
+  GitHub Pages. The site is built once, and the E2E tests play that exact build under its
+  GitHub Pages path (`/python-course/`). The planned Phase 6 Pages workflow is now part of it.
 
 ### Requirement changes during Phase 1
 
@@ -108,6 +116,11 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 - import Merge; PWA/offline
 
 ### Known issues
+
+- **Deploys need GitHub Pages turned on:** Settings → Pages → Source: "GitHub Actions".
+  Until then the deploy job is skipped with a warning. This repository is private, so Pages needs a paid GitHub plan, and the
+  site it publishes is public. Deploys follow the default branch, which is
+  `claude/new-session-aahe56` until a `main` branch is made the default.
 
 - **Art direction:** this is the first look. Please react to the mood and palette (Q6).
 - **Narrow screens:** the quest screen stacks its panels vertically below 1100 px wide.

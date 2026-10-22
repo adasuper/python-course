@@ -1,0 +1,162 @@
+# CI/CD: build once, test that build, then deploy the same files to GitHub Pages.
+#
+#   Build  ─►  Test (static checks · unit/Python/content · end-to-end + axe)  ─►  Deploy
+#
+# Every push and pull request runs Build and Test. Deploy runs only on the default branch
+# (on push, or by hand with "Run workflow"), and only once GitHub Pages is turned on with
+# Settings → Pages → Source: "GitHub Actions". Until then it is skipped with a note.
+name: CI/CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  # Never cancel a run on the default branch part-way through a deploy.
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+env:
+  # Where the site lives on its host: /<repo>/ for a GitHub Pages project site. Set the
+  # repository variable SITE_BASE_PATH to "/" when using a custom domain.
+  CODEWEALD_BASE: ${{ vars.SITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}
+
+jobs:
+  # ----- Stage 1: Build -------------------------------------------------------------------
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the site (copies Python, draws the art, compiles content, type-checks, size budget)
+        run: npm run build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: site
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # ----- Stage 2: Test --------------------------------------------------------------------
+
+  checks:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run prepare:assets
+      - run: npm run lint
+      - run: npm run format:check
+
+  unit:
+    name: Unit, Python and content tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run prepare:assets
+      - name: Validate content (schema, references, every solution and wrong solution)
+        run: npm run validate-content
+      - name: Instructor answer key is up to date
+        run: npm run solutions -- --check
+      - run: npm test
+
+  e2e:
+    name: End-to-end and accessibility tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Get the built site
+        uses: actions/download-artifact@v8
+        with:
+          name: site
+          path: dist
+      - run: npx playwright install --with-deps chromium
+      - name: Play the built site in Chromium (golden path, keyboard, saves, axe)
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ----- Stage 3: Deploy ------------------------------------------------------------------
+
+  pages:
+    name: Check GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [checks, unit, e2e]
+    if: >-
+      github.event_name != 'pull_request' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      pages: read
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>/dev/null)" = workflow ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            note='Deploy skipped: turn on GitHub Pages with Settings → Pages → Source: "GitHub Actions", then re-run this workflow.'
+            echo "::warning title=GitHub Pages is off::$note"
+            echo "$note" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: pages
+    if: needs.pages.outputs.enabled == 'true'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Get the tested site
+        uses: actions/download-artifact@v8
+        with:
+          name: site
+          path: dist
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v5

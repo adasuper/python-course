@@ -24,9 +24,9 @@ function mapState(page: Page) {
 
 test('the map stays still and fills its frame after a quest', async ({ page }) => {
   test.setTimeout(180_000);
-  await newPlayer(page, 'Clever Newt', '/?dev');
+  await newPlayer(page, 'Clever Newt', './?dev');
   await solveQuest(page, 'r1-q1-first-steps');
-  // Scrolling the page made Phaser report a resize every 500 ms, which re-centred the camera.
+  // Scrolling the page made Phaser report a resize every 500 ms, which re-centered the camera.
   await page.evaluate(() => window.scrollTo(0, 40));
   await page.waitForTimeout(500);
 

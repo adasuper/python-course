@@ -20,7 +20,7 @@ async function scan(page: Page, label: string) {
 }
 
 test('title and character creator', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await scan(page, 'title');
   await page.getByRole('button', { name: /New adventurer/ }).click();
   await scan(page, 'creator');
@@ -29,7 +29,7 @@ test('title and character creator', async ({ page }) => {
 });
 
 test('story, overworld, save dialog, inventory', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: /New adventurer/ }).click();
   await page.getByLabel('Your nickname').fill('Axe Tester');
   await page.getByRole('button', { name: 'Start my adventure' }).click();
@@ -55,14 +55,14 @@ for (const quest of [
   'r1-boss-village-crier-bug',
 ]) {
   test(`quest screen: ${quest}`, async ({ page }) => {
-    await page.goto(`/?dev#/dev/quest/${quest}`);
+    await page.goto(`./?dev#/dev/quest/${quest}`);
     await expect(page.locator('#quest-title')).toBeVisible();
     await scan(page, quest);
   });
 }
 
 test('knowledge check', async ({ page }) => {
-  await page.goto('/?dev#/dev/check/hearthvale-village');
+  await page.goto('./?dev#/dev/check/hearthvale-village');
   await expect(page.getByRole('heading', { name: /Review riddles/ })).toBeVisible();
   await scan(page, 'knowledge check');
   await page.getByRole('button', { name: 'Check my answers' }).click();

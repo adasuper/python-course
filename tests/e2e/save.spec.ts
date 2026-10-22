@@ -17,7 +17,7 @@ test('a save code restores progress in a brand-new browser', async ({ page, brow
 
   const fresh = await browser.newContext();
   const other = await fresh.newPage();
-  await other.goto('/');
+  await other.goto('./');
   await expect(other.getByText('No adventurers on this computer yet.')).toBeVisible();
   await other.getByRole('button', { name: /Continue from a save/ }).click();
   await other.getByLabel('Paste your save code').fill(code);
@@ -31,7 +31,7 @@ test('a save code restores progress in a brand-new browser', async ({ page, brow
 });
 
 test('a mistyped save code is caught kindly', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: /Continue from a save/ }).click();
   await page.getByLabel('Paste your save code').fill('CW1-ABCDE-FGHJK-MNPQR');
   await page.getByRole('button', { name: 'Continue with this code' }).click();

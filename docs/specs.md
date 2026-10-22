@@ -203,7 +203,7 @@ python-course/
 │  ├─ content/                     # generated per-quest tests
 │  └─ e2e/                         # Playwright (+ axe, offline, throttled)
 ├─ docs/                           # this doc, features, curriculum, guides
-├─ .github/workflows/ci.yml
+├─ .github/workflows/ci-cd.yml
 ├─ README.md · PROGRESS.md · ASSETS_LICENSES.md
 ```
 
@@ -1537,19 +1537,29 @@ CI fails if any quest lacks a passing solution or has fewer than 2 wrong solutio
 
 ## 19. CI and deployment
 
-### 19.1 GitHub Actions (`.github/workflows/ci.yml`)
+### 19.1 GitHub Actions CI/CD (`.github/workflows/ci-cd.yml`)
 
-| Job | Steps |
-|---|---|
-| `checks` | `npm ci` → ESLint → Prettier check → `tsc --noEmit` |
-| `unit` | Vitest (TS + Python suites) with coverage |
-| `content` | `npm run validate-content` (schema, cross-refs, all solutions, wrong solutions) |
-| `build` | `npm run build` → size budget → upload `dist/` artifact |
-| `e2e` | needs `build`; serve `dist/`; Playwright Chromium; axe; offline; throttled smoke |
-| `reading-level` | report artifact + job summary |
+One pipeline in three stages. The site is built once. The tests and the deploy use that same
+build, so what was tested is exactly what gets published.
 
-npm and Pyodide caches are keyed on the lockfile. An optional `deploy-pages.yml` (manual
-dispatch) publishes `dist/` to GitHub Pages.
+| Stage | Job | Steps |
+|---|---|---|
+| Build | `build` | `npm ci` → `npm run build` (Pyodide copy, art, content, `tsc --noEmit`, Vite, size budget) → upload the `site` artifact (`dist/`) |
+| Test | `checks` | ESLint → Prettier check |
+| Test | `unit` | `validate-content` (schema, cross-refs, all solutions, wrong solutions) → answer key up to date → Vitest (TS + Python suites) |
+| Test | `e2e` | download `site` → serve it under its real base path → Playwright Chromium; axe. Offline and throttled smoke tests join in Phases 2 and 6. |
+| Test | `reading-level` *(Phase 2)* | report artifact + job summary |
+| Deploy | `deploy` | default branch only (push or manual run), after every test job passes → publish `site` to GitHub Pages |
+
+- Every push and pull request runs Build and Test. The npm cache is keyed on the lockfile
+  (Pyodide comes from npm, so it is cached too).
+- The site is built with `CODEWEALD_BASE` set to `/<repo>/` (a GitHub Pages project site), or
+  to the repository variable `SITE_BASE_PATH` (for example `/` for a custom domain). The E2E
+  tests use relative URLs and run under that same base path, so sub-path hosting is checked
+  on every change.
+- Deploy uses the `github-pages` environment, where a required reviewer can be added. Until
+  GitHub Pages is turned on (Settings → Pages → Source: GitHub Actions), the deploy job is
+  skipped with a warning instead of failing.
 
 ### 19.2 Static deployment
 

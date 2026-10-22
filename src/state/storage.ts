@@ -98,7 +98,8 @@ export class Storage {
   async deleteProfile(id: string) {
     await this.kv.del(`profile:${id}`);
     await this.kv.del(`programs:${id}`);
-    for (const k of await this.kv.keys()) if (k.startsWith(`draft:${id}:`)) await this.kv.del(k);
+    for (const k of await this.kv.keys())
+      if (k.startsWith(`draft:${id}:`) || k.startsWith(`duck:${id}:`)) await this.kv.del(k);
   }
 
   /** Saved Workshop programs (§11.7), newest first. */
@@ -143,6 +144,22 @@ export class Storage {
     return out;
   }
 
+  /**
+   * A rubber-duck talk-through (§9.8a): the student's answer for each line and whether they
+   * finished. Free text stays on this device: it is never put in a save file or save code.
+   */
+  async duck(profileId: string, key: string): Promise<DuckTalk> {
+    const value = await this.kv.get<Partial<DuckTalk>>(`duck:${profileId}:${key}`);
+    return {
+      answers: Array.isArray(value?.answers) ? value.answers.map(String) : [],
+      finished: value?.finished === true,
+    };
+  }
+
+  saveDuck(profileId: string, key: string, talk: DuckTalk) {
+    return this.kv.set(`duck:${profileId}:${key}`, talk);
+  }
+
   lastProfileId() {
     return this.kv.get<string>('meta:lastProfile');
   }
@@ -159,6 +176,11 @@ export interface Program {
   code: string;
   mapId: string;
   savedOn: string;
+}
+
+export interface DuckTalk {
+  answers: string[];
+  finished: boolean;
 }
 
 /** Students keep up to this many Workshop programs (§11.7). */

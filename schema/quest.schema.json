@@ -1852,6 +1852,72 @@
         "jar_shelf": {
           "type": "boolean"
         },
+        "duck": {
+          "type": "object",
+          "properties": {
+            "intro": {
+              "type": "string"
+            },
+            "closing": {
+              "default": "Did you spot anything odd?",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "starters": {
+          "minItems": 2,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "description": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "description",
+              "code"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "sample_solutions": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "additionalProperties": false
+          }
+        },
         "bonus": {
           "default": [],
           "type": "array",
@@ -4490,6 +4556,72 @@
               },
               "jar_shelf": {
                 "type": "boolean"
+              },
+              "duck": {
+                "type": "object",
+                "properties": {
+                  "intro": {
+                    "type": "string"
+                  },
+                  "closing": {
+                    "default": "Did you spot anything odd?",
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "starters": {
+                "minItems": 2,
+                "maxItems": 4,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$"
+                    },
+                    "title": {
+                      "type": "string",
+                      "maxLength": 40
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "description",
+                    "code"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "sample_solutions": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "code"
+                  ],
+                  "additionalProperties": false
+                }
               },
               "bonus": {
                 "default": [],

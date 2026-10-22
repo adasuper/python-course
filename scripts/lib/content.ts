@@ -250,6 +250,12 @@ export function isCodeChecked(body: Body) {
   return CODE_CHECKED.has(body.type);
 }
 
+/** Whether a unit's programs import `random` (then each run needs a seed, §6.7). */
+export function usesRandom(body: Body): boolean {
+  const programs = [body.starter_code, body.solution ?? '', ...(body.starters ?? []).map((s) => s.code)];
+  return programs.some((code) => /^\s*(import\s+random\b|from\s+random\s+import)/m.test(code));
+}
+
 /** The program a unit's solution stands for (Parsons solutions are assembled from lines). */
 export function solutionCode(body: Body): string {
   if (body.type === 'parsons' && body.parsons) {
@@ -426,16 +432,44 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
       add(unit.file, `${where}: locked: true only works in fill quests`, at('locked'));
     // Without `seed:` every run gets a new random seed (§6.7), so a quest that uses random
     // must fix one, or check several with hidden_tests mode: seed.
-    const usesRandom = /^\s*(import\s+random\b|from\s+random\s+import)/m.test(
-      `${b.starter_code}\n${b.solution ?? ''}`,
-    );
     const seedTests = b.validators.some((v) => v.type === 'hidden_tests' && v.mode === 'seed');
-    if (usesRandom && b.seed === undefined && !seedTests)
+    // runs_ok checks the student's own runs, each with a new seed; the content check runs the
+    // solutions with several seeds too (the capstone's free part).
+    const freeRuns = b.validators.some((v) => v.type === 'runs_ok');
+    // An investigate quest may show chance at work ("run it 5 times and compare"), as long as
+    // no answer counts its output lines.
+    const showsChance =
+      b.type === 'investigate' && !b.questions?.some((q) => q.verify?.kind === 'output_lines');
+    if (usesRandom(b) && b.seed === undefined && !seedTests && !freeRuns && !showsChance)
       add(
         unit.file,
         `${where}: the code uses random: add \`seed:\` so every run gives the same result, or test several seeds with hidden_tests mode: seed`,
         at('type'),
       );
+    const editsCode = ['fix', 'fill', 'modify', 'make'].includes(b.type);
+    if (b.duck && !editsCode)
+      add(
+        unit.file,
+        `${where}: the duck talks through code the student edits (fix, fill, modify, make)`,
+        at('duck'),
+      );
+    if (b.starters) {
+      if (!editsCode || b.type === 'fill')
+        add(unit.file, `${where}: starters work in fix, modify and make quests`, at('starters'));
+      if (b.starter_code)
+        add(
+          unit.file,
+          `${where}: with starters, leave starter_code out (the student picks one)`,
+          at('starters'),
+        );
+      if ('carry_code' in b && b.carry_code)
+        add(unit.file, `${where}: a phase that carries code can't offer starters`, at('starters'));
+      const ids = b.starters.map((st) => st.id);
+      if (new Set(ids).size !== ids.length)
+        add(unit.file, `${where}: starter ids must differ`, at('starters'));
+    }
+    if (b.sample_solutions.length && !isCodeChecked(b))
+      add(unit.file, `${where}: sample_solutions need a quest type that runs checks`, at('sample_solutions'));
     if (b.parsons) {
       const n = b.parsons.lines.length;
       b.parsons.alternatives.forEach((alt, i) => {
@@ -631,6 +665,15 @@ export function compileBody(body: Body, baked?: ValidatorSpec[]): QuestBody {
       : null,
     jarShelf: body.jar_shelf ?? body.type !== 'predict',
     bonus: body.bonus.map((b) => ({ ...b, check: b.check as ValidatorSpec })),
+    duck: body.duck ? { intro: richOrNull(body.duck.intro), closing: rich(body.duck.closing) } : null,
+    starters: body.starters
+      ? body.starters.map((s) => ({
+          id: s.id,
+          title: s.title,
+          description: rich(s.description),
+          code: s.code,
+        }))
+      : null,
   };
 }
 
@@ -758,8 +801,11 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
     id: course.id,
     title: course.title,
     opening: course.opening.map((l) => ({ speaker: l.speaker, text: rich(l.text) })),
+    finale: course.finale.map((l) => ({ speaker: l.speaker, text: rich(l.text) })),
     regions: course.regions.map((r) => {
       const reg = content.regions.find((x) => x.data.id === r.id)!.data;
+      // For the finale's credits: the people met there (Byte is everywhere) and its Bugs.
+      const npcs = Object.entries(reg.npcs).filter(([id]) => id !== 'byte');
       return {
         id: r.id,
         number: reg.number,
@@ -767,6 +813,9 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
         enabled: r.enabled,
         lessons: r.lessons,
         pois: reg.pois,
+        fragment: reg.fragment.name,
+        cast: npcs.filter(([, n]) => !n.sprite.startsWith('bug_')).map(([, n]) => n.name),
+        bugs: npcs.filter(([, n]) => n.sprite.startsWith('bug_')).map(([, n]) => n.name),
       };
     }),
     questOrder,

@@ -171,18 +171,6 @@ in a generated answer key, which starts in Phase 1 and grows with each region.
 build bundle contains no reference solutions (unit test); the authoring guide's examples pass
 `validate-content`; axe on any new screens.
 
----|---|
-| M5.1 | Teacher gate (`set-passphrase`, default-passphrase banner, auto-lock); unlock regions; view solutions and answer keys |
-| M5.2 | Class code generator + student entry; hints all/nudge/off; knowledge-check gating option |
-| M5.3 | Dashboard: import files and save codes; overview, quest, student and outcome views; remember/forget class |
-| M5.4 | CSV exports (long, wide, outcomes) with the injection guard |
-| M5.5 | `docs/teacher-guide.md` (curriculum map, CSTA alignment, 45-min lesson plans per region, unplugged prompts, misconceptions, answer keys) + `docs:generate`; in-app rendering with gated answer keys |
-| M5.6 | `docs/quest-authoring.md` (schema, validators, mistakes, hidden tests, stages, scaffolder, validate-content; also editing on github.com with CI as the checker) |
-
-**Exit criteria:** E2E teacher flow (unlock → import 3 files → CSV columns verified); unit tests
-for the class code, mastery rules and CSV; axe on teacher screens; a teacher-guide
-completeness check (every region has a lesson plan and an answer key).
-
 ---
 
 ## Phase 6 — Hardening

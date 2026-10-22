@@ -23,7 +23,7 @@ import {
   update,
 } from './state/store';
 import { App } from './ui/App';
-import { applySettings } from './ui/flow';
+import { applySettings, playFinale } from './ui/flow';
 import { checkOfflineReady, whenControlled } from './ui/pwa';
 import { registerServiceWorker } from './ui/registerSW';
 import { configureRules } from './state/progress';
@@ -61,10 +61,16 @@ async function boot() {
 
 /** Authors and tests can open any quest, knowledge check, concept scene or region map
  *  directly (specs §10.6): /?dev#/dev/quest/<quest-id>, /?dev#/dev/check/<region-id>,
- *  /?dev#/dev/concept/<region-id> or /?dev#/dev/region/<region-id>. */
+ *  /?dev#/dev/concept/<region-id> or /?dev#/dev/region/<region-id>; and the finale with
+ *  /?dev#/dev/finale. */
 async function openDevQuest() {
   if (!new URLSearchParams(location.search).has('dev')) return;
   exposeTestHooks();
+  if (location.hash === '#/dev/finale') {
+    useDevProfile();
+    playFinale();
+    return;
+  }
   const match = /^#\/dev\/(quest|check|concept|region)\/(.+)$/.exec(location.hash);
   if (!match) return;
   const [, kind, raw] = match as unknown as [string, 'quest' | 'check' | 'concept' | 'region', string];

@@ -61,8 +61,8 @@ Quests, regions, dialogue, the glossary and error messages are YAML files in
 [`content/`](content). Each quest file starts with a `yaml-language-server` line, so VS Code
 (with the YAML extension) autocompletes and checks fields as you type. After editing, run
 `npm run validate-content`: it reports problems as `file:line — message` and runs every
-reference solution and known-wrong solution through the real Python runtime. A full authoring
-guide arrives in Phase 5.
+reference solution and known-wrong solution through the real Python runtime. The full guide
+is [docs/quest-authoring.md](docs/quest-authoring.md).
 
 ## Architecture in one minute
 
@@ -154,6 +154,7 @@ Keep it somewhere private, such as the student's own Google Drive.
 | [docs/build-plan.md](docs/build-plan.md) | Phases, milestones and exit criteria |
 | [docs/open-questions.md](docs/open-questions.md) | Decisions and the assumptions in use |
 | [docs/solutions.md](docs/solutions.md) | Instructor answer key (generated) |
+| [docs/quest-authoring.md](docs/quest-authoring.md) | How to write and check quests, regions and other content |
 | [ASSETS_LICENSES.md](ASSETS_LICENSES.md) | Every asset and its license |
 
 ## Stack

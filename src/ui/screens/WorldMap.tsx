@@ -2,9 +2,9 @@
 // restored, in words and icons. A picture of the road shows the same thing at a glance.
 import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
-import { playableRegions, regionRestored, regionUnlocked } from '../../state/progress';
+import { courseComplete, playableRegions, regionRestored, regionUnlocked } from '../../state/progress';
 import { course, go, profile, regions } from '../../state/store';
-import { enterRegion } from '../flow';
+import { enterRegion, playFinale } from '../flow';
 import { Hud } from './Overworld';
 
 type RegionStatus = 'restored' | 'open' | 'locked';
@@ -22,7 +22,10 @@ export function WorldMapScreen() {
       : regionUnlocked(p, c, r.id)
         ? 'open'
         : 'locked';
-    return { ...r, status, here: r.id === p.location.region };
+    // Core quests and the boss; side quests are extra.
+    const core = c.questOrder.filter((q) => c.questInfo[q]?.region === r.id && !c.questInfo[q]!.sideQuest);
+    const done = core.filter((q) => p.quests[q]?.status === 'completed').length;
+    return { ...r, status, here: r.id === p.location.region, done, total: core.length };
   });
   const previousName = (i: number) => list[i - 1]?.name ?? '';
 
@@ -39,6 +42,13 @@ export function WorldMapScreen() {
           </h1>
         </div>
         <p class="muted">{t.worldMap.intro}</p>
+        {courseComplete(p, c) && (
+          <p>
+            <button type="button" class="primary" onClick={playFinale}>
+              🌟 {t.finale.replay}
+            </button>
+          </p>
+        )}
         <RoadPicture statuses={list.map((r) => r.status)} here={list.findIndex((r) => r.here)} />
         <ol class="region-list">
           {list.map((r, i) => (
@@ -55,6 +65,9 @@ export function WorldMapScreen() {
                 </span>
                 {r.status === 'locked' && i > 0 && (
                   <span class="needs small-text"> {t.worldMap.needs(previousName(i))}</span>
+                )}
+                {r.status !== 'locked' && (
+                  <span class="needs small-text"> {t.worldMap.progress(r.done, r.total)}</span>
                 )}
               </span>
               <button

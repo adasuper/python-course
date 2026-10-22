@@ -208,6 +208,67 @@ describe('random needs a seed (F-EXE-10)', () => {
     const problems = crossCheck(loadContent(root), root);
     expect(problems.find((p) => /the code uses random: add `seed:`/.test(p.message))).toBeDefined();
   });
+  it('lets an investigate quest show chance at work, unless an answer counts output lines', () => {
+    // r1-q2 is an investigate quest with one answer that counts output lines.
+    const q2 = `${R1}/quests/r1-q2-hello-hearthvale.yaml`;
+    const withRandom = (t: string) => t.replace(/^starter_code: \|\n/m, 'starter_code: |\n  import random\n');
+    const randomProblems = (root: string) =>
+      crossCheck(loadContent(root), root).filter((p) => /uses random/.test(p.message));
+    expect(randomProblems(brokenCopy({ [q2]: withRandom }))).toHaveLength(1);
+    const noCount = (t: string) => withRandom(t).replace('    verify: { kind: output_lines }\n', '');
+    expect(randomProblems(brokenCopy({ [q2]: noCount }))).toEqual([]);
+  });
+});
+
+describe('Phase 4 mechanics: the duck, starters, samples and seeds (M4.0)', () => {
+  const q1 = `${R1}/quests/r1-q1-first-steps.yaml`;
+  const q6 = `${R1}/quests/r1-q6-welcome-sign.yaml`;
+
+  it('puts the duck and starters only where the student edits code', () => {
+    const root = brokenCopy({
+      [q1]: (t) => t.replace(/^starter_code:/m, 'duck: { closing: Odd? }\nstarter_code:'),
+      [q6]: (t) =>
+        t.replace(
+          /^starter_code:/m,
+          'starters:\n  - { id: a, title: A, description: One., code: print(1) }\n  - { id: a, title: B, description: Two., code: print(2) }\nstarter_code:',
+        ),
+    });
+    const problems = crossCheck(loadContent(root), root).map((p) => p.message);
+    expect(problems).toContain('r1-q1-first-steps: the duck talks through code the student edits (fix, fill, modify, make)');
+    expect(problems).toContain('r1-q6-welcome-sign: with starters, leave starter_code out (the student picks one)');
+    expect(problems).toContain('r1-q6-welcome-sign: starter ids must differ');
+  });
+
+  it('runs every sample solution, and random programs with several seeds and runs_ok', async () => {
+    // The sign is printed only when the dice say so: some seeds fail, and runs_ok lets the
+    // quest go without `seed:` (each of the student's runs gets a new one).
+    const lucky = (n: number) =>
+      [
+        'import random',
+        `if random.randint(1, ${n}) == 1:`,
+        '    print("Welcome to Hearthvale!")',
+        '    print("Try Bun\'s Bakery")',
+        '    print("Mind the chickens.")',
+      ]
+        .map((l) => `  ${l}`)
+        .join('\n');
+    const root = brokenCopy({
+      [q6]: (t) =>
+        t
+          .replace(/^solution: \|\n(.*\n)+?\n/m, `solution: |\n${lucky(1)}\n\n`)
+          .replace(
+            /^validators:\n/m,
+            `sample_solutions:\n  - name: fifty-fifty\n    code: |\n${lucky(2).replace(/^/gm, '    ')}\nvalidators:\n  - { type: runs_ok, min_runs: 3 }\n`,
+          ),
+    });
+    const content = loadContent(root);
+    expect(content.problems).toEqual([]);
+    expect(crossCheck(content, root).map((p) => p.message).filter((m) => m.includes('random'))).toEqual([]);
+    const problems = checkUnit(await getPyHost(), units(content).find((u) => u.key === 'r1-q6-welcome-sign')!);
+    expect(problems.find((p) => p.startsWith('sample solution "fifty-fifty" does not pass'))).toBeDefined();
+    expect(problems.find((p) => /^sample solution "fifty-fifty" fails with seed \d/.test(p))).toBeDefined();
+    expect(problems.filter((p) => p.startsWith('the reference solution'))).toEqual([]);
+  });
 });
 
 describe('pacing summary (F-AUT-11)', () => {

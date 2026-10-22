@@ -134,7 +134,17 @@ export async function solveBody(page: Page, body: Body) {
     }
     await page.getByRole('button', { name: /^▶ Run$/ }).click();
   } else {
+    if (body.starters) await page.getByRole('button', { name: 'Start with this one' }).click();
     await setCode(page, solutionCode(body));
+    // runs_ok needs several runs without a crash (the capstone's free part).
+    const runsOk = body.validators.find((v) => v.type === 'runs_ok');
+    const runs = runsOk?.type === 'runs_ok' ? runsOk.min_runs : 1;
+    for (let i = 1; i < runs; i++) {
+      await page.getByRole('button', { name: /^▶ Run$/ }).click();
+      await expect(page.locator('#feedback')).toContainText(`Runs without a crash: ${i} of ${runs}.`, {
+        timeout: 30_000,
+      });
+    }
     await page.getByRole('button', { name: /^▶ Run$/ }).click();
   }
   await expect(page.locator('#feedback')).toContainText('Quest complete!', { timeout: 30_000 });

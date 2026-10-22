@@ -1,0 +1,31 @@
+# The rubber duck (§9.8a, Region 10): explain each line, then fix the bug it uncovers.
+id: r1-q97-duck-talk
+region: hearthvale-village
+title: Talk to the Duck
+type: fix
+learning_outcome: Explain a program line by line, then fix the bug that the explanation uncovers.
+csta: [2-AP-17]
+estimated_minutes: 5
+story_intro: This spell has 1 bug. A score of 95 should be gold.
+goal: Explain each line to the duck, then fix the order of the checks.
+concept_card: Explaining code out loud helps you hear the bug.
+duck:
+  intro: Tell the duck what each line should do.
+starter_code: |
+  score = 95
+  # medals
+  if score >= 50:
+      print("bronze")
+  elif score >= 90:
+      print("gold")
+solution: |
+  score = 95
+  # medals
+  if score >= 90:
+      print("gold")
+  elif score >= 50:
+      print("bronze")
+validators:
+  - { type: output, expect: gold }
+hints: [Which check runs first?, Python stops at the first true check., 'Put `score >= 90` first.']
+story_outro: The duck nods wisely. Quack.

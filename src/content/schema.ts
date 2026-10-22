@@ -321,6 +321,25 @@ const Parsons = z.strictObject({
 
 const Hints = z.array(z.string()).length(3, 'Every quest has exactly 3 hints: nudge, explanation, near-complete example');
 
+// The rubber duck asks "What should this line do?" for each line (§9.8a). Answers are not
+// graded and stay on this device.
+const Duck = z.strictObject({
+  intro: z.string().optional(),
+  closing: z.string().default('Did you spot anything odd?'),
+});
+
+// Starting programs the student picks from, such as the capstone's three game ideas.
+const Starter = z.strictObject({
+  id: Slug,
+  title: z.string().max(40),
+  description: z.string(),
+  code: z.string().min(1),
+});
+
+// More programs that must pass, for open quests with many right answers (the capstone's free
+// part). `validate-content` runs each one; the answer key lists them.
+const SampleSolution = z.strictObject({ name: z.string(), code: z.string().min(1) });
+
 const QUEST_TYPES = ['predict', 'investigate', 'fix', 'fill', 'parsons', 'modify', 'make'] as const;
 export const QuestTypeSchema = z.enum([...QUEST_TYPES, 'boss']);
 
@@ -351,6 +370,9 @@ const QuestBody = {
   questions: z.array(InvestigateQuestion).optional(),
   parsons: Parsons.optional(),
   jar_shelf: z.boolean().optional(),
+  duck: Duck.optional(),
+  starters: z.array(Starter).min(2).max(4).optional(),
+  sample_solutions: z.array(SampleSolution).default([]),
   bonus: z
     .array(z.strictObject({ id: Slug, description: z.string(), check: ValidatorSchema, xp: z.number().int() }))
     .default([]),
@@ -475,6 +497,7 @@ export const CourseSchema = z.strictObject({
   id: Slug,
   title: z.string(),
   opening: z.array(DialogueLine).min(1),
+  finale: z.array(DialogueLine).min(1),
   regions: z
     .array(z.strictObject({ id: Slug, enabled: z.boolean().default(true), lessons: z.number().int().min(1).default(2) }))
     .min(1),

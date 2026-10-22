@@ -32,6 +32,13 @@ export interface ParsonsSpec {
   alternatives: number[][];
 }
 
+export interface Starter {
+  id: string;
+  title: string;
+  description: Rich;
+  code: string;
+}
+
 /** The playable part of a quest or a boss phase. */
 export interface QuestBody {
   type: Exclude<QuestType, 'boss'>;
@@ -59,6 +66,10 @@ export interface QuestBody {
   parsons: ParsonsSpec | null;
   jarShelf: boolean;
   bonus: BonusSpec[];
+  /** The rubber-duck talk-through (§9.8a), or null. */
+  duck: { intro: Rich | null; closing: Rich } | null;
+  /** Programs the student picks one of to start (the capstone's game ideas), or null. */
+  starters: Starter[] | null;
   // Reference solutions never ship in the game (owner decision Q13); instructors read
   // them in docs/solutions.md.
 }
@@ -208,8 +219,23 @@ export interface Course {
   title: string;
   contentVersion: string;
   opening: DialogueLine[];
-  /** `pois`: the region's secret corners (for the Explorer badge). */
-  regions: { id: string; number: number; name: string; enabled: boolean; lessons: number; pois: string[] }[];
+  /** Shown when every region is restored (the Great Script is whole again). */
+  finale: DialogueLine[];
+  /**
+   * `pois`: the region's secret corners (for the Explorer badge). `fragment`, `cast` and `bugs`
+   * are names for the finale's credits.
+   */
+  regions: {
+    id: string;
+    number: number;
+    name: string;
+    enabled: boolean;
+    lessons: number;
+    pois: string[];
+    fragment: string;
+    cast: string[];
+    bugs: string[];
+  }[];
   /** Every quest id in a stable order; save codes depend on it. */
   questOrder: string[];
   /** Small facts about every quest, so progress can be read without loading regions. */

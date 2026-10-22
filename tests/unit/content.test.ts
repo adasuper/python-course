@@ -42,10 +42,12 @@ describe('rich text', () => {
 
 describe('compiled content (F-INS-02)', () => {
   const dir = join(import.meta.dirname, '..', '..', 'src', 'generated', 'content');
-  it('contains no reference or wrong solutions', () => {
+  it('contains no reference, sample or wrong solutions', () => {
     for (const file of readdirSync(dir)) {
       const json = readFileSync(join(dir, file), 'utf8');
-      expect(json, file).not.toMatch(/"(solution|solutionEnc|wrong_solutions|wrongSolutions)"/);
+      expect(json, file).not.toMatch(
+        /"(solution|solutionEnc|wrong_solutions|wrongSolutions|sample_solutions|sampleSolutions)"/,
+      );
     }
   });
 });

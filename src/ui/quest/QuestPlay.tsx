@@ -34,10 +34,12 @@ import { Hints } from './Hints';
 import { Parsons } from './Parsons';
 import { checkOrder, orderFeedback, programFrom, type Block } from './parsonsModel';
 import { checkQuestion, predictionCorrect } from './answers';
+import { DuckPanel } from './Duck';
 import { InvestigatePanel, PredictPanel, type QuestionState } from './Predict';
 import { panelProps, questTab, useNarrow, type QuestTab } from './questTabs';
 import { ReplayControls } from './ReplayControls';
 import { SessionPanel } from './SessionPanel';
+import { StarterPicker } from './Starters';
 
 const NOOP_VIEW: ReplayView = { apply: async () => {}, reset: () => {} };
 
@@ -68,6 +70,10 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   const narrow = useNarrow();
 
   const [code, setCode] = useState(starter);
+  // Quests with starters begin with a choice of program (until there is a saved draft).
+  const [picking, setPicking] = useState(Boolean(body.starters));
+  // The line the rubber duck is asking about (§9.8a).
+  const [duckLine, setDuckLine] = useState<number | null>(null);
   const [parsons, setParsons] = useState<{ scraps: Block[]; spell: Block[] } | null>(null);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
@@ -146,6 +152,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
       .draftWithSession(p.id, unitKey)
       .then((draft) => {
         if (draft === undefined) return;
+        setPicking(false);
         sessionRef.current = draft.session;
         setSession(draft.session);
         if (body.type === 'parsons') {
@@ -169,13 +176,13 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   };
   const draftValue = () => (body.type === 'parsons' ? (parsons ? JSON.stringify(parsons) : null) : code);
   useEffect(() => {
-    if (isPredict) return;
+    if (isPredict || picking) return;
     const value = draftValue();
     if (value === null) return;
     unsavedDraft.current = value;
     const timer = setTimeout(saveDraftNow, 1000);
     return () => clearTimeout(timer);
-  }, [code, parsons]);
+  }, [code, parsons, picking]);
   useEffect(() => {
     const onHide = () => document.visibilityState === 'hidden' && saveDraftNow();
     document.addEventListener('visibilitychange', onHide);
@@ -446,7 +453,9 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
           type="button"
           class="ghost"
           onClick={() => {
-            if (confirm(t.quest.resetConfirm)) setCode(starter);
+            if (!body.starters) {
+              if (confirm(t.quest.resetConfirm)) setCode(starter);
+            } else if (confirm(t.starters.resetConfirm)) setPicking(true);
           }}
         >
           ↺ {t.quest.reset}
@@ -512,7 +521,17 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
         </section>
 
         <section class="quest-work card" aria-label="Your work" {...panelProps('work', narrow)}>
-          {body.type === 'parsons' && body.parsons ? (
+          {picking && body.starters ? (
+            <StarterPicker
+              starters={body.starters}
+              onPick={(s) => {
+                setCode(s.code);
+                setPicking(false);
+                announce(t.starters.chosen(s.title));
+                requestAnimationFrame(() => editorView.current?.focus());
+              }}
+            />
+          ) : body.type === 'parsons' && body.parsons ? (
             <Parsons spec={body.parsons} seed={unitKey} state={parsons} onChange={setParsons} />
           ) : (
             <div class="editor-wrap">
@@ -523,7 +542,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
                 onRun={() => void run()}
                 id="code-editor"
                 fontSize={p.settings.editorFontSize}
-                replayLine={replayLine}
+                replayLine={duckLine ?? replayLine}
                 error={editorError}
                 label={isPredict ? 'Code to read (read only)' : t.quest.editorLabel}
                 fill={isFill ? { starter: body.starterCode, locked: body.locked } : null}
@@ -556,6 +575,10 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
             </div>
           )}
 
+          {body.duck && !picking && (
+            <DuckPanel duck={body.duck} code={code} unitKey={unitKey} onLine={setDuckLine} />
+          )}
+
           {isPredict && body.prompts && (
             <PredictPanel
               prompts={body.prompts}
@@ -567,7 +590,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
             />
           )}
 
-          {!narrow && runBar}
+          {!narrow && !picking && runBar}
           {lockedNote && (
             <p class="small-text note-locked" role="status">
               🔒 {t.quest.lockedLine}
@@ -691,7 +714,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
           />
         )}
       </div>
-      {narrow && <div class="sticky-run">{runBar}</div>}
+      {narrow && !picking && <div class="sticky-run">{runBar}</div>}
     </>
   );
 }

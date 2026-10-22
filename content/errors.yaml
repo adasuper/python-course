@@ -221,6 +221,11 @@ zero_division:
   message: >-
     Line {line} divides by zero. Nobody can share cookies among zero friends!
   tip: Check the number you divide by before you divide.
+assert.failed:
+  title: A check came out False
+  message: >-
+    The `assert` on line {line} checked something, and it was not true. {note}
+  tip: Compare what you expected with what your code really gives. A `print()` above the assert can show the real value.
 value.int_conversion:
   title: That text isn't a whole number
   message: >-

@@ -64,6 +64,13 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['d = {}\nd["x"] += 1', 'key.empty', { key: "'x'", name: 'd' }],
   ['d = {"a": 1}\nd.pop("b")', 'key.generic', { key: "'b'" }],
   ['print(1 / 0)', 'zero_division'],
+  [
+    'total = 9\nassert total == 10, "the total is wrong"',
+    'assert.failed',
+    { note: 'Its note says: "the total is wrong"' },
+    2,
+  ],
+  ['assert 1 > 2', 'assert.failed', { note: '' }],
   ['int("abc")', 'value.int_conversion', { text: "'abc'" }],
   ['float("x")', 'value.float_conversion'],
   ['[1].remove(2)', 'value.remove_missing'],
@@ -83,7 +90,7 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['import math\nmath.sqrt(-1)', 'value.generic'],
   ['x = [0] * (10**9)', 'limits.memory'],
   ['x = [0] * (2**40)', 'limits.memory'],
-  ['assert False', 'generic'],
+  ['raise LookupError("lost")', 'generic'],
   ['import time\ntime.sleep("1")', 'api.sleep_not_number'],
   ['import time\ntime.sleep(-1)', 'api.sleep_negative'],
   // Fill quests: a gap left as it was, even where it isn't valid Python yet.
@@ -146,7 +153,7 @@ describe('error translation', () => {
       for (const file of readdirSync(dir)) {
         const text = readFileSync(join(dir, file), 'utf8');
         for (const m of text.matchAll(
-          /["']((?:syntax|indent|name|type|index|key|value|attribute|limits|api|sandbox|stage|fill|import|input)\.[a-z_]+)["']/g,
+          /["']((?:syntax|indent|name|type|index|key|value|attribute|assert|limits|api|sandbox|stage|fill|import|input)\.[a-z_]+)["']/g,
         ))
           produced.add(m[1]!);
       }

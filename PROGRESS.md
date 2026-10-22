@@ -55,6 +55,43 @@ Phase 2 (core loop polish) is done: see "Phase 2 — Core loop polish ✅" below
   knowledge check, and the road from Hearthvale on the world map, with axe on the map, a
   quest and the world map.
 
+### Phase 4 groundwork (started early, while Regions 3–6 are written)
+
+#### M4.0 Phase 4 mechanics
+
+- **Talk to the Duck** (§9.8a, Region 10): a quest with a `duck:` block gets a panel where the
+  duck asks "What should this line do?" about each line of the student's code (blank and
+  comment lines are skipped, the line is highlighted in the editor). At the end the student
+  sees their notes next to each line and the duck's closing question. Answers are not graded,
+  stay on this computer (never in a save file or save code) and the first finished talk in a
+  quest counts toward Duck Whisperer.
+- **Pick a starter** (the capstone): `starters:` offers 2–4 programs to start from; Reset goes
+  back to the list.
+- **Light rules for the free part:** `ast` checks accept `Loop` (any `for` or `while`) and
+  `random.*` (any call into `random`, also after `from random import …`), with `runs_ok` for
+  "runs 3 times without a crash".
+- **Open quests are proven:** `sample_solutions` must pass too, and a quest that uses
+  `random` without `seed:` is checked with seeds 1–5 (each solution must pass every time, and
+  `runs_ok` must be reachable). The answer key lists starters and sample solutions.
+- **The finale** (M4.6 early): when every region is restored, "Restore the Great Script"
+  plays the `finale` story from `course.yaml`, then a screen with the fragments, the student's
+  journey and the credits (the student, Byte, the people of each region, the Bugs). It can be
+  seen again from the world map; `/?dev#/dev/finale` opens it.
+- E2E: the duck talk (with axe), a starter quest with the light rules over 3 runs, and the
+  finale with its credits (with axe).
+- A failed `assert` gets its own friendly message (`assert.failed`, for Region 10's truth
+  spells).
+
+#### M5.2 The quest-authoring guide (Phase 5, early)
+
+- `docs/quest-authoring.md`: the quest file line by line, every quest type, stages and grids,
+  every validator and mistake detector, hidden tests and `from_solution`, wrong solutions,
+  hints, rich text and reading level, input and seeds, the duck, starters and sample
+  solutions, bosses, regions and the other content files, the commands, and editing on
+  github.com with CI as the checker.
+- Its five complete example quests are tested: `tests/content/authoring.test.ts` puts them in a
+  copy of the course and runs the same checks as `validate-content`.
+
 **Live site:** <https://adasuper.github.io/python-course/> (deployed from `main`).
 
 ### How to try the demo

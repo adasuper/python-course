@@ -1,4 +1,5 @@
 // Where the game goes next: opening story → region intro → concept scene → overworld.
+import { t } from '../i18n/en';
 import { applyAudio } from './audio';
 import { loadQuick } from './quickPrefs';
 import { questState } from '../state/progress';
@@ -51,6 +52,12 @@ export async function continueAdventure() {
     return;
   }
   go(regionStart);
+}
+
+/** The finale story, then the finale screen with the credits. */
+export function playFinale() {
+  const c = course.value!;
+  go({ name: 'story', title: t.finale.heading, lines: c.finale, next: { name: 'finale' } });
 }
 
 export async function enterRegion(regionId: string) {

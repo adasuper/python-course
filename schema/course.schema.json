@@ -29,6 +29,26 @@
         "additionalProperties": false
       }
     },
+    "finale": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speaker": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "speaker",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
     "regions": {
       "minItems": 1,
       "type": "array",
@@ -65,6 +85,7 @@
     "id",
     "title",
     "opening",
+    "finale",
     "regions"
   ],
   "additionalProperties": false

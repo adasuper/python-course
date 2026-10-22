@@ -236,6 +236,7 @@ python-course/
 | Spellbook pages | Concept cards, worked examples, "My Spells" | §11.5 |
 | Workshop | Free sandbox | §11.7 |
 | Settings | Accessibility, audio, save/export | §14 |
+| Finale | The Great Script restored: fragments, the student's journey, the credits roll | After the last region's boss; replayable from the world map (§11.1a) |
 | Credits | Asset licenses, about | Reads `ASSETS_LICENSES.md` |
 | System check | Tests this device: service worker, IndexedDB, WebAssembly, storage quota, offline readiness, local TTS voices | Linked from Settings and the README; plain pass/fail list with fixes (§21) |
 
@@ -420,7 +421,12 @@ Each run gets a seed (random per run, or fixed per quest via `seed:`). The same 
 and inputs always give the same result. This is required for replay-on-input and for stable
 hidden tests. Quests that use `random` (Region 11) test with several fixed seeds. Answering
 `input()` questions re-runs with the same seed. `validate-content` asks a quest whose code
-uses `random` for a `seed:`, unless it has `hidden_tests` with `mode: seed`.
+uses `random` for a `seed:`, unless it has `hidden_tests` with `mode: seed` or a `runs_ok`
+check (the capstone's free part, where every run of the student's own game gets a new seed), or
+it is an investigate quest that shows chance at work ("run it 5 times and compare") and no
+answer counts its output lines.
+A quest without `seed:` is checked with seeds 1–5: the solution and every sample solution must
+pass with each one, and running them again and again must satisfy `runs_ok`.
 
 ### 6.8 Error translation
 
@@ -659,7 +665,7 @@ message (§9.4).
 | `output` | `match: exact \| normalized \| contains \| regex \| fuzzy`, `expect` or `expect_regex`, `normalize: [trim, case, spaces, punctuation]`, `threshold` (fuzzy, 0–1) | Printed output. `normalized` trims line ends, unifies newlines and collapses blank trailing lines. `fuzzy` uses a difflib ratio after normalization. |
 | `state` | `hero_at: [c, r]`, `hero_on: exit`, `has_items: [gem]`, `items_count: {gem: 3}`, `chests_opened: [C]`, `max_bonks: 0`, `said_contains: "…"` | World state after the run. |
 | `variable` | `name`, `equals`, `value_type: int\|float\|str\|bool\|list\|dict`, `matches` (regex for strings) | Top-level variables in the student namespace. |
-| `ast` | `require: [For, If, …]`, `forbid: [While]`, `require_calls: [print]`, `min_count: {print: 3}`, `require_else: true`, `function: {name: heal, params: 1, returns: true}`, `no_literal: [42]`, `uses_names: [gold]`, `max_lines` | Code structure via Python's `ast` module. `no_literal` catches hard-coded answers. |
+| `ast` | `require: [For, If, …]`, `forbid: [While]`, `require_calls: [print]`, `min_count: {print: 3}`, `require_else: true`, `function: {name: heal, params: 1, returns: true}`, `no_literal: [42]`, `uses_names: [gold]`, `max_lines` | Code structure via Python's `ast` module. `no_literal` catches hard-coded answers. `Loop` stands for any `for` or `while` loop, and `require_calls: [random.*]` accepts any call into a module (also after `from random import randint`): the capstone's light rules. |
 | `hidden_tests` | `mode: vars \| inputs \| call \| seed`, `cases: [...]`, `compare: [output, returns, said, state, vars:<name>]`, `expect: from_solution` or explicit per case | Re-runs the program (each case gets a fresh namespace and world). `vars` rewrites the first top-level assignment of each named variable to the case value. `inputs` runs with that input queue. `call` calls the student's function with `args` and compares the return value and/or output. `seed` runs with fixed random seeds. |
 | `style` | `min_comments`, `comment_above: [lines matching a regex]`, `max_line_length` | Uses `tokenize` (the `ast` module drops comments). Used for the "document your code" quests (2-AP-19). |
 | `custom` | `python: \|` a `check(ctx)` function | Escape hatch. `ctx` has `.source .tree .output .lines .vars .world .run(vars=, inputs=, seed=, stage=) .call(name, *args)`. Returns `Pass()` or `Fail("hint")`. |
@@ -810,7 +816,10 @@ types a short free-text answer for each line.
 - Answers are **not graded**, and they are stored only in the local draft.
 - They are **excluded from exports** by default, because they are free text.
 - Finishing the walk-through unlocks the duck's closing question ("Did you spot anything
-  odd?") and counts toward the *Duck Whisperer* badge.
+  odd?") and counts toward the *Duck Whisperer* badge (the `duckChats` counter, once per quest).
+- The duck skips blank and comment-only lines, highlights the line it asks about in the editor,
+  and moves on only when there is an answer. At the end the student sees their notes next to
+  each line. Answers are kept per quest under `duck:<profile>:<quest>`, apart from drafts.
 
 ### 9.9 Side quests
 
@@ -1000,7 +1009,9 @@ bonus:
 | `api_extras` | — | Extra API helpers for this quest |
 | `vocabulary` | — | Glossary terms (must exist) |
 | `retrieval` | — | Earlier regions this quest revisits, e.g. `[r2, r6]` (spaced retrieval; checked per region by §10.4) |
-| `duck` | — | Rubber-duck dialog (§9.8a) |
+| `duck` | fix, fill, modify, make | Rubber-duck dialog (§9.8a): `{ intro?, closing }` (`closing` defaults to "Did you spot anything odd?") |
+| `starters` | fix, modify, make | 2–4 programs to start from, `[{ id, title, description, code }]`; the student picks one (the capstone's game ideas). Leave `starter_code` out; Reset goes back to the list. Not with `carry_code`. |
+| `sample_solutions` | code-checked types | More programs that must pass, `[{ name, code }]`, for open quests (the capstone's free part). `validate-content` runs each one; the answer key lists them. |
 | `track_coverage` | — | `true` turns on line-coverage recording for session validators (§9.3) |
 
 ### 10.4 Schema implementation
@@ -1129,6 +1140,21 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
   region follow their `prerequisites`.
 - **Author-added quests** without a map NPC appear on the Quest Board, so adding a quest
   never needs a map edit.
+
+### 11.1a The finale
+
+When every region in `course.yaml` is restored, the last boss's feedback offers **Restore the
+Great Script**. The `finale` lines from `course.yaml` play as a story, then the **Finale**
+screen shows:
+
+- the Script Fragments restored, one per region;
+- the student's journey: level and title, quests and side quests finished, badges earned;
+- the credits: the student (by nickname) as the Scriptwright, Byte, the people met in each
+  region (its NPCs), the Bugs (now fireflies), the tools the game is made with, and a button to
+  the full **Credits and licenses**.
+
+Nothing scrolls or moves on its own. The world map shows a **The Great Script** button once the
+course is complete, so the finale can be seen again. `/?dev#/dev/finale` opens it for testing.
 
 ### 11.2 XP and levels
 

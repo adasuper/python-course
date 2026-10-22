@@ -26,7 +26,8 @@ export type Route =
   | { name: 'system' }
   | { name: 'worldmap' }
   | { name: 'spellbook'; tab?: 'pages' | 'spells' | 'examples' | 'scenes' | 'glossary' }
-  | { name: 'credits' };
+  | { name: 'finale' }
+  | { name: 'credits'; back?: Route };
 
 export interface Toast {
   id: number;

@@ -8,6 +8,7 @@ import { stopSpeaking } from './speech';
 import { QuestScreen } from './quest/QuestScreen';
 import { CheckScreen } from './screens/Check';
 import { CreditsScreen } from './screens/Credits';
+import { FinaleScreen } from './screens/Finale';
 import { ConceptScreen } from './screens/Concept';
 import { CreatorScreen } from './screens/Creator';
 import { InventoryScreen, ItemScreen } from './screens/Inventory';
@@ -87,7 +88,10 @@ export function App() {
       screen = <SpellbookScreen key={r.tab} tab={r.tab} />;
       break;
     case 'credits':
-      screen = <CreditsScreen />;
+      screen = <CreditsScreen back={r.back} />;
+      break;
+    case 'finale':
+      screen = <FinaleScreen />;
       break;
     case 'system':
       screen = <SystemCheckScreen />;

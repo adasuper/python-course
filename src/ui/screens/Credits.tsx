@@ -4,19 +4,19 @@ import { useEffect, useRef } from 'preact/hooks';
 import licenses from '../../../ASSETS_LICENSES.md?raw';
 import { parseInline } from '../../content/richtext';
 import { t } from '../../i18n/en';
-import { go } from '../../state/store';
+import { go, type Route } from '../../state/store';
 import { InlineNodes } from '../components/RichText';
 import { parseCredits } from '../markdown';
 
 const Text = ({ text }: { text: string }) => <InlineNodes nodes={parseInline(text)} />;
 
-export function CreditsScreen() {
+export function CreditsScreen({ back = { name: 'title' } }: { back?: Route }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   return (
     <main id="main" class="screen credits-screen">
       <div class="quest-header">
-        <button type="button" class="ghost" onClick={() => go({ name: 'title' })}>
+        <button type="button" class="ghost" onClick={() => go(back)}>
           ◀ {t.credits.back}
         </button>
         <h1 ref={heading} tabIndex={-1}>

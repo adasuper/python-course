@@ -532,6 +532,23 @@ describe('validator fields', () => {
     expect(check('print(1)', [{ type: 'ast', function: shape }]).passed).toBe(false);
   });
 
+  it('ast: the capstone light rules (any loop, any call into random)', () => {
+    const rules: ValidatorSpec[] = [
+      { type: 'ast', require: ['Loop', 'If', 'FunctionDef'] },
+      { type: 'ast', require_calls: ['random.*'] },
+    ];
+    const game = (loop: string, roll: string, head = 'import random') =>
+      `${head}\ndef roll():\n    return ${roll}\n${loop}\n    if roll() == 6:\n        print("Six!")`;
+    expect(check(game('for i in range(3):', 'random.randint(1, 6)'), rules).passed).toBe(true);
+    expect(check(game('n = 0\nwhile n < 3:\n    n += 1', 'random.choice([6])'), rules).passed).toBe(true);
+    // `from random import randint` counts too.
+    expect(
+      check(game('for i in range(3):', 'randint(1, 6)', 'from random import randint'), rules).passed,
+    ).toBe(true);
+    expect(check(game('for i in range(3):', '6'), rules).passed).toBe(false);
+    expect(check('import random\nif random.random() > 2:\n    print(1)', rules).passed).toBe(false);
+  });
+
   it('style: max_line_length', () => {
     expect(check('print("short")', [{ type: 'style', max_line_length: 20 }]).passed).toBe(true);
     expect(check(`print("${'x'.repeat(30)}")`, [{ type: 'style', max_line_length: 20 }]).passed).toBe(false);

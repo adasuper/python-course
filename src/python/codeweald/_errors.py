@@ -164,6 +164,10 @@ def _runtime(exc, source, info):
         _key_error(exc, source, info)
     elif isinstance(exc, ZeroDivisionError):
         info["key"] = "zero_division"
+    elif isinstance(exc, AssertionError):
+        # A truth spell (Region 10): `assert total == 10, "the total is wrong"`.
+        info["key"] = "assert.failed"
+        params["note"] = f'Its note says: "{message}"' if message else ""
     elif isinstance(exc, ValueError):
         m = re.match(r"invalid literal for int\(\) with base 10: (.*)", message)
         if m:

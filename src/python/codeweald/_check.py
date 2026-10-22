@@ -229,12 +229,31 @@ def _call_name(call):
     return ""
 
 
+def _imported_from(tree, module):
+    """Names brought in with `from module import a, b` (so a() counts as module.a())."""
+    names = set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ImportFrom) and n.module == module:
+            names.update(alias.asname or alias.name for alias in n.names)
+    return names
+
+
 def count_calls(tree, name):
-    return sum(1 for n in ast.walk(tree) if isinstance(n, ast.Call) and _call_name(n) == name)
+    """Calls of `name`. "random.*" counts any call into the random module."""
+    calls = [_call_name(n) for n in ast.walk(tree) if isinstance(n, ast.Call)]
+    if name.endswith(".*"):
+        module = name[:-2]
+        local = _imported_from(tree, module)
+        return sum(1 for c in calls if c.startswith(module + ".") or c in local)
+    return sum(1 for c in calls if c == name)
+
+
+# Words for groups of nodes: "Loop" is any for or while loop.
+NODE_GROUPS = {"Loop": (ast.For, ast.While)}
 
 
 def count_nodes(tree, node_name):
-    cls = getattr(ast, node_name, None)
+    cls = NODE_GROUPS.get(node_name) or getattr(ast, node_name, None)
     if cls is None:
         raise ValueError(f"unknown ast node {node_name!r}")
     return sum(1 for n in ast.walk(tree) if isinstance(n, cls))

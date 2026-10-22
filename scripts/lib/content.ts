@@ -336,6 +336,20 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     if (tr.kind === 'quest_completed' && !content.quests.has(tr.quest))
       add('content/badges.yaml', `${at}: quest "${tr.quest}" does not exist`);
   });
+  // Every region has a Region Restorer badge, and an Explorer badge if it has secret corners
+  // (F-PRG-06, F-PRG-07).
+  for (const region of content.regions) {
+    const r = region.data;
+    const has = (kind: 'boss_defeated' | 'pois_visited') =>
+      content.badges.some((b) => b.trigger.kind === kind && b.trigger.region === r.id);
+    if (!has('boss_defeated'))
+      add('content/badges.yaml', `region "${r.id}" needs a Region Restorer badge (trigger boss_defeated)`);
+    if (r.overworld.objects.some((o) => o.kind === 'poi') && !has('pois_visited'))
+      add(
+        'content/badges.yaml',
+        `region "${r.id}" has secret corners, so it needs an Explorer badge (trigger pois_visited)`,
+      );
+  }
 
   if (content.course) {
     const course = content.course;

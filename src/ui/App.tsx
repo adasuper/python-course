@@ -15,6 +15,7 @@ import { SpellbookScreen } from './screens/Spellbook';
 import { WorkshopScreen } from './screens/Workshop';
 import { SettingsScreen } from './screens/Settings';
 import { SystemCheckScreen } from './screens/SystemCheck';
+import { WorldMapScreen } from './screens/WorldMap';
 import { reloadForUpdate, updateReady } from './pwa';
 import { flushSave } from '../state/store';
 import { OverworldScreen } from './screens/Overworld';
@@ -90,6 +91,9 @@ export function App() {
       break;
     case 'system':
       screen = <SystemCheckScreen />;
+      break;
+    case 'worldmap':
+      screen = <WorldMapScreen />;
       break;
   }
   return (

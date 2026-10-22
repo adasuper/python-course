@@ -18,7 +18,7 @@ from ._common import (
     OutputBudgetExceeded,
     ProgramExit,
 )
-from ._errors import classify, loop_line
+from ._errors import classify, loop_line, stuck_while
 from ._sandbox import Env, RedirectOutput, find_locked, make_builtins
 
 DEFAULT_LIMITS = {
@@ -126,7 +126,16 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
     except LoopBudgetExceeded as signal:
         outcome.status = "loop-budget"
         line = loop_line(source, signal.line)
-        outcome.error = _game_error("limits.loop", line, budget=limits["loopBudget"])
+        # A runaway while loop gets its own words, naming what never changes (Region 5).
+        is_while, unchanged = stuck_while(source, line)
+        if is_while and unchanged:
+            outcome.error = _game_error(
+                "limits.loop_while_unchanged", line, budget=limits["loopBudget"], name=unchanged[0]
+            )
+        elif is_while:
+            outcome.error = _game_error("limits.loop_while", line, budget=limits["loopBudget"])
+        else:
+            outcome.error = _game_error("limits.loop", line, budget=limits["loopBudget"])
     except ActionBudgetExceeded:
         outcome.status = "action-budget"
         outcome.error = _game_error("limits.actions", None, budget=limits["maxActions"])

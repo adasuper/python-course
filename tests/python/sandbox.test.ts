@@ -53,6 +53,21 @@ describe('sandbox', () => {
     });
   });
 
+  it("names who hands the answer over: the stage's first character (F-EXE-12)", () => {
+    const npc = { kind: 'npc' as const, cast: [{ sprite: 'npc_merchant', name: 'The merchant' }] };
+    const r = py.run({ code: 'n = input("How many pies? ")', inputs: ['5'], stage: npc });
+    expect(r.actions[0]).toMatchObject({ t: 'input', value: '5', source: 'queue', by: 'The merchant' });
+    const grid = {
+      kind: 'grid' as const,
+      grid: 'HN',
+      npcs: { N: { sprite: 'npc_baker', name: 'Baker Bun' } },
+    };
+    expect(py.run({ code: 'input()', inputs: ['x'], stage: grid }).actions[0]).toMatchObject({
+      by: 'Baker Bun',
+    });
+    expect(py.run({ code: 'input()', inputs: ['x'] }).actions[0]).not.toHaveProperty('by');
+  });
+
   it('asks the player when the queue runs out in interactive mode', () => {
     const r = py.run({ code: 'a = input("A? ")\nb = input("B? ")', inputs: ['1'], interactiveInput: true });
     expect(r.status).toBe('needs-input');
@@ -86,13 +101,25 @@ describe('budgets', () => {
       limits: { maxOutputChars: 10_000_000 },
     });
     expect(r.status).toBe('loop-budget');
-    expect(r.error).toMatchObject({ key: 'limits.loop', line: 2 });
+    // A while loop whose condition never changes says which name to change (Region 5).
+    expect(r.error).toMatchObject({ key: 'limits.loop_while_unchanged', line: 2, params: { name: 'steps' } });
   });
 
   it('stops while True with no output', () => {
     const r = py.run({ code: 'x = 0\nwhile True:\n    x += 1' });
     expect(r.status).toBe('loop-budget');
-    expect(r.error?.line).toBe(2);
+    expect(r.error).toMatchObject({ key: 'limits.loop_while', line: 2 });
+  });
+
+  it('words a runaway for loop as a long loop, not a stuck condition', () => {
+    const r = py.run({ code: 'n = 0\nfor i in range(10 ** 9):\n    n += 1' });
+    expect(r.status).toBe('loop-budget');
+    expect(r.error).toMatchObject({ key: 'limits.loop', line: 2 });
+  });
+
+  it('does not blame a name the loop does change', () => {
+    const r = py.run({ code: 'steps = 0\nwhile steps < 10:\n    steps = steps - 1' });
+    expect(r.error).toMatchObject({ key: 'limits.loop_while', line: 2 });
   });
 
   it('counts loops inside functions too', () => {

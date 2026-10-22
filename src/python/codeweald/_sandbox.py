@@ -200,7 +200,10 @@ def make_builtins(env):
                 prompt=prompt,
             )
         env.transcript.append(prompt + value + "\n")
-        env.world.log({"t": "input", "prompt": prompt, "value": value, "source": source})
+        action = {"t": "input", "prompt": prompt, "value": value, "source": source}
+        if source == "queue" and env.world.giver:
+            action["by"] = env.world.giver
+        env.world.log(action)
         return value
 
     def safe_exit(*args):

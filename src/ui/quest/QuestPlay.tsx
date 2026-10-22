@@ -667,6 +667,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
           <OutputScroll
             lines={out}
             tall={!hasStage}
+            tapestry={body.stage.kind === 'none' && body.stage.view === 'tapestry'}
             onShowAll={
               replayState === 'playing' || replayState === 'paused'
                 ? () => void engine.skipToEnd()

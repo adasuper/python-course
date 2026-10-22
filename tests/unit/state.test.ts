@@ -8,6 +8,8 @@ import {
   completePhase,
   coreQuests,
   missingFor,
+  playableRegions,
+  regionRestored,
   completeQuest,
   hintsShown,
   questState,
@@ -305,5 +307,26 @@ describe('the Quest Board (F-WLD-07, F-BOS-05)', () => {
     expect(questState(p, withBoard, 'early-side')).toBe('available');
     // A side quest never blocks anything: the boss doesn't need it.
     expect(missingFor(p, withBoard, 'boss')).toEqual([]);
+  });
+});
+
+describe('regions left out of the course (F-AUT-11)', () => {
+  const withSkipped = {
+    ...course,
+    regions: [
+      course.regions[0]!,
+      { id: 'mid', number: 2, name: 'Mid', enabled: false, lessons: 2 },
+      { ...course.regions[1]!, number: 3 },
+    ],
+  } as Course;
+
+  it('skips them in gating: beating region 1 opens region 3', () => {
+    const p = newProfile('Newt', 'avatar-1', 'moss', 'one');
+    expect(playableRegions(withSkipped).map((r) => r.id)).toEqual(['one', 'two']);
+    expect(regionUnlocked(p, withSkipped, 'two')).toBe(false);
+    for (const ph of ['p1', 'p2']) completePhase(p, withSkipped, 'boss', ph, 'x');
+    expect(regionRestored(p, withSkipped, 'one')).toBe(true);
+    expect(regionUnlocked(p, withSkipped, 'two')).toBe(true);
+    expect(regionUnlocked(p, withSkipped, 'mid')).toBe(false);
   });
 });

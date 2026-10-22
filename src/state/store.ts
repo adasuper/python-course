@@ -24,6 +24,7 @@ export type Route =
   | { name: 'workshop' }
   | { name: 'settings' }
   | { name: 'system' }
+  | { name: 'worldmap' }
   | { name: 'spellbook'; tab?: 'pages' | 'spells' | 'examples' | 'scenes' | 'glossary' }
   | { name: 'credits' };
 

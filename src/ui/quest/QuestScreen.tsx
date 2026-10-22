@@ -3,7 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import type { BossQuest, NormalQuest } from '../../content/types';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
-import { completePhase, completeQuest, record } from '../../state/progress';
+import { completePhase, completeQuest, playableRegions, record } from '../../state/progress';
 import { course, getStorage, go, loadRegion, profile, regions, update } from '../../state/store';
 import { Hud } from '../screens/Overworld';
 import { QuestPlay } from './QuestPlay';
@@ -216,9 +216,17 @@ function BossScreen({ quest, regionName }: { quest: BossQuest; regionName: strin
                   {t.quest.nextPhase} ▸
                 </button>
               ) : (
-                <button type="button" class="primary" onClick={() => go({ name: 'overworld' })}>
-                  {t.quest.continue} ▸
-                </button>
+                <div class="row">
+                  <button type="button" class="primary" onClick={() => go({ name: 'overworld' })}>
+                    {t.quest.continue} ▸
+                  </button>
+                  {/* The road to the next region is open now (F-WLD-08). */}
+                  {playableRegions(course.value!).length > 1 && (
+                    <button type="button" onClick={() => go({ name: 'worldmap' })}>
+                      🗺️ {t.worldMap.open}
+                    </button>
+                  )}
+                </div>
               )
             }
           />

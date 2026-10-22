@@ -24,7 +24,8 @@ export function sentenceFor(action: Action, count = 1): string | null {
     case 'wait':
       return `Waited ${action.seconds} second${action.seconds === 1 ? '' : 's'}.`;
     case 'input':
-      return `Answered "${action.value}".`;
+      if (action.source === 'player') return `You answered "${action.value}".`;
+      return action.by ? `${action.by} says: ${action.value}` : `Handed over "${action.value}".`;
     case 'out':
       return null; // output is shown (and announced) by the Scroll of Output itself
   }

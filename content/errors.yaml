@@ -253,6 +253,16 @@ limits.loop:
   message: >-
     Your loop on line {line} ran {budget} times! Your loop might be running forever! Check that your loop condition eventually becomes False.
   tip: Something inside the loop must change, so the condition can turn False.
+limits.loop_while:
+  title: Your loop might be running forever!
+  message: >-
+    The `while` loop on line {line} ran {budget} times, and its condition is still True. Byte stopped it so nothing freezes.
+  tip: Something inside the loop must change, so the condition on line {line} can turn False. Or use `break` to jump out.
+limits.loop_while_unchanged:
+  title: Your loop might be running forever!
+  message: >-
+    The `while` loop on line {line} checks `{name}`, but nothing inside the loop changes `{name}`. So the condition stays True, and the loop ran {budget} times before Byte stopped it.
+  tip: Change `{name}` inside the loop, for example `{name} = {name} + 1`, so the condition can turn False.
 limits.actions:
   title: The hero is exhausted
   message: >-

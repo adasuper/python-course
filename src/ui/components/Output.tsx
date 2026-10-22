@@ -13,12 +13,15 @@ export function OutputScroll({
   lines,
   empty = t.quest.outputEmpty,
   tall = false,
+  tapestry = false,
   onShowAll,
 }: {
   lines: OutLine[];
   empty?: string;
   /** No quest map: the Scroll gets the room instead (F-API-06). */
   tall?: boolean;
+  /** Patterns drawn with print() show on a loom, every character in its own square. */
+  tapestry?: boolean;
   /** Set while a replay is still writing output: skips straight to the end (F-EXE-11). */
   onShowAll?: () => void;
 }) {
@@ -27,10 +30,13 @@ export function OutputScroll({
     if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
   }, [lines.length]);
   return (
-    <section class={`output${tall ? ' output-tall' : ''}`} aria-labelledby="output-h">
+    <section
+      class={`output${tall ? ' output-tall' : ''}${tapestry ? ' output-tapestry' : ''}`}
+      aria-labelledby="output-h"
+    >
       <div class="output-head">
         <h2 id="output-h" class="panel-title">
-          📜 {t.quest.output}
+          {tapestry ? `🧶 ${t.quest.tapestry}` : `📜 ${t.quest.output}`}
         </h2>
         {onShowAll && (
           <button type="button" class="small ghost" onClick={onShowAll}>

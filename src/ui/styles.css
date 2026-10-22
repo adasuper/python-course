@@ -1546,3 +1546,92 @@ button.danger {
     display: block;
   }
 }
+
+/* ----- world map (F-WLD-08) ----- */
+.road-picture {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  display: block;
+  margin: 0.5rem 0 1rem;
+}
+.road-picture .road {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 4;
+  stroke-dasharray: 8 6;
+}
+.road-picture circle {
+  stroke: var(--ink);
+  stroke-width: 2;
+  fill: var(--parchment-2);
+}
+.road-picture .stop-restored circle {
+  fill: var(--ok-bg, #d9f2e3);
+}
+.road-picture .stop-locked circle {
+  fill: var(--parchment);
+  stroke-dasharray: 3 3;
+}
+.road-picture text {
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+.region-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.region-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--parchment);
+}
+.region-row.region-locked {
+  border-style: dashed;
+}
+.region-number {
+  font-weight: 700;
+  min-width: 1.6rem;
+  text-align: center;
+}
+.region-name {
+  flex: 1 1 14rem;
+}
+
+/* ----- the tapestry: printed patterns on a loom (Region 6) ----- */
+.output-tapestry .output-body {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 1.3em, rgba(138, 115, 86, 0.18) 1.3em 1.35em),
+    repeating-linear-gradient(90deg, transparent 0 0.9em, rgba(138, 115, 86, 0.18) 0.9em 0.95em),
+    var(--parchment);
+  border: 6px double var(--line);
+}
+.output-tapestry pre {
+  font-size: 1.35rem;
+  line-height: 1.3;
+  letter-spacing: 0.32em;
+  font-weight: 700;
+}
+
+/* ----- the tapestry: printed patterns on a loom (Region 6) ----- */
+.output-tapestry .output-body {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 1.3em, rgba(138, 115, 86, 0.18) 1.3em 1.35em),
+    repeating-linear-gradient(90deg, transparent 0 0.9em, rgba(138, 115, 86, 0.18) 0.9em 0.95em),
+    var(--parchment);
+  border: 6px double var(--line);
+}
+.output-tapestry pre {
+  font-size: 1.35rem;
+  line-height: 1.3;
+  letter-spacing: 0.32em;
+  font-weight: 700;
+}

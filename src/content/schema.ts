@@ -38,7 +38,8 @@ export const StageSchema = z.discriminatedUnion('kind', [
     kind: z.literal('npc'),
     cast: z.array(z.strictObject({ sprite: z.string(), name: z.string() })).default([]),
   }),
-  z.strictObject({ kind: z.literal('none') }),
+  // `view: tapestry` shows the output as a woven pattern, for drawing with loops (Region 6).
+  z.strictObject({ kind: z.literal('none'), view: z.enum(['scroll', 'tapestry']).optional() }),
 ]);
 
 const Common = { id: z.string().optional(), fail_hint: z.string().optional() };

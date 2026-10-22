@@ -14,7 +14,14 @@ export type Action = { ln: number | null } & (
   | { t: 'chest'; at: XY; ok: boolean; code: string; loot: string[]; missing?: boolean }
   | { t: 'look'; at: XY; saw: string }
   | { t: 'wait'; seconds: number }
-  | { t: 'input'; prompt: string; value: string; source: 'queue' | 'player' }
+  | {
+      t: 'input';
+      prompt: string;
+      value: string;
+      source: 'queue' | 'player';
+      /** Who handed the answer over: the first named character on stage (F-EXE-12). */
+      by?: string;
+    }
 );
 
 export interface LegendEntry {
@@ -36,6 +43,8 @@ export interface StageSpec {
   npcs?: Record<string, { name?: string; sprite?: string }>;
   /** For kind: npc — who stands on stage with the hero. */
   cast?: { sprite: string; name: string }[];
+  /** kind none: show the output as a woven "tapestry" grid (Region 6 patterns). */
+  view?: 'scroll' | 'tapestry';
 }
 
 export interface Limits {

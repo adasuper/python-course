@@ -438,6 +438,27 @@ def real_traceback(exc, lines):
     return "\n".join(out)
 
 
+def stuck_while(source, line):
+    """For a runaway `while` loop on `line`: (True, names its condition reads that nothing in
+    the loop changes). (False, []) when the loop there is not a `while`."""
+    tree = _parse(source)
+    if tree is None:
+        return False, []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.While) and node.lineno == line:
+            read = sorted({n.id for n in ast.walk(node.test) if isinstance(n, ast.Name)})
+            changed = set()
+            for inner in ast.walk(node):
+                if isinstance(inner, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+                    targets = inner.targets if isinstance(inner, ast.Assign) else [inner.target]
+                    for target in targets:
+                        changed |= {n.id for n in ast.walk(target) if isinstance(n, ast.Name)}
+                elif isinstance(inner, (ast.For, ast.With)) and isinstance(getattr(inner, "target", None), ast.Name):
+                    changed.add(inner.target.id)
+            return True, [name for name in read if name not in changed]
+    return False, []
+
+
 def loop_line(source, line):
     """The header line (while/for) of the innermost loop containing `line`."""
     tree = _parse(source)

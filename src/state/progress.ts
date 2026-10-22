@@ -17,11 +17,18 @@ export function configureRules(features: { knowledgeCheckGates: boolean; sideQue
   sideQuestsOn = features.sideQuests;
 }
 
+/** The regions in this course, in order: `enabled: false` in course.yaml leaves one out (F-AUT-11). */
+export function playableRegions(course: Course) {
+  return course.regions.filter((r) => r.enabled !== false);
+}
+
+/** A region opens when the boss of the region before it (skipping left-out ones) is beaten. */
 export function regionUnlocked(p: Profile, course: Course, regionId: string, unlockedThrough = 0): boolean {
-  const index = course.regions.findIndex((r) => r.id === regionId);
+  const regions = playableRegions(course);
+  const index = regions.findIndex((r) => r.id === regionId);
   if (index <= 0) return index === 0;
   if (index < unlockedThrough) return true;
-  const previous = course.regions[index - 1]!;
+  const previous = regions[index - 1]!;
   const bossId = course.questOrder.find(
     (q) => course.questInfo[q]?.region === previous.id && course.questInfo[q]?.type === 'boss',
   );
@@ -67,6 +74,16 @@ export function boardQuests(course: Course, regionId: string): string[] {
     const info = course.questInfo[q];
     return info?.region === regionId && (info.sideQuest || !info.npc);
   });
+}
+
+/** A region is restored when its boss is defeated. */
+export function regionRestored(p: Profile, course: Course, regionId: string): boolean {
+  return course.questOrder.some(
+    (q) =>
+      course.questInfo[q]?.region === regionId &&
+      course.questInfo[q]?.type === 'boss' &&
+      p.quests[q]?.status === 'completed',
+  );
 }
 
 export function questState(p: Profile, course: Course, questId: string, unlockedThrough = 0): Marker {

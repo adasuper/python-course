@@ -31,6 +31,16 @@ export const t = {
     deleted: (name: string) => `${name} was deleted from this computer.`,
   },
   credits: { link: 'Credits', heading: 'Credits and licenses', back: 'Back' },
+  worldMap: {
+    heading: 'World map',
+    intro: 'Each region you restore opens the road to the next one.',
+    status: { restored: 'Restored', open: 'Open', locked: 'Locked' },
+    here: 'You are here',
+    travel: 'Travel',
+    travelTo: (name: string) => `Travel to ${name}`,
+    needs: (previous: string) => `Defeat the Bug of ${previous} to open the road.`,
+    open: 'World map',
+  },
   offline: {
     ready: 'Ready to play offline ✓',
     notYet: 'Getting ready to play offline…',
@@ -90,6 +100,7 @@ export const t = {
     spellbook: 'Spellbook',
     workshop: 'Workshop',
     settings: 'Settings',
+    worldMap: 'World map',
     save: 'Save progress',
     unsaved: 'Unsaved progress',
     saved: 'Progress saved',
@@ -104,6 +115,7 @@ export const t = {
   quest: {
     back: 'Back to the map',
     panels: 'Quest panels',
+    tapestry: 'The Tapestry (your output)',
     tabQuest: '📜 Quest',
     tabWork: '✏️ Spellbook',
     tabStage: '🗺️ Stage and output',

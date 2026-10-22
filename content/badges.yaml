@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../schema/badges.schema.json
 # Badges reward good habits and exploring, never speed (docs/specs.md §11.6).
 # Save codes keep earned badges in this order, so add new badges at the end.
-# Explorer, Duck Whisperer, Review Riddler, Side Questor II/III and Great Scriptwright
+# Duck Whisperer, Review Riddler, Side Questor II/III and Great Scriptwright
 # arrive with the content they need (Phases 3 and 4); the triggers already exist.
 - id: first-bug-squashed
   name: First Bug Squashed
@@ -43,3 +43,8 @@
   emoji: 🛠️
   description: You ran 10 of your own programs in the Workshop.
   trigger: { kind: counter, counter: workshopRuns, count: 10 }
+- id: explorer-hearthvale
+  name: "Explorer: Hearthvale"
+  emoji: 🧭
+  description: You found every secret corner of Hearthvale.
+  trigger: { kind: pois_visited, region: hearthvale-village }

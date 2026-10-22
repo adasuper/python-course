@@ -377,6 +377,8 @@ class StageScene extends Phaser.Scene {
   private items = new Map<string, Phaser.GameObjects.Image[]>();
   private chests = new Map<string, Phaser.GameObjects.Sprite>();
   private bubble: Phaser.GameObjects.Text | null = null;
+  /** Characters on stage; the first one hands over input() answers (F-EXE-12). */
+  private cast: Phaser.GameObjects.Sprite[] = [];
   private cols = 1;
   private rows = 1;
   private stepCount = 0;
@@ -404,6 +406,7 @@ class StageScene extends Phaser.Scene {
     this.chests.clear();
     this.bubble = null;
     this.hero = null;
+    this.cast = [];
     const { stage } = this.data_;
     if (stage.kind === 'grid') this.buildGrid(stage);
     else if (stage.kind === 'npc') this.buildCast(stage);
@@ -433,7 +436,7 @@ class StageScene extends Phaser.Scene {
           );
         } else if (cell.object === 'npc') {
           const sprite = stage.npcs?.[ch]?.sprite ?? 'npc_villager_a';
-          this.add.sprite(cx, cy, 'chars', frameOf(this, 'chars', sprite)).setDepth(8);
+          this.cast.push(this.add.sprite(cx, cy, 'chars', frameOf(this, 'chars', sprite)).setDepth(8));
         } else if (cell.object) {
           const tiles = this.cache.json.get('tiles-index') as SheetIndex | undefined;
           const sheet = tiles?.frames[cell.object] !== undefined ? 'tiles' : 'chars';
@@ -472,9 +475,11 @@ class StageScene extends Phaser.Scene {
       .sprite(TILE * 1.5, TILE * 1.5, 'chars', heroFrame(this, this.data_, 'right', 0))
       .setDepth(20);
     cast.forEach((member, i) => {
-      this.add
-        .sprite((3 + i * 2) * TILE + TILE / 2, TILE * 1.5, 'chars', frameOf(this, 'chars', member.sprite))
-        .setDepth(10);
+      this.cast.push(
+        this.add
+          .sprite((3 + i * 2) * TILE + TILE / 2, TILE * 1.5, 'chars', frameOf(this, 'chars', member.sprite))
+          .setDepth(10),
+      );
     });
   }
 
@@ -548,6 +553,16 @@ class StageScene extends Phaser.Scene {
         this.say(action.text);
         await wait(this, ms);
         return;
+      case 'input': {
+        // The character hands over the answer in a speech bubble; a typed one is the player's.
+        const giver = action.source === 'queue' ? this.cast[0] : null;
+        if (giver) {
+          const t = label(this, giver.x, giver.y - TILE / 2 - 2, action.value, this.cameras.main.zoom);
+          void wait(this, Math.max(ms, 600)).then(() => t.destroy());
+        }
+        await wait(this, ms);
+        return;
+      }
       case 'pickup': {
         if (!action.item) {
           this.flash(action.at, '?', ms);

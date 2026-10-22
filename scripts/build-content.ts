@@ -15,6 +15,7 @@ import {
   units,
 } from './lib/content';
 import { bakeValidators } from './lib/contentCheck';
+import { pacing, pacingLine } from './lib/pacing';
 import { getPyHost } from './lib/pyHost';
 import { reportProblems } from './lib/report';
 import { writeSchemas } from './write-schema';
@@ -61,6 +62,7 @@ async function main() {
     `content: ${content.regions.length} region(s), ${content.quests.size} quest(s), version ${version}` +
       (toBake.length ? `, ${toBake.length} hidden-test set(s) baked` : ''),
   );
+  console.log(pacingLine(pacing(content)));
 }
 
 void main();

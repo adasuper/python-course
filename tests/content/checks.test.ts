@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { CONTENT_DIR, crossCheck, gridProblems, loadContent, units, type Problem } from '../../scripts/lib/content';
 import { checkUnit } from '../../scripts/lib/contentCheck';
+import { pacing, pacingLine } from '../../scripts/lib/pacing';
 import { contentFiles } from '../../scripts/lib/prose';
 import { getPyHost } from '../../scripts/lib/pyHost';
 
@@ -206,5 +207,16 @@ describe('random needs a seed (F-EXE-10)', () => {
     const root = brokenCopy({ [q6]: (t) => t.replace(/^solution: \|\n/m, 'solution: |\n  import random\n') });
     const problems = crossCheck(loadContent(root), root);
     expect(problems.find((p) => /the code uses random: add `seed:`/.test(p.message))).toBeDefined();
+  });
+});
+
+describe('pacing summary (F-AUT-11)', () => {
+  it('adds up the regions, lessons, quests and minutes that course.yaml turns on', () => {
+    const real = pacing(loadContent());
+    expect(real).toMatchObject({ regions: 1, lessons: 2, quests: 7, sideQuests: 1, skipped: [] });
+    expect(real.minutes).toBeGreaterThan(50);
+    expect(pacingLine(real)).toMatch(/^pacing: 1 region\(s\), 2 lesson\(s\), 7 quest\(s\) and bosses \+ 1 side/);
+    const root = brokenCopy({ 'course.yaml': (t) => t.replace('side_quests: true', 'side_quests: false') });
+    expect(pacing(loadContent(root))).toMatchObject({ sideQuests: 0, quests: 7 });
   });
 });

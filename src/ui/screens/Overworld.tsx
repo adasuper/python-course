@@ -9,6 +9,7 @@ import { levelFor, titleFor, xpForLevel } from '../../state/profile';
 import {
   boardQuests,
   missingFor,
+  playableRegions,
   questState,
   regionCounts,
   regionMarkers,
@@ -92,6 +93,11 @@ export function Hud({ regionName }: { regionName: string }) {
         <button type="button" onClick={() => go({ name: 'inventory' })}>
           🎒 {t.hud.inventory}
         </button>
+        {playableRegions(course.value!).length > 1 && (
+          <button type="button" onClick={() => go({ name: 'worldmap' })}>
+            🗺️ {t.hud.worldMap}
+          </button>
+        )}
         <button type="button" onClick={() => go({ name: 'settings' })}>
           ⚙️ {t.hud.settings}
         </button>
@@ -387,6 +393,11 @@ export function OverworldScreen() {
         </div>
         {npc?.greeting && <p>{npc.greeting}</p>}
         {object.text && <p>{object.text}</p>}
+        {object.kind === 'exit' && (
+          <button type="button" onClick={() => go({ name: 'worldmap' })}>
+            🗺️ {t.worldMap.open}
+          </button>
+        )}
         {(npc?.greeting || object.text) && (
           <ReadAloud
             rich={[npc?.greeting, object.text]

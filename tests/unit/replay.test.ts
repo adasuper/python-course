@@ -49,6 +49,20 @@ describe('narration', () => {
     ]);
   });
 
+  it('says who handed over an input() answer, and what the player typed', () => {
+    const input = (source: 'queue' | 'player', by?: string): Action => ({
+      t: 'input',
+      prompt: 'How many? ',
+      value: '5',
+      source,
+      ln: 1,
+      ...(by ? { by } : {}),
+    });
+    expect(narrate([input('queue', 'The merchant')])).toEqual(['The merchant says: 5']);
+    expect(narrate([input('queue')])).toEqual(['Handed over "5".']);
+    expect(narrate([input('player')])).toEqual(['You answered "5".']);
+  });
+
   it('sums up a replay shown all at once, unless it is short anyway', () => {
     const long = [
       move('right'),

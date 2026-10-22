@@ -1,10 +1,11 @@
 """The safe environment student code runs in (docs/specs.md §6.4–§6.7).
 
 This is a *teaching* sandbox: it keeps curious students away from things that
-don't belong in a quest (files, eval, other modules). The real security boundary
-is the Web Worker, which has its network and storage APIs removed.
+don't belong in a quest (files, eval, other modules, Python's own machinery). The real
+security boundary is the Web Worker, which has its network and storage APIs removed.
 """
 
+import ast
 import builtins
 import math
 import random as _random
@@ -17,6 +18,52 @@ ALLOWED_MODULES = ("random", "math", "time", "codeweald")
 
 # Builtins students never need in Codeweald. Each is replaced by a friendly stub.
 BLOCKED_BUILTINS = ("open", "eval", "exec", "compile", "breakpoint", "help", "memoryview")
+# Removed outright: they lead straight to the import system.
+REMOVED_BUILTINS = ("__loader__", "__spec__")
+
+# Python's own machinery. No quest needs it, and it is the way out of any sandbox
+# (`f.__globals__`, `x.__class__.__subclasses__()`, a generator's frame...). Without it,
+# student code can't reach the runner, the real World or `sys`, so quest checks can't be
+# tricked (specs §6.4 (7)).
+OPEN_DUNDERS = frozenset({"__name__", "__doc__", "__init__"})
+LOCKED_ATTRS = frozenset(
+    {
+        "gi_frame", "gi_code", "gi_yieldfrom", "gi_suspended",
+        "cr_frame", "cr_code", "cr_await", "ag_frame", "ag_code", "ag_await",
+        "f_back", "f_globals", "f_locals", "f_builtins", "f_code", "tb_frame", "tb_next",
+    }
+)  # fmt: skip
+
+_getattr, _setattr, _delattr, _hasattr = getattr, setattr, delattr, hasattr
+
+
+def is_locked(name):
+    """True for names of Python's own machinery, which student code may not touch."""
+    if name in OPEN_DUNDERS:
+        return False
+    return (name.startswith("__") and name.endswith("__")) or name in LOCKED_ATTRS
+
+
+def find_locked(tree):
+    """The first use of a locked name in a parsed program, as (name, line), or None."""
+    found = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and is_locked(node.attr):
+            found.append((node.lineno, node.end_col_offset, node.attr))
+        elif isinstance(node, ast.Name) and is_locked(node.id):
+            found.append((node.lineno, node.end_col_offset, node.id))
+    if not found:
+        return None
+    line, _col, name = min(found)
+    return name, line
+
+
+def locked_error(name):
+    return CodewealdError(
+        "sandbox.locked",
+        f"{name} is part of Python's own machinery, which Codeweald keeps locked.",
+        name=name,
+    )
 
 SLEEP_CAP_PER_CALL = 3.0
 SLEEP_CAP_PER_RUN = 15.0
@@ -98,6 +145,34 @@ def make_builtins(env):
 
     for name in BLOCKED_BUILTINS:
         safe[name] = blocked(name)
+    for name in REMOVED_BUILTINS:
+        safe.pop(name, None)
+
+    # getattr("__glo" + "bals__") would get around the check of the program text.
+    def guard(name):
+        if isinstance(name, str) and is_locked(name):
+            raise locked_error(name)
+
+    def safe_getattr(obj, name, *default):
+        guard(name)
+        return _getattr(obj, name, *default)
+
+    def safe_setattr(obj, name, value):
+        guard(name)
+        return _setattr(obj, name, value)
+
+    def safe_delattr(obj, name):
+        guard(name)
+        return _delattr(obj, name)
+
+    def safe_hasattr(obj, name):
+        guard(name)
+        return _hasattr(obj, name)
+
+    safe["getattr"] = safe_getattr
+    safe["setattr"] = safe_setattr
+    safe["delattr"] = safe_delattr
+    safe["hasattr"] = safe_hasattr
 
     def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
         root = name.split(".")[0]

@@ -7,34 +7,12 @@
 //   --quiet            print only the summary
 //
 // Flags and failures use the score with glossary terms left out; the raw score is shown too.
-import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
-import { isPair, isScalar, LineCounter, parseDocument, visit, type Scalar } from 'yaml';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parseDocument } from 'yaml';
 import { CONTENT_DIR } from './lib/content';
+import { proseStrings } from './lib/prose';
 import { glossaryRemover, score, studentText, type Score } from './lib/readingLevel';
-
-/** YAML keys whose string values are student-facing prose, and what to call them. */
-const PROSE: Record<string, string> = {
-  story_intro: 'story',
-  story_outro: 'story',
-  goal: 'goal',
-  hints: 'hint',
-  hint: 'hint',
-  fail_hint: 'hint',
-  feedback: 'feedback',
-  question: 'question',
-  explain: 'explanation',
-  text: 'dialogue',
-  greeting: 'dialogue',
-  analogy: 'concept',
-  concept_card: 'concept',
-  description: 'description',
-  definition: 'glossary',
-  message: 'error message',
-  tip: 'error message',
-};
-/** Text under these keys is code, checks or author notes, never shown as prose. */
-const SKIP_UNDER = new Set(['detect', 'validators', 'wrong_solutions', 'stage', 'check', 'hidden_tests']);
 
 export const FLAG_ABOVE = 7;
 export const MIN_WORDS = 8;
@@ -48,18 +26,6 @@ export interface TextScore {
   adjusted: Score;
 }
 
-function contentFiles(root: string): string[] {
-  const files = ['course.yaml', 'glossary.yaml', 'items.yaml', 'errors.yaml'].map((f) => join(root, f));
-  const regions = join(root, 'regions');
-  for (const dir of readdirSync(regions).sort()) {
-    files.push(join(regions, dir, 'region.yaml'));
-    const quests = join(regions, dir, 'quests');
-    if (existsSync(quests))
-      for (const f of readdirSync(quests).sort()) if (f.endsWith('.yaml')) files.push(join(quests, f));
-  }
-  return files.filter((f) => existsSync(f));
-}
-
 function glossaryTerms(root: string): string[] {
   const data = parseDocument(readFileSync(join(root, 'glossary.yaml'), 'utf8')).toJS() as { term: string }[];
   return (data ?? []).map((g) => g.term);
@@ -68,29 +34,16 @@ function glossaryTerms(root: string): string[] {
 export function readingLevels(root = CONTENT_DIR): TextScore[] {
   const removeTerms = glossaryRemover(glossaryTerms(root));
   const out: TextScore[] = [];
-  for (const path of contentFiles(root)) {
-    const lineCounter = new LineCounter();
-    const doc = parseDocument(readFileSync(path, 'utf8'), { lineCounter });
-    visit(doc, {
-      Scalar(_key, node: Scalar, ancestors) {
-        if (typeof node.value !== 'string') return;
-        const keys = ancestors.filter(isPair).map((p) => (isScalar(p.key) ? String(p.key.value) : ''));
-        const own = keys.at(-1);
-        // A key's own scalar is a name, not a value.
-        const parent = ancestors.at(-1);
-        if (isPair(parent) && parent.key === node) return;
-        if (!own || !(own in PROSE) || keys.some((k) => SKIP_UNDER.has(k))) return;
-        const text = studentText(node.value);
-        if (!text.trim()) return;
-        out.push({
-          file: relative(join(root, '..'), path),
-          line: node.range ? lineCounter.linePos(node.range[0]).line : 1,
-          kind: PROSE[own]!,
-          text,
-          raw: score(text),
-          adjusted: score(removeTerms(text)),
-        });
-      },
+  for (const prose of proseStrings(root)) {
+    const text = studentText(prose.value);
+    if (!text.trim()) continue;
+    out.push({
+      file: prose.file,
+      line: prose.line,
+      kind: prose.kind,
+      text,
+      raw: score(text),
+      adjusted: score(removeTerms(text)),
     });
   }
   return out;

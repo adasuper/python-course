@@ -327,8 +327,12 @@ interface RunResult {
 - The timer pauses while the program waits for the player to type input (§6.5).
 - `RecursionError` (limit 200, to stay well under the WASM stack) and `MemoryError` get
   friendly messages. A WASM stack overflow crashes the worker, which is treated like layer 3.
-- The loop budget is per mode: quests 100,000, Workshop 1,000,000. Phase 1 calibrates
-  these on a 4×-throttled CPU so that layer 1 trips in under 1 s.
+- The loop budget is per mode: quests 100,000, Workshop 1,000,000. Calibration (Phase 1,
+  Pyodide 314 on Node 22): 100,000 iterations trip in 18–30 ms and 1,000,000 in 150–310 ms
+  unthrottled, so even a 4× slower Chromebook stops a quest loop in about 0.1 s and a
+  Workshop loop in about 1.2 s.
+- Loops are counted with `sys.monitoring` `JUMP` events. CPython 3.12 added it, and Pyodide
+  ships 3.14, so no `sys.settrace` fallback is needed.
 
 ### 6.4 Sandbox
 
@@ -336,8 +340,9 @@ Student code is not trusted. We assume curious kids, not attackers with exploit 
 we contain the worst case anyway. The layers are:
 
 1. **Builtins allowlist.** `SAFE_BUILTINS` is a copy of `builtins` minus `open`, `eval`,
-   `exec`, `compile`, `breakpoint`, `help`, `memoryview`, `__loader__`. It replaces
-   `__import__`, `input`, `exit` and `quit` with safe versions.
+   `exec`, `compile`, `breakpoint`, `help`, `memoryview`, `__loader__`, `__spec__`. It replaces
+   `__import__`, `input`, `exit` and `quit` with safe versions, and `getattr`, `setattr`,
+   `delattr` and `hasattr` with versions that refuse locked names (layer 7).
 2. **Import allowlist.** `__import__` permits only `random`, `math`, `time` and
    `codeweald`, exactly as the brief specifies. Anything else raises
    `ImportError` with the message "That spellbook isn't in Codeweald's library."
@@ -351,10 +356,20 @@ we contain the worst case anyway. The layers are:
    `indexedDB`, `caches` and `Worker` on `self` with functions that throw. Even a sandbox
    escape inside Python cannot reach the network or storage. The worker has no DOM.
 6. **Virtual FS only.** Pyodide's in-memory FS; nothing persists; `open` is not exposed.
-7. **Validator integrity.** Validators run from a module copy loaded *after* the student
-   run (re-imported from a frozen source string). Monkeypatching `codeweald` during the run
-   cannot fake a pass. A determined student can still read solutions from the bundle. That
-   is acceptable for low-stakes, formative practice (§15.4).
+7. **Locked machinery and validator integrity.** Every escape from a Python sandbox goes
+   through Python's own machinery: `f.__globals__`, `x.__class__.__subclasses__()`,
+   `e.__traceback__`, a generator's `gi_frame.f_back`. No quest needs any of it, so it is
+   locked. Before running, the program text is parsed and any double-underscore name
+   (except `__name__`, `__doc__` and `__init__`) or frame attribute (`gi_frame`, `f_back`,
+   `f_globals`, `tb_frame`, …) stops it with a friendly "that part of Python is locked"
+   message on its line. The safe `getattr`/`setattr` refuse the same names when they are
+   built at run time. The modules students can import are facades that expose only their
+   public API (`codeweald` has `hero`, `world` and `CodewealdError`). So student code can't
+   reach the runner, the real `World` or the validators, and patching the game during a run
+   can't fake a pass (a test proves it). This replaced the planned "re-import validators
+   from a frozen copy", which would not have stopped `__globals__` either. A determined
+   student can still read solutions from the bundle. That is acceptable for low-stakes,
+   formative practice (§15.4).
 
 ### 6.5 `input()` design (decision D6)
 

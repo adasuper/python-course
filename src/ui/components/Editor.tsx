@@ -199,21 +199,19 @@ export function CodeSize({ size, onChange }: { size: number; onChange(size: numb
       <button
         type="button"
         class="small"
-        aria-label={t.quest.codeSmaller}
         disabled={size <= CODE_SIZE_MIN}
         onClick={() => onChange(clamp(size - 2))}
       >
-        A−
+        A−<span class="sr-only"> {t.quest.codeSmaller}</span>
       </button>
       <output aria-live="polite">{size} px</output>
       <button
         type="button"
         class="small"
-        aria-label={t.quest.codeBigger}
         disabled={size >= CODE_SIZE_MAX}
         onClick={() => onChange(clamp(size + 2))}
       >
-        A+
+        A+<span class="sr-only"> {t.quest.codeBigger}</span>
       </button>
     </div>
   );

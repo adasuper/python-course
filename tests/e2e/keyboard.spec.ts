@@ -55,3 +55,16 @@ test('the editor never traps the keyboard: Esc, then Tab, leaves it', async ({ p
   await page.keyboard.press('Tab');
   await expect(page.locator('.cm-content')).not.toBeFocused();
 });
+
+test('the code size buttons make the editor text bigger and smaller (F-EDT-02)', async ({ page }) => {
+  await page.goto('./?dev#/dev/quest/r1-q6-welcome-sign');
+  const content = page.locator('.cm-content');
+  await expect(content).toHaveCSS('font-size', '16px');
+  const bigger = page.getByRole('button', { name: 'A+ bigger code' });
+  await bigger.click();
+  await bigger.click();
+  await expect(content).toHaveCSS('font-size', '20px');
+  await expect(page.locator('.code-size output')).toHaveText('20 px');
+  await page.getByRole('button', { name: 'A− smaller code' }).click();
+  await expect(content).toHaveCSS('font-size', '18px');
+});

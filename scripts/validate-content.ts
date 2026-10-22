@@ -15,7 +15,7 @@ async function main() {
     const host = await getPyHost();
     for (const unit of units(content)) {
       for (const message of checkUnit(host, unit))
-        problems.push({ file: unit.file, message: `${unit.label}: ${message}` });
+        problems.push({ file: unit.file, line: unit.locate(['type']), message: `${unit.label}: ${message}` });
     }
     for (const region of content.regions) {
       for (const message of checkRegion(host, region.data)) problems.push({ file: region.file, message });

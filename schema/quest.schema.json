@@ -102,8 +102,8 @@
         },
         "estimated_minutes": {
           "type": "integer",
-          "minimum": 2,
-          "maximum": 20
+          "minimum": 5,
+          "maximum": 15
         },
         "story_intro": {
           "type": "string"
@@ -1328,6 +1328,51 @@
                   },
                   "explain": {
                     "type": "string"
+                  },
+                  "verify": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "output_lines"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "try"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "outcome": {
+                            "type": "string",
+                            "enum": [
+                              "ok",
+                              "error"
+                            ]
+                          },
+                          "output": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "code",
+                          "outcome"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -1357,6 +1402,51 @@
                   },
                   "explain": {
                     "type": "string"
+                  },
+                  "verify": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "output_lines"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "try"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "outcome": {
+                            "type": "string",
+                            "enum": [
+                              "ok",
+                              "error"
+                            ]
+                          },
+                          "output": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "code",
+                          "outcome"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -1389,6 +1479,51 @@
                   },
                   "explain": {
                     "type": "string"
+                  },
+                  "verify": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "output_lines"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "try"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "outcome": {
+                            "type": "string",
+                            "enum": [
+                              "ok",
+                              "error"
+                            ]
+                          },
+                          "output": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "code",
+                          "outcome"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -2269,8 +2404,8 @@
               },
               "estimated_minutes": {
                 "type": "integer",
-                "minimum": 2,
-                "maximum": 20
+                "minimum": 5,
+                "maximum": 10
               },
               "story_intro": {
                 "type": "string"
@@ -3495,6 +3630,51 @@
                         },
                         "explain": {
                           "type": "string"
+                        },
+                        "verify": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "output_lines"
+                                }
+                              },
+                              "required": [
+                                "kind"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "try"
+                                },
+                                "code": {
+                                  "type": "string"
+                                },
+                                "outcome": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok",
+                                    "error"
+                                  ]
+                                },
+                                "output": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "code",
+                                "outcome"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -3524,6 +3704,51 @@
                         },
                         "explain": {
                           "type": "string"
+                        },
+                        "verify": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "output_lines"
+                                }
+                              },
+                              "required": [
+                                "kind"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "try"
+                                },
+                                "code": {
+                                  "type": "string"
+                                },
+                                "outcome": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok",
+                                    "error"
+                                  ]
+                                },
+                                "output": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "code",
+                                "outcome"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -3556,6 +3781,51 @@
                         },
                         "explain": {
                           "type": "string"
+                        },
+                        "verify": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "output_lines"
+                                }
+                              },
+                              "required": [
+                                "kind"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "try"
+                                },
+                                "code": {
+                                  "type": "string"
+                                },
+                                "outcome": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok",
+                                    "error"
+                                  ]
+                                },
+                                "output": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "code",
+                                "outcome"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
                         }
                       },
                       "required": [

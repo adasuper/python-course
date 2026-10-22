@@ -21,8 +21,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   courseId: 'codeweald-intro-python',
   execution: {
     timeoutSeconds: 3,
-    loopBudget: 1_000_000,
-    workshopLoopBudget: 10_000_000,
+    loopBudget: 100_000,
+    workshopLoopBudget: 1_000_000,
     maxActions: 2000,
     maxOutputChars: 100_000,
   },

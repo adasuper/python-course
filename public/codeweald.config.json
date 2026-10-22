@@ -2,8 +2,8 @@
   "courseId": "codeweald-intro-python",
   "execution": {
     "timeoutSeconds": 3,
-    "loopBudget": 1000000,
-    "workshopLoopBudget": 10000000,
+    "loopBudget": 100000,
+    "workshopLoopBudget": 1000000,
     "maxActions": 2000,
     "maxOutputChars": 100000
   },

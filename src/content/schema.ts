@@ -209,6 +209,19 @@ const PredictPrompt = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('text'), question: z.string(), answer: z.string(), explain: z.string() }),
 ]);
 
+/** How validate-content proves an investigate answer against the real program (F-QA-04). */
+const InvestigateVerify = z.discriminatedUnion('kind', [
+  // The answer is the number of lines the program prints.
+  z.strictObject({ kind: z.literal('output_lines') }),
+  // The change the question asks for: the changed program, and what really happens.
+  z.strictObject({
+    kind: z.literal('try'),
+    code: z.string(),
+    outcome: z.enum(['ok', 'error']),
+    output: z.string().optional(),
+  }),
+]);
+
 const InvestigateQuestion = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal('mcq'),
@@ -217,6 +230,7 @@ const InvestigateQuestion = z.discriminatedUnion('kind', [
     answer: z.number().int().min(0),
     hint: z.string(),
     explain: z.string().optional(),
+    verify: InvestigateVerify.optional(),
   }),
   z.strictObject({
     kind: z.literal('number'),
@@ -224,6 +238,7 @@ const InvestigateQuestion = z.discriminatedUnion('kind', [
     answer: z.number(),
     hint: z.string(),
     explain: z.string().optional(),
+    verify: InvestigateVerify.optional(),
   }),
   z.strictObject({
     kind: z.literal('text'),
@@ -231,6 +246,7 @@ const InvestigateQuestion = z.discriminatedUnion('kind', [
     accept: z.array(z.string()).min(1),
     hint: z.string(),
     explain: z.string().optional(),
+    verify: InvestigateVerify.optional(),
   }),
 ]);
 
@@ -253,7 +269,7 @@ const QuestBody = {
   type: z.enum(QUEST_TYPES),
   learning_outcome: Outcome,
   csta: z.array(Csta).min(1),
-  estimated_minutes: z.number().int().min(2).max(20),
+  estimated_minutes: z.number().int().min(5, 'A quest takes 5–15 minutes').max(15, 'A quest takes 5–15 minutes'),
   story_intro: z.string(),
   goal: z.string(),
   stage: StageSchema.default({ kind: 'none' }),
@@ -301,6 +317,11 @@ export const PhaseSchema = z.strictObject({
   starter_code: z.string().default(''),
   carry_code: z.boolean().default(false),
   story_outro: z.string().optional(),
+  estimated_minutes: z
+    .number()
+    .int()
+    .min(5, 'A boss phase takes 5–10 minutes')
+    .max(10, 'A boss phase takes 5–10 minutes'),
 });
 
 export const NormalQuestSchema = z.strictObject({ ...QuestMeta, ...QuestBody });

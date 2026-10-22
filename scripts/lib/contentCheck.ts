@@ -130,6 +130,28 @@ export function checkUnit(host: PyHost, unit: Unit): string[] {
   if (body.type === 'investigate') {
     const run = runBody(host, body, body.starter_code, []);
     if (run.error) problems.push(`the investigate code errors: ${describe(run)}`);
+    for (const [i, q] of (body.questions ?? []).entries()) {
+      const v = q.verify;
+      if (v?.kind === 'output_lines') {
+        const lines = run.output.replace(/\n$/, '').split('\n').length;
+        if (q.kind !== 'number')
+          problems.push(`question ${i + 1}: output_lines only works for a number question`);
+        else if (q.answer !== lines)
+          problems.push(
+            `question ${i + 1}: the program prints ${lines} line(s), but the answer is ${q.answer}`,
+          );
+      }
+      if (v?.kind === 'try') {
+        const tried = runBody(host, body, v.code, []);
+        const outcome = tried.error ? 'error' : 'ok';
+        if (outcome !== v.outcome)
+          problems.push(`question ${i + 1}: the changed program ends with "${outcome}", not "${v.outcome}"`);
+        if (v.output !== undefined && norm(v.output) !== norm(tried.output))
+          problems.push(
+            `question ${i + 1}: the changed program prints ${JSON.stringify(tried.output)}, not ${JSON.stringify(v.output)}`,
+          );
+      }
+    }
   }
   return problems;
 }

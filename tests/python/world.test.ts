@@ -106,3 +106,39 @@ describe('hero movement and the action log', () => {
     ]);
   });
 });
+
+describe('hero queries and edge cases (F-API-07)', () => {
+  it('reports position, facing and inventory', () => {
+    const r = run(
+      'hero.move("right", 2)\nhero.pick_up()\nhero.face("down")\nprint(hero.position(), hero.facing, hero.inventory())',
+    );
+    expect(r.status).toBe('ok');
+    expect(r.output).toBe("(3, 1) down ['gem']\n");
+  });
+
+  it('caps what the hero says at 200 characters', () => {
+    const r = run('hero.say("x" * 300)');
+    const said = r.actions.find((a) => a.t === 'say') as { text: string };
+    expect(said.text).toHaveLength(200);
+    expect(said.text.endsWith('…')).toBe(true);
+  });
+
+  it('opens a chest once, and only where there is one', () => {
+    const r = run(
+      'hero.move("right", 3)\nprint(hero.open_chest(1234))\nprint(hero.open_chest(1234))\nhero.face("down")\nprint(hero.open_chest(1234))',
+    );
+    expect(r.output).toBe('True\nTrue\nFalse\n');
+    const chests = r.actions.filter((a) => a.t === 'chest');
+    expect(chests).toMatchObject([
+      { ok: true, loot: ['crown'] },
+      { ok: true, loot: [] },
+      { ok: false, missing: true },
+    ]);
+    expect(r.world?.inventory).toEqual(['crown']);
+  });
+
+  it("records the line inside the student's own function", () => {
+    const r = run('def walk():\n    hero.move("right")\n\nwalk()\nwalk()');
+    expect(r.actions.map((a) => a.ln)).toEqual([3, 3]);
+  });
+});

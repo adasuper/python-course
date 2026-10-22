@@ -4,6 +4,7 @@
 import { loadPyodide, type PyodideInterface } from 'pyodide';
 import { installPackage } from '../runtime/pythonPackage';
 import type { FromWorker, RunResult, ToWorker } from '../runtime/protocol';
+import { neuterNetwork } from './neuter';
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -13,7 +14,8 @@ const pythonFiles = import.meta.glob('../python/codeweald/*.py', {
   eager: true,
 }) as Record<string, string>;
 
-let host: { run(json: string): string } | null = null;
+// The run function itself, kept from boot: replacing codeweald._host.run later changes nothing.
+let run: ((json: string) => string) | null = null;
 
 const post = (message: FromWorker) => self.postMessage(message);
 
@@ -41,28 +43,6 @@ async function prefetch(indexURL: string): Promise<void> {
   }
 }
 
-/** After boot, student code (even via a sandbox escape) must not reach the network or storage. */
-function neuterNetwork(): void {
-  const blocked = (name: string) => () => {
-    throw new Error(`${name} is not available inside Codeweald's Python worker`);
-  };
-  const scope = self as unknown as Record<string, unknown>;
-  for (const name of ['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'importScripts', 'Worker']) {
-    try {
-      scope[name] = blocked(name);
-    } catch {
-      /* some globals are read-only; the CSP still blocks them */
-    }
-  }
-  for (const name of ['indexedDB', 'caches']) {
-    try {
-      Object.defineProperty(self, name, { get: blocked(name), configurable: false });
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
 async function init(indexURL: string): Promise<void> {
   await prefetch(indexURL);
   post({ kind: 'progress', stage: 'compile' });
@@ -73,10 +53,12 @@ async function init(indexURL: string): Promise<void> {
     files[path.split('/').pop()!] = source;
   }
   installPackage(pyodide, files);
-  host = pyodide.pyimport('codeweald._host') as { run(json: string): string };
+  const host = pyodide.pyimport('codeweald._host') as { run(json: string): string; lockdown(): void };
+  run = host.run.bind(host);
   // Warm up: the first run compiles our modules.
-  host.run(JSON.stringify({ mode: 'example', code: 'pass', stage: null, inputs: [] }));
-  neuterNetwork();
+  run(JSON.stringify({ mode: 'example', code: 'pass', stage: null, inputs: [] }));
+  host.lockdown();
+  neuterNetwork(self);
   const pythonVersion = pyodide.runPython('import sys; sys.version.split()[0]') as string;
   post({ kind: 'progress', stage: 'ready' });
   post({ kind: 'ready', pyodideVersion: pyodide.version, pythonVersion });
@@ -93,13 +75,19 @@ self.onmessage = async (event: MessageEvent<ToWorker>) => {
     return;
   }
   if (message.kind === 'run') {
-    if (!host) {
+    if (!run) {
       post({ kind: 'failed', message: 'Python is not ready yet' });
       return;
     }
     const started = performance.now();
-    const result = JSON.parse(host.run(JSON.stringify(message.request))) as RunResult;
-    result.stats.durationMs = Math.round(performance.now() - started);
-    post({ kind: 'result', runId: message.runId, result });
+    try {
+      const result = JSON.parse(run(JSON.stringify(message.request))) as RunResult;
+      result.stats.durationMs = Math.round(performance.now() - started);
+      post({ kind: 'result', runId: message.runId, result });
+    } catch (error) {
+      // Pyodide itself failed (e.g. a WebAssembly stack overflow). The main thread
+      // replaces this worker, just like after a timeout (specs §6.3).
+      post({ kind: 'crashed', runId: message.runId, message: String(error) });
+    }
   }
 };

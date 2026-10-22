@@ -91,7 +91,8 @@ export function Feedback({
   return (
     <section class="feedback not-yet" aria-labelledby="fb-h" tabIndex={-1} id="feedback">
       <h2 id="fb-h">
-        <span aria-hidden="true">✗</span> {result.status === 'timeout' ? t.quest.timeout : t.quest.notYet}
+        <span aria-hidden="true">✗</span>{' '}
+        {result.status === 'timeout' || result.status === 'crashed' ? t.quest.timeout : t.quest.notYet}
       </h2>
       {fb?.text && <RichText rich={parseRich(fb.text)} />}
       {fb?.source === 'mistake' && result.error && <ErrorExplanation error={result.error} />}

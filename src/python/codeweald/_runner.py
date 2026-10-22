@@ -1,5 +1,6 @@
 """Run one student program in the sandbox and collect everything the UI needs."""
 
+import ast
 import reprlib
 import sys
 import types
@@ -15,10 +16,10 @@ from ._common import (
     ProgramExit,
 )
 from ._errors import classify, loop_line
-from ._sandbox import Env, RedirectOutput, make_builtins
+from ._sandbox import Env, RedirectOutput, find_locked, make_builtins
 
 DEFAULT_LIMITS = {
-    "loopBudget": 1_000_000,
+    "loopBudget": 100_000,
     "maxActions": 2_000,
     "maxOutputChars": 100_000,
     "recursionLimit": 200,
@@ -67,7 +68,12 @@ class Outcome:
 def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=None, coverage=False):
     limits = {**DEFAULT_LIMITS, **(limits or {})}
     outcome = Outcome(source)
-    world = _world.World(stage, limits["maxActions"])
+    try:
+        world = _world.World(stage, limits["maxActions"])
+    except ValueError as exc:  # a broken quest map: validate-content reports it with file and line
+        outcome.status = "error"
+        outcome.error = _limit_error("stage.invalid", None, problem=str(exc)) | {"type": "StageError", "raw": str(exc)}
+        return outcome
     env = Env(world, inputs, interactive, seed, limits["maxOutputChars"])
     outcome.world = world
     outcome.env = env
@@ -77,6 +83,16 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
     except SyntaxError as exc:  # also IndentationError
         outcome.status = "error"
         outcome.error = classify(exc, source)
+        return outcome
+
+    locked = find_locked(ast.parse(source))
+    if locked:
+        name, line = locked
+        outcome.status = "error"
+        outcome.error = _limit_error("sandbox.locked", line, name=name) | {
+            "type": "LockedName",
+            "raw": f'  File "{SPELLBOOK}", line {line}\nLockedName: {name} is locked in Codeweald',
+        }
         return outcome
 
     namespace = {"__name__": "__main__", "__builtins__": make_builtins(env)}

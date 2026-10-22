@@ -382,7 +382,7 @@ As a Student, I want Byte to stop a loop that never ends and tell me which line 
 **Acceptance criteria**
 - Given `while True: pass` on line 4, the run stops with "Your loop on **line 4** ran 100,000 times! Check that your loop condition eventually becomes `False`." and line 4 is highlighted.
 - The worker is not restarted; the next run starts immediately.
-- Loop iterations are counted with `sys.monitoring` `JUMP` events (fallback `sys.settrace`).
+- Loop iterations are counted with `sys.monitoring` `JUMP` events (Pyodide ships CPython 3.14, so no `sys.settrace` fallback is needed).
 - Budgets come from `codeweald.config.json` (quests 100,000; Workshop 1,000,000) and are calibrated so the stop happens in < 1 s on a 4× CPU throttle.
 
 Priority: Must · Phase: 1 · Spec: §6.3 (layer 1) · Brief: §2.1
@@ -418,7 +418,7 @@ Priority: Should · Phase: 2 · Spec: §6.3 · Brief: §2.1
 ### F-EXE-07 — Only safe parts of Python
 As a Maintainer, I want student code limited to safe builtins and an import allowlist, so that it can't touch files or other modules.
 **Acceptance criteria**
-- `SAFE_BUILTINS` removes `open`, `eval`, `exec`, `compile`, `breakpoint`, `help`, `memoryview`, `__loader__` and replaces `__import__`, `input`, `exit`, `quit`.
+- `SAFE_BUILTINS` removes `open`, `eval`, `exec`, `compile`, `breakpoint`, `help`, `memoryview`, `__loader__`, `__spec__` and replaces `__import__`, `input`, `exit`, `quit`, `getattr`, `setattr`, `delattr`, `hasattr`.
 - Imports allowed: `random`, `math`, `time` (wrapped) and `codeweald`, and nothing else.
 - Any other import raises "That spellbook isn't in Codeweald's library."
 - Only Pyodide's in-memory file system exists; nothing persists.
@@ -482,8 +482,8 @@ Priority: Must · Phase: 2 · Spec: §6.5 (Mode B), D6 · Brief: §2.1
 ### F-EXE-14 — Checks can't be tricked from student code
 As an Instructor, I want quest checks protected from student code, so that a pass means the code really worked.
 **Acceptance criteria**
-- Validators run from a module copy re-imported from a frozen source string *after* the student run.
-- A test shows monkeypatching `codeweald` during a run cannot fake a pass.
+- Student code can't reach the checking code: Python's own machinery (double-underscore names such as `__globals__`, and frame attributes such as `gi_frame`) is locked both in the program text and in `getattr`/`setattr`, and `codeweald`, `random` and `time` are facades that expose only the public API.
+- A test shows that patching the game during a run, including through `__globals__` or a name built at run time, cannot fake a pass.
 
 Priority: Should · Phase: 1 · Spec: §6.4 (7) · Brief: §2.2
 

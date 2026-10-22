@@ -26,7 +26,11 @@ test('a save code restores progress in a brand-new browser', async ({ page, brow
   await expect(other.locator('.hud')).toContainText('Swift Otter');
   await expect(other.locator('.hud')).toContainText('20 of 50 XP');
   await other.locator('#quest-log-button').click();
-  await expect(other.locator('.quest-row', { hasText: "Byte's First Steps" })).toContainText('✓ Done');
+  await expect(
+    other
+      .locator('.quest-row')
+      .filter({ has: other.locator('.quest-title', { hasText: /^Byte's First Steps$/ }) }),
+  ).toContainText('✓ Done');
   await fresh.close();
 });
 

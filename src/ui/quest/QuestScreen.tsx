@@ -1,6 +1,7 @@
 // Opens a quest (or a boss with phases) and wires completion to progress (§9.6).
 import { useEffect, useState } from 'preact/hooks';
 import type { BossQuest, NormalQuest } from '../../content/types';
+import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
 import { completePhase, completeQuest } from '../../state/progress';
 import { course, go, loadRegion, profile, regions, update } from '../../state/store';
@@ -149,6 +150,7 @@ function BossScreen({ quest, regionName }: { quest: BossQuest; regionName: strin
             };
             update((x) => (reward = completePhase(x, course.value!, quest.id, phase.id, code)));
             setStarterFromPrevious(code);
+            if (reward.bossDefeated) getWorldView().celebrateBoss(quest.boss.sprite);
             return reward;
           }}
           afterPass={

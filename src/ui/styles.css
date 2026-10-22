@@ -1058,3 +1058,32 @@ button.run {
 .replay-controls:focus-visible {
   border-radius: 6px;
 }
+.term-example {
+  display: block;
+  margin-top: 0.3rem;
+}
+.term-example code {
+  white-space: pre-wrap;
+}
+.quest-row .needs {
+  display: block;
+  color: var(--ink-muted);
+}
+.talk-head {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+img.pixel,
+.portrait.pixel {
+  image-rendering: pixelated;
+}
+.explain li.current {
+  background: var(--code-replay);
+  border-radius: 6px;
+  outline: 2px solid var(--accent);
+}
+.stage-holder.mini {
+  height: 200px;
+  margin: 0.6rem 0;
+}

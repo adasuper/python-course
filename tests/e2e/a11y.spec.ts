@@ -42,7 +42,7 @@ test('story, overworld, save dialog, inventory', async ({ page }) => {
     .getByRole('button', { name: /Save progress/ })
     .click();
   await scan(page, 'save dialog');
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: /Inventory/ }).click();
   await scan(page, 'inventory');
 });

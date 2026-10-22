@@ -1,6 +1,7 @@
 // Renders compiled story text safely (no innerHTML) with glossary toggletips.
 import { useState } from 'preact/hooks';
 import type { Inline, Rich } from '../../content/richtext';
+import { t } from '../../i18n/en';
 import { course } from '../../state/store';
 
 let termCounter = 0;
@@ -19,18 +20,25 @@ export function Term({ term, children }: { term: string; children: preact.Compon
         aria-controls={id}
         onClick={() => setOpen(!open)}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') setOpen(false);
+          // Esc closes the tip, and only the tip (not the scene around it).
+          if (e.key === 'Escape' && open) {
+            e.stopPropagation();
+            setOpen(false);
+          }
         }}
       >
         {children}
       </button>
-      <span id={id} class="term-pop" role="note" hidden={!open}>
-        <strong>{entry.term}:</strong> <RichText rich={entry.definition} inline />
-        {entry.example && (
-          <>
-            {' '}
-            <code>{entry.example}</code>
-          </>
+      {/* The toggletip pattern: the definition is put into a live region when it opens, so
+          screen readers announce it (F-DLG-03). */}
+      <span id={id} class="term-live" role="status">
+        {open && (
+          <span class="term-pop">
+            <strong>{entry.term}:</strong> <RichText rich={entry.definition} inline />{' '}
+            <span class="term-example">
+              {t.glossaryExample} <RichText rich={entry.example} inline />
+            </span>
+          </span>
         )}
       </span>
     </span>

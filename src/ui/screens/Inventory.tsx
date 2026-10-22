@@ -20,6 +20,15 @@ export function InventoryScreen() {
             ◀ {t.quest.back}
           </button>
           <h1>🎒 {t.inventory.heading}</h1>
+          <button
+            type="button"
+            class="ghost"
+            onClick={() =>
+              go({ name: 'story', title: c.title, lines: c.opening, next: { name: 'inventory' } })
+            }
+          >
+            📜 {t.dialogue.replayOpening}
+          </button>
         </div>
         {p.items.length === 0 && <p class="muted">{t.inventory.empty}</p>}
         <ul class="items">

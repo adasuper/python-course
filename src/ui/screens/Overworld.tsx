@@ -17,6 +17,7 @@ import {
   unsaved,
   update,
 } from '../../state/store';
+import { Portrait } from '../components/Common';
 import { RichText } from '../components/RichText';
 import { switchProfile } from '../flow';
 
@@ -84,6 +85,25 @@ export function OverworldScreen() {
   const worldEl = useRef<HTMLDivElement>(null);
   const [talk, setTalk] = useState<Talk | null>(null);
   const [logOpen, setLogOpen] = useState(false);
+  const logOpener = useRef<HTMLElement | null>(null);
+  const openLog = () => {
+    logOpener.current = document.activeElement as HTMLElement | null;
+    setLogOpen(true);
+  };
+  const closeLog = () => {
+    setLogOpen(false);
+    (logOpener.current ?? worldEl.current)?.focus();
+  };
+  useEffect(() => {
+    if (logOpen) document.getElementById('quest-log-h')?.focus();
+  }, [logOpen]);
+  /** "Finish The Path to the Well first" for a locked quest (F-WLD-04). */
+  const needsFirst = (questId: string) => {
+    const missing = (c.questInfo[questId]?.prerequisites ?? []).filter(
+      (pre) => p.quests[pre]?.status !== 'completed',
+    );
+    return missing.length ? t.hud.finishFirst(missing.map((pre) => c.questInfo[pre]?.title ?? pre)) : '';
+  };
   const markers = regionMarkers(p, c, region.id);
   const counts = regionCounts(p, c, region.id);
   const bossDone = p.quests[region.boss]?.status === 'completed';
@@ -137,7 +157,8 @@ export function OverworldScreen() {
       if (!world.interact()) announce('Nobody to talk to here.');
     } else if (e.key.toLowerCase() === 'q') {
       e.preventDefault();
-      setLogOpen(!logOpen);
+      if (logOpen) closeLog();
+      else openLog();
     } else if (e.key.toLowerCase() === 'l') {
       e.preventDefault();
       announce(describeAround());
@@ -222,56 +243,75 @@ export function OverworldScreen() {
           </button>
         </div>
 
-        <aside class={`quest-log card ${logOpen ? 'open' : ''}`} aria-labelledby="quest-log-h">
-          <h2 id="quest-log-h">
-            <button
-              id="quest-log-button"
-              type="button"
-              class="ghost"
-              aria-expanded={logOpen}
-              onClick={() => setLogOpen(!logOpen)}
-            >
-              📖 {t.hud.questLog} ({counts.done}/{counts.total})
-            </button>
-          </h2>
+        <aside class={`quest-log card ${logOpen ? 'open' : ''}`} aria-label={t.hud.questLog}>
+          <button
+            id="quest-log-button"
+            type="button"
+            class="ghost"
+            aria-expanded={logOpen}
+            aria-controls="quest-log-panel"
+            onClick={() => (logOpen ? closeLog() : openLog())}
+          >
+            📖 {t.hud.questLog} ({counts.done}/{counts.total})
+          </button>
           {logOpen && (
-            <ul>
-              {regionQuests.map((q) => {
-                const state = questState(p, c, q);
-                const info = c.questInfo[q]!;
-                return (
-                  <li key={q} class={`quest-row state-${state}`}>
-                    <span class="status">{STATUS_TEXT[state]}</span>
-                    <span class="quest-name">
-                      {info.sideQuest && '⭐ '}
-                      {info.title}
-                      <span class="muted small-text"> · {info.type}</span>
-                    </span>
+            <div
+              id="quest-log-panel"
+              role="dialog"
+              aria-modal="false"
+              aria-labelledby="quest-log-h"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  e.stopPropagation();
+                  closeLog();
+                }
+              }}
+            >
+              <h2 id="quest-log-h" tabIndex={-1}>
+                {t.hud.questLog}
+              </h2>
+              <ul>
+                {regionQuests.map((q) => {
+                  const state = questState(p, c, q);
+                  const info = c.questInfo[q]!;
+                  return (
+                    <li key={q} class={`quest-row state-${state}`}>
+                      <span class="status">{STATUS_TEXT[state]}</span>
+                      <span class="quest-name">
+                        {info.sideQuest && '⭐ '}
+                        <span class="quest-title">{info.title}</span>
+                        <span class="muted small-text"> · {info.type}</span>
+                        {state === 'locked' && <span class="needs small-text">{needsFirst(q)}</span>}
+                      </span>
+                      <button
+                        type="button"
+                        class="small"
+                        disabled={state === 'locked'}
+                        onClick={() => openQuest(q)}
+                      >
+                        {state === 'completed' ? 'Replay' : 'Go'}
+                      </button>
+                    </li>
+                  );
+                })}
+                {bossDone && (
+                  <li class="quest-row">
+                    <span class="status">🧩</span>
+                    <span class="quest-name">Review riddles (knowledge check)</span>
                     <button
                       type="button"
                       class="small"
-                      disabled={state === 'locked'}
-                      onClick={() => openQuest(q)}
+                      onClick={() => go({ name: 'check', regionId: region.id })}
                     >
-                      {state === 'completed' ? 'Replay' : 'Go'}
+                      Go
                     </button>
                   </li>
-                );
-              })}
-              {bossDone && (
-                <li class="quest-row">
-                  <span class="status">🧩</span>
-                  <span class="quest-name">Review riddles (knowledge check)</span>
-                  <button
-                    type="button"
-                    class="small"
-                    onClick={() => go({ name: 'check', regionId: region.id })}
-                  >
-                    Go
-                  </button>
-                </li>
-              )}
-            </ul>
+                )}
+              </ul>
+              <button type="button" class="small ghost" onClick={closeLog}>
+                {t.hud.closeLog}
+              </button>
+            </div>
           )}
         </aside>
 
@@ -321,13 +361,16 @@ export function OverworldScreen() {
         aria-labelledby="talk-h"
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
-        <h2 id="talk-h">{title}</h2>
+        <div class="talk-head">
+          {object.kind === 'npc' && object.id && <Portrait speaker={object.id} talking />}
+          <h2 id="talk-h">{title}</h2>
+        </div>
         {npc?.greeting && <p>{npc.greeting}</p>}
         {object.text && <p>{object.text}</p>}
         {questId && state && (
           <p>
             <strong>{c.questInfo[questId]!.title}</strong> — {STATUS_TEXT[state]}
-            {state === 'locked' && <span class="muted"> (finish the earlier quests first)</span>}
+            {state === 'locked' && questId && <span class="muted"> ({needsFirst(questId)})</span>}
           </p>
         )}
         {object.kind === 'board' && (

@@ -40,6 +40,11 @@ export function StoryScreen({ route }: { route: Extract<Route, { name: 'story' }
         </div>
       </div>
       <div class="row dialogue-actions">
+        {i > 0 && (
+          <button type="button" onClick={() => setI(i - 1)}>
+            ◂ {t.dialogue.back}
+          </button>
+        )}
         <button type="button" class="primary" ref={next} onClick={() => (last ? finish() : setI(i + 1))}>
           {last ? t.dialogue.done : `${t.dialogue.next} ▸`}
         </button>

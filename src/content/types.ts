@@ -140,7 +140,7 @@ export interface QuestInfo {
 export interface GlossaryEntry {
   term: string;
   definition: Rich;
-  example: string | null;
+  example: Rich;
   related: string[];
 }
 

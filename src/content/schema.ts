@@ -419,7 +419,8 @@ export const GlossarySchema = z.array(
   z.strictObject({
     term: z.string(),
     definition: z.string(),
-    example: z.string().optional(),
+    /** Rich text: code in `backticks`, or a ``` block for several lines. */
+    example: z.string(),
     related: z.array(z.string()).default([]),
   }),
 );

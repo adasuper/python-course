@@ -96,6 +96,8 @@ function label(scene: Phaser.Scene, x: number, y: number, text: string, zoom: nu
     })
     .setOrigin(0.5, 1)
     .setDepth(50);
+  // Labels are drawn large and scaled down, which needs smooth filtering.
+  t.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
   t.setScale(size / Math.max(zoom, 1) / 1.6);
   return t;
 }
@@ -126,6 +128,8 @@ class OverworldScene extends Phaser.Scene {
   private pos: XY = [0, 0];
   private facing: Dir = 'down';
   private moving = false;
+  /** A key pressed (or held) while the hero was still walking: taken when the step ends. */
+  private queued: Dir | null = null;
   private step = 0;
   private solid: boolean[][] = [];
   private objectsAt = new Map<string, OverworldObject>();
@@ -146,6 +150,7 @@ class OverworldScene extends Phaser.Scene {
     this.markerTexts.clear();
     this.npcSprites.clear();
     this.moving = false;
+    this.queued = null;
     this.laidOutFor = '';
   }
 
@@ -248,7 +253,8 @@ class OverworldScene extends Phaser.Scene {
     const worldW = this.cols * TILE;
     const worldH = this.rows * TILE;
     const fit = Math.min(w / worldW, h / worldH);
-    const zoom = Math.max(2, Math.min(4, fit));
+    // Whole-number zoom keeps every pixel the same size (F-WLD-01).
+    const zoom = Math.max(2, Math.min(4, Math.floor(fit)));
     cam.setZoom(zoom);
     // A map smaller than the view sits in the middle: widen the bounds around it.
     const padX = Math.max(0, (w / zoom - worldW) / 2);
@@ -286,8 +292,12 @@ class OverworldScene extends Phaser.Scene {
     return Boolean(obj && obj.kind !== 'poi' && obj.kind !== 'spawn');
   }
 
+  /** False only when the way is blocked. Holding a key queues the next step. */
   tryMove(dir: Dir): boolean {
-    if (this.moving) return false;
+    if (this.moving) {
+      this.queued = dir;
+      return true;
+    }
     this.facing = dir;
     const [dx, dy] = DELTA[dir];
     const [nx, ny] = [this.pos[0] + dx, this.pos[1] + dy];
@@ -302,6 +312,9 @@ class OverworldScene extends Phaser.Scene {
         this.hero.setFrame(heroFrame(this, this.opts, dir, 0));
         this.moving = false;
         this.opts.onStep(this.pos);
+        const next = this.queued;
+        this.queued = null;
+        if (next) this.tryMove(next);
       },
     );
     return true;
@@ -444,7 +457,7 @@ class StageScene extends Phaser.Scene {
     const worldH = this.rows * TILE;
     const zoom = Math.max(
       1,
-      Math.min(6, Math.min(this.scale.width / worldW, (this.scale.height - 24) / worldH)),
+      Math.min(6, Math.floor(Math.min(this.scale.width / worldW, (this.scale.height - 24) / worldH))),
     );
     cam.setZoom(zoom);
     cam.centerOn(worldW / 2, worldH / 2 - 6 / zoom);
@@ -546,6 +559,37 @@ class StageScene extends Phaser.Scene {
     }
   }
 
+  /** The Bug turns into a friendly, glowing firefly (F-BOS-03). Static with reduced motion. */
+  celebrate(bugSprite: string) {
+    const bugFrame = String(frameOf(this, 'chars', bugSprite));
+    const bug = this.children.list.find(
+      (c): c is Phaser.GameObjects.Sprite =>
+        c instanceof Phaser.GameObjects.Sprite && c.texture.key === 'chars' && c.frame.name === bugFrame,
+    );
+    const x = bug?.x ?? (this.hero ? this.hero.x + TILE : (this.cols * TILE) / 2);
+    const y = bug?.y ?? (this.hero ? this.hero.y - TILE : (this.rows * TILE) / 2);
+    bug?.destroy();
+    const f0 = frameOf(this, 'chars', 'firefly:0');
+    const f1 = frameOf(this, 'chars', 'firefly:1');
+    const glow = this.add.circle(x, y, 9, 0xfff3a0, 0.45).setDepth(29);
+    const fly = this.add.sprite(x, y, 'chars', f0).setDepth(30);
+    if (this.reducedMotion) return;
+    this.tweens.add({ targets: glow, alpha: 0.15, scale: 1.4, duration: 700, yoyo: true, repeat: -1 });
+    this.tweens.add({
+      targets: [fly, glow],
+      y: y - 4,
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+    this.time.addEvent({
+      delay: 300,
+      loop: true,
+      callback: () => fly.setFrame(fly.frame.name === String(f0) ? f1 : f0),
+    });
+  }
+
   describe(): string {
     if (!this.hero) return 'There is no map in this quest.';
     const stage = this.data_.stage;
@@ -590,7 +634,8 @@ export class WorldView implements ReplayView {
       // page every 500 ms and counts fractional sizes and positions as changes, which made
       // the map jump.
       scale: { mode: Phaser.Scale.NONE, width: 640, height: 400 },
-      render: { smoothPixelArt: true, powerPreference: 'low-power' },
+      // Crisp pixels at whole-number zoom levels (F-WLD-01). Text labels opt back into smoothing.
+      render: { pixelArt: true, powerPreference: 'low-power' },
       input: { keyboard: false, gamepad: false },
       audio: { noAudio: true },
       scene: [BootScene, OverworldScene, StageScene],
@@ -671,6 +716,10 @@ export class WorldView implements ReplayView {
   apply(action: Action, ms: number): Promise<void> {
     if (!this.game.scene.isActive('stage')) return Promise.resolve();
     return this.stage.apply(action, ms);
+  }
+
+  celebrateBoss(bugSprite: string) {
+    if (this.game.scene.isActive('stage')) this.stage.celebrate(bugSprite);
   }
 
   describeStage(): string {

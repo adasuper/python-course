@@ -3,7 +3,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
 import type { PyRunner } from '../../runtime/pyRunner';
-import { announcement, dismissToast, toasts } from '../../state/store';
+import { announcement, dismissToast, regions, toasts } from '../../state/store';
 
 const ART = `${import.meta.env.BASE_URL}assets/art/`;
 
@@ -115,6 +115,20 @@ export function Portrait({ speaker, talking = false }: { speaker: string; talkin
         height={64}
       />
     );
+  }
+  // Villagers and Bugs: their sprite, drawn big (F-DLG-01).
+  for (const region of Object.values(regions.value)) {
+    const npc = region.npcs[speaker];
+    if (npc)
+      return (
+        <img
+          class="portrait pixel"
+          src={`${ART}portraits/${npc.sprite}.png`}
+          alt={npc.name}
+          width={64}
+          height={64}
+        />
+      );
   }
   return null;
 }

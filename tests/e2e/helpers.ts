@@ -36,7 +36,9 @@ export async function skipToOverworld(page: Page) {
 export async function openFromQuestLog(page: Page, title: string) {
   const toggle = page.locator('#quest-log-button');
   if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
-  const row = page.locator('.quest-row', { hasText: title });
+  const row = page
+    .locator('.quest-row')
+    .filter({ has: page.locator('.quest-title', { hasText: new RegExp(`^${escape(title)}$`) }) });
   await row.getByRole('button', { name: /^(Go|Replay)$/ }).click();
   await expect(page.locator('#quest-title')).toHaveText(title);
 }

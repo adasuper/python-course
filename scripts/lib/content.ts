@@ -22,7 +22,7 @@ import {
   type QuestFile,
   type RegionFile,
 } from '../../src/content/schema';
-import { parseRich, termsIn, type Rich } from '../../src/content/richtext';
+import { parseRich, plainText, termsIn, type Rich } from '../../src/content/richtext';
 import {
   BOSS_PHASE_XP,
   DEFAULT_XP,
@@ -36,6 +36,7 @@ import {
 import { STAGE_LEGEND, stageRows } from '../../src/game/legend';
 import type { StageSpec, ValidatorSpec } from '../../src/runtime/protocol';
 import { proseStrings } from './prose';
+import { sentenceCount } from './readingLevel';
 
 export const CONTENT_DIR = join(import.meta.dirname, '..', '..', 'content');
 
@@ -298,6 +299,12 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     if (prose.value.includes('____') && !tier3)
       add(prose.file, `____ gaps belong only in fill starters and the third hint`, prose.line);
   }
+
+  content.glossary.forEach((g) => {
+    const sentences = sentenceCount(plainText(parseRich(g.definition)));
+    if (sentences > 2)
+      add('content/glossary.yaml', `"${g.term}": keep the definition to 2 sentences (it has ${sentences})`);
+  });
 
   if (content.course) {
     const course = content.course;
@@ -661,7 +668,7 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
     glossary: Object.fromEntries(
       content.glossary.map((g) => [
         g.term.toLowerCase(),
-        { term: g.term, definition: rich(g.definition), example: g.example ?? null, related: g.related },
+        { term: g.term, definition: rich(g.definition), example: rich(g.example), related: g.related },
       ]),
     ),
     items: Object.fromEntries(

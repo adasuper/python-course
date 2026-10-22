@@ -7,6 +7,7 @@
  *   tiles.png + tiles.json            16×16 tile sheet and frame index
  *   characters.png + characters.json  avatars (every theme/direction/frame), Byte, villagers, Bugs
  *   portraits/byte-0.png, byte-1.png  32×32 dialogue portraits
+ *   portraits/<character>.png         16×16 portraits of villagers and Bugs (shown at 64 px)
  *   icons/<item>.png                  item icons for the DOM
  *   icons/avatar-N-<theme>.png        character-creator icons
  *   preview.html                      a contact sheet for reviewing the art
@@ -163,6 +164,12 @@ BYTE_PORTRAIT.frames.forEach((frame, i) => {
     renderSingle({ key: `byte_portrait:${i}`, frame, palette: BYTE_PORTRAIT.palette }),
   );
 });
+for (const character of Object.values(CHARACTERS)) {
+  writeFileSync(
+    join(OUT, 'portraits', `${character.name}.png`),
+    renderSingle({ key: character.name, frame: character.frames[0] ?? [], palette: character.palette }),
+  );
+}
 
 // ── Icons ──
 const iconPngs: Record<string, Buffer> = {};
@@ -328,6 +335,6 @@ const kb = (b: Buffer) => `${(b.length / 1024).toFixed(1)} KB`;
 console.log(
   `make-art: ${Object.keys(TILES).length} tiles (${tileCells.length} frames, ${kb(tileSheet.png)}), ` +
     `${characterCells.length} character frames (${kb(characterSheet.png)}), ` +
-    `${Object.keys(ITEMS).length} item icons, ${Object.keys(avatarIconPngs).length} avatar icons, 2 portraits ` +
+    `${Object.keys(ITEMS).length} item icons, ${Object.keys(avatarIconPngs).length} avatar icons, ${2 + Object.keys(CHARACTERS).length} portraits ` +
     `→ public/assets/art in ${ms} ms`,
 );

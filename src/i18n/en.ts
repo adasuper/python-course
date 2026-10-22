@@ -35,9 +35,22 @@ export const t = {
       blocked: 'Let\'s pick a different nickname. Try "Make one for me"!',
     },
   },
-  dialogue: { next: 'Next', done: 'Done', skip: 'Skip scene' },
+  dialogue: {
+    next: 'Next',
+    back: 'Back',
+    done: 'Done',
+    skip: 'Skip scene',
+    replayOpening: 'Replay the opening story',
+  },
+  glossaryExample: 'For example:',
   hud: {
     questLog: 'Quest log',
+    closeLog: 'Close the quest log',
+    finishFirst: (titles: string[]) => {
+      const named = titles.slice(0, 2).map((x) => `“${x}”`);
+      const more = titles.length - named.length;
+      return `Finish ${named.join(more ? ', ' : ' and ')}${more ? ` and ${more} more` : ''} first.`;
+    },
     inventory: 'Inventory',
     save: 'Save progress',
     unsaved: 'Unsaved progress',

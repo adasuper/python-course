@@ -12,6 +12,9 @@ test('a concept scene and a region map open from the dev routes', async ({ page 
 test("a later region's quest from the dev route goes back to that region's map", async ({ page }) => {
   await page.goto('./?dev#/dev/quest/r2-q1-labeled-jars');
   await expect(page.locator('#quest-title')).toBeVisible();
-  await page.getByRole('button', { name: /Back to the map/ }).first().click();
+  await page
+    .getByRole('button', { name: /Back to the map/ })
+    .first()
+    .click();
   await expect(page.getByRole('application', { name: /Whispering Library map/ })).toBeVisible();
 });

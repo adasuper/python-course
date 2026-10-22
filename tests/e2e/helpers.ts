@@ -134,6 +134,9 @@ export async function solveBody(page: Page, body: Body) {
     }
     await page.getByRole('button', { name: /^▶ Run$/ }).click();
   } else {
+    // Quests with typed input: play the quest's own answers (the box is on by default).
+    const typeOwn = page.getByRole('checkbox', { name: /Let me type the answers/ });
+    if (await typeOwn.count()) await typeOwn.uncheck();
     if (body.starters) await page.getByRole('button', { name: 'Start with this one' }).click();
     await setCode(page, solutionCode(body));
     // runs_ok needs several runs without a crash (the capstone's free part).

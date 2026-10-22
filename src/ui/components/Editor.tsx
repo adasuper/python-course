@@ -140,14 +140,14 @@ const theme = EditorView.theme({
   '.cm-gap-line': { boxShadow: 'inset 3px 0 0 var(--accent)' },
 });
 
-/** Read-only code (predict quests) can't be typed in, but it stays focusable, so a long line
- *  that scrolls sideways can still be reached and read by keyboard. */
+/** Read-only code (predict quests) can't be typed in, but it stays focusable (tabindex 0 is
+ *  set for every editor), so a long line that scrolls sideways can still be read by keyboard. */
 function readOnlyExtensions(readOnly: boolean): Extension[] {
   return readOnly
     ? [
         EditorState.readOnly.of(true),
         EditorView.editable.of(false),
-        EditorView.contentAttributes.of({ tabindex: '0', 'aria-readonly': 'true' }),
+        EditorView.contentAttributes.of({ 'aria-readonly': 'true' }),
       ]
     : [EditorState.readOnly.of(false), EditorView.editable.of(true)];
 }
@@ -201,6 +201,8 @@ export function Editor({
       EditorView.contentAttributes.of({
         'aria-label': label ?? t.quest.editorLabel,
         'aria-describedby': 'editor-help',
+        // In the tab order even when long code scrolls sideways (axe: scrollable-region-focusable).
+        tabindex: '0',
         ...(id ? { id } : {}),
       }),
       EditorView.updateListener.of((u) => {

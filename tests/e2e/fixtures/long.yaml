@@ -15,7 +15,7 @@ starter_code: |
 prompts:
   - kind: mcq
     question: How many lines does it print?
-    options: ["1", "2", "3"]
+    options: ['1', '2', '3']
     answer: 0
     explain: One print() shows one line.
     verify: { kind: none }

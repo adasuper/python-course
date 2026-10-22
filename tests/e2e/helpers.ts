@@ -12,17 +12,21 @@ export const content = loadContent();
 
 /** Opens a quest from tests/e2e/fixtures, for quest types the real content doesn't use
  *  yet. It goes through the same schema and compiler as content/. */
-export async function openFixture(page: Page, name: string): Promise<Quest> {
+export async function openFixture(
+  page: Page,
+  name: string,
+  options: { regionNumber?: number } = {},
+): Promise<Quest> {
   const raw = parse(readFileSync(join(import.meta.dirname, 'fixtures', `${name}.yaml`), 'utf8')) as unknown;
   const quest = compileQuest(NormalQuestSchema.parse(raw), new Map());
   await page.goto('./?dev');
   await page.waitForFunction(() => '__codewealdTest' in window);
   await page.evaluate(
-    (q) =>
+    ([q, o]) =>
       (
-        window as unknown as { __codewealdTest: { openQuest(q: unknown): Promise<void> } }
-      ).__codewealdTest.openQuest(q),
-    quest,
+        window as unknown as { __codewealdTest: { openQuest(q: unknown, o: unknown): Promise<void> } }
+      ).__codewealdTest.openQuest(q, o),
+    [quest, options] as const,
   );
   await expect(page.locator('#quest-title')).toHaveText(quest.title);
   await waitForPython(page);

@@ -68,7 +68,9 @@ async function openDevQuest() {
  *  the game a compiled quest (tests/e2e/fixtures). Only with ?dev. */
 function exposeTestHooks() {
   (window as unknown as { __codewealdTest: unknown }).__codewealdTest = {
-    async openQuest(quest: Quest) {
+    /** `regionNumber` plays the fixture as if it were in that region (e.g. 10 for the
+     *  annotated traceback). */
+    async openQuest(quest: Quest, options: { regionNumber?: number } = {}) {
       const c = course.value ?? loadCourse();
       const regionId = c.regions[0]!.id;
       const region = await loadRegion(regionId);
@@ -79,6 +81,9 @@ function exposeTestHooks() {
       };
       course.value = {
         ...c,
+        regions: c.regions.map((r) =>
+          r.id === regionId && options.regionNumber ? { ...r, number: options.regionNumber } : r,
+        ),
         questInfo: {
           ...c.questInfo,
           [quest.id]: {

@@ -31,8 +31,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 |---|---|
 | M2.1 All quest types | ✅ Done |
 | M2.2 Accessible Parsons (complete) | ✅ Done (manual screen-reader check pending) |
-| M2.3 Full error translation | Next |
-| M2.4 Feedback engine | — |
+| M2.3 Full error translation | ✅ Done |
+| M2.4 Feedback engine | Next |
 | M2.5 Progression | — |
 | M2.6 Spellbook reference | — |
 | M2.7 Workshop | — |
@@ -89,6 +89,21 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   files and 33 Playwright tests.
 - **Still to do by hand:** the screen-reader check with NVDA and ChromeVox (it can't run in
   this build environment). Please try a Parsons quest with each and tell me what you hear.
+
+#### M2.3 Full error translation
+
+- **Every row of the §6.8 table** has a key, a template and a pinned Python 3.14 fixture. A new
+  test also checks the other way round: every key the Python code or the runner can produce has
+  a template in `content/errors.yaml`.
+- **Index and key errors say which list and what's in it:** "`shelf` has 3 items, so its
+  positions go from 0 to 2. You asked for position 3." and "The dictionary `d` has no key
+  `'gold'`. Its keys are `'gems'`". The values come from the student's variables at the moment
+  of the error; none of their code runs again. Empty lists, `pop()` from an empty list and
+  empty dictionaries get their own messages.
+- **Byte's annotated traceback:** from Region 10 on, "Show the real Python error" lists each
+  line of the real error with a note (where, which function, the code, the `^` marks, the error
+  type and message). It's ready now; Region 10 will use it.
+- **Editor diagnostics:** Ctrl+Shift+M lists the error under the code, and F8 jumps to it.
 
 ## Phase 1 — Vertical slice ✅
 

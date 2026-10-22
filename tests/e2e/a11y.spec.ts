@@ -105,6 +105,14 @@ test('Parsons listboxes with lines in both lists and one picked up', async ({ pa
   await scan(page, 'parsons');
 });
 
+test("Byte's annotated real error (Region 10 on)", async ({ page }) => {
+  await openFixture(page, 'crash', { regionNumber: 10 });
+  await page.getByRole('button', { name: /^▶ Run$/ }).click();
+  await page.getByRole('button', { name: 'Show the real Python error' }).click();
+  await expect(page.locator('.trace-annotated')).toBeVisible();
+  await scan(page, 'annotated traceback');
+});
+
 test('Phase 2 quest types: fill, typed input, lamps, twin, bonus', async ({ page }) => {
   await openFixture(page, 'fill');
   await page.getByRole('button', { name: /^▶ Run$/ }).click();

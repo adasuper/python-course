@@ -1,0 +1,25 @@
+# A program that crashes inside a function: for the real-error views (M2.3).
+id: r1-q96-fair-shares
+region: hearthvale-village
+title: Fair Shares
+type: fix
+learning_outcome: Use the traceback to find where a crash happened inside a function.
+csta: [2-AP-17]
+estimated_minutes: 5
+story_intro: 'This spell has 1 bug: it shares gold with zero friends.'
+goal: Make the program print 5.
+concept_card: A traceback shows each step that led to an error.
+starter_code: |
+  def share(gold, friends):
+      return gold / friends
+
+  print(share(10, 0))
+solution: |
+  def share(gold, friends):
+      return gold // friends
+
+  print(share(10, 2))
+validators:
+  - { type: output, expect: '5' }
+hints: [Look at the last line., Who is sharing?, 'print(share(10, ____))']
+story_outro: Fair is fair.

@@ -17,6 +17,7 @@ import { InputDialog } from '../components/InputDialog';
 import { JarShelf, OutputScroll, type OutLine } from '../components/Output';
 import { RichText } from '../components/RichText';
 import { prefersReducedMotion } from '../flow';
+import { ANNOTATE_FROM_REGION } from '../traceback';
 import { BonusList, errorTemplate, Feedback, type RewardView } from './Feedback';
 import { Hints } from './Hints';
 import { Parsons } from './Parsons';
@@ -53,6 +54,8 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   const byOrder = body.type === 'parsons' && body.parsons?.check === 'order';
   const usesSession = hasSessionValidators(body.validators);
   const hasStage = body.stage.kind !== 'none';
+  const regionNumber = course.value!.regions.find((r) => r.id === quest.region)?.number ?? 0;
+  const annotate = regionNumber >= ANNOTATE_FROM_REGION;
 
   const [code, setCode] = useState(starter);
   const [parsons, setParsons] = useState<{ scraps: Block[]; spell: Block[] } | null>(null);
@@ -567,11 +570,14 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
               outro={outro}
               reward={reward}
               note={sessionNote(result)}
+              annotate={annotate}
             >
               {passed && afterPass}
             </Feedback>
           )}
-          {revealed && isInvestigate && result?.error && <Feedback result={result} passed={false} />}
+          {revealed && isInvestigate && result?.error && (
+            <Feedback result={result} passed={false} annotate={annotate} />
+          )}
         </div>
 
         {isInvestigate && body.questions && (

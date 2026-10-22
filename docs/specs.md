@@ -468,8 +468,9 @@ interface PyErrorInfo {
 | `'str' object cannot be interpreted as an integer` | `type.str_as_int` | |
 | `takes N positional arguments but M were given` / `missing … required positional argument` | `type.arg_count` | |
 | `'NoneType' object …` | `type.none_value` | (Region 8: did the function `return`?) |
-| `IndexError: list index out of range` | `index.out_of_range` | "The list has 3 items (positions 0–2). You asked for position 3." |
-| `KeyError` | `key.missing` | "No key `'gold'`. Keys here: `'gems'`, `'coins'`." |
+| `IndexError: list index out of range` (also string and tuple) | `index.out_of_range` · `index.empty` · `index.generic` | "`shelf` has 3 items, so its positions go from 0 to 2. You asked for position 3." When the list can't be worked out: `index.generic`. |
+| `IndexError: pop from empty list` | `index.pop_empty` | |
+| `KeyError` | `key.missing` · `key.empty` · `key.generic` | "The dictionary `d` has no key `'gold'`. Its keys are `'gems'`, `'coins'`." (up to 6) |
 | `ZeroDivisionError` | `zero_division` | |
 | `ValueError: invalid literal for int() with base 10: 'abc'` | `value.int_conversion` | "`int()` can only turn digit-words like `'42'` into numbers." |
 | `could not convert string to float` | `value.float_conversion` | |
@@ -481,14 +482,23 @@ interface PyErrorInfo {
 | `ImportError` (sandbox) | `import.not_allowed` | |
 | anything else | `generic` | "Python found a problem: `TypeError`. Let's read the real error together." |
 
+To name the list or dictionary, the classifier looks at the subscripts on the error line and
+works out their values from the student's variables in the innermost student frame. It only
+reads names, literals, `len()`, unary minus, `+`/`-` and indexing into built-in lists, strings,
+tuples and dictionaries, so none of the student's code runs again. A test checks that every key
+the Python code (and the runner) can produce has a template in `content/errors.yaml`.
+
 **Presentation:**
 
 - Byte's friendly explanation appears in the feedback panel.
 - The editor gets a CodeMirror diagnostic: an underline, a gutter marker *with an icon*
   (not color only) and a line highlight. Focus does not jump, but a polite live region
-  announces "Error on line 3: …".
+  announces "Error on line 3: …". In the editor, Ctrl+Shift+M lists the diagnostic below the
+  code and F8 moves to it (CodeMirror's lint keys).
 - A **"Show the real Python error"** toggle shows the filtered traceback. From Region 10 on,
-  Byte annotates the parts of the real traceback (file, line, error type, message).
+  Byte annotates the parts of the real traceback: each line is listed with a note (the
+  "Traceback" heading, where: line and function, the code, the `^` marks, and the error type
+  and message), from `annotateTraceback` in `src/ui/traceback.ts`.
 - Templates live in `content/errors.yaml`, so course authors can change the wording without code.
 
 ---

@@ -5,6 +5,7 @@ import { t } from '../../i18n/en';
 import type { BonusSpec, PyErrorInfo, RunResult } from '../../runtime/protocol';
 import { course, update } from '../../state/store';
 import { RichText } from '../components/RichText';
+import { annotateTraceback } from '../traceback';
 
 export function errorTemplate(error: PyErrorInfo) {
   const templates = course.value!.errors;
@@ -17,7 +18,8 @@ export function errorTemplate(error: PyErrorInfo) {
   };
 }
 
-export function ErrorExplanation({ error }: { error: PyErrorInfo }) {
+/** `annotate`: Byte labels each part of the real error (from Region 10, F-FBK-10). */
+export function ErrorExplanation({ error, annotate = false }: { error: PyErrorInfo; annotate?: boolean }) {
   const [real, setReal] = useState(false);
   const tpl = errorTemplate(error);
   return (
@@ -46,10 +48,22 @@ export function ErrorExplanation({ error }: { error: PyErrorInfo }) {
           >
             {real ? t.quest.hideRealError : t.quest.showRealError}
           </button>
-          {real && (
+          {real && !annotate && (
             <pre class="real-error" lang="zxx">
               {error.raw}
             </pre>
+          )}
+          {real && annotate && (
+            <ol class="real-error trace-annotated" aria-label={t.trace.heading}>
+              {annotateTraceback(error.raw).map((part, i) => (
+                <li key={i} class={`trace-${part.kind}`}>
+                  <code class="trace-line" lang="zxx">
+                    {part.line}
+                  </code>
+                  <span class="trace-note">{part.note}</span>
+                </li>
+              ))}
+            </ol>
           )}
         </>
       )}
@@ -97,6 +111,7 @@ export function Feedback({
   outro,
   reward,
   note,
+  annotate = false,
   children,
 }: {
   result: RunResult | null;
@@ -105,6 +120,8 @@ export function Feedback({
   reward?: RewardView | null;
   /** Shown instead of the generic "not quite" (e.g. progress on session validators). */
   note?: string | null;
+  /** Label the parts of the real error (Region 10 on). */
+  annotate?: boolean;
   children?: preact.ComponentChildren;
 }) {
   if (!result) return null;
@@ -136,8 +153,10 @@ export function Feedback({
         {result.status === 'timeout' || result.status === 'crashed' ? t.quest.timeout : t.quest.notYet}
       </h2>
       {fb?.text && <RichText rich={parseRich(fb.text)} />}
-      {fb?.source === 'mistake' && result.error && <ErrorExplanation error={result.error} />}
-      {showError && <ErrorExplanation error={result.error!} />}
+      {fb?.source === 'mistake' && result.error && (
+        <ErrorExplanation error={result.error} annotate={annotate} />
+      )}
+      {showError && <ErrorExplanation error={result.error!} annotate={annotate} />}
       {!fb?.text && !result.error && <p>{note ?? t.quest.generic}</p>}
       <p class="muted">{t.quest.tryAgain}</p>
       {children}

@@ -181,9 +181,36 @@ type.generic:
 index.out_of_range:
   title: No item at that position
   message: >-
+    On line {line}, `{name}` has {length} {unit}, so its positions go from 0 to {last}. You asked
+    for position {index}.
+  tip: 'Positions start at 0, so the last position is one less than `len({name})`.'
+index.empty:
+  title: The list is empty
+  message: >-
+    On line {line}, `{name}` is empty, so it has no position {index}. There is nothing in it yet.
+  tip: 'Add something to it first, or check `len({name})` before you use a position.'
+index.pop_empty:
+  title: Nothing left to take
+  message: >-
+    On line {line}, you used `pop()` on a list that was already empty.
+  tip: 'Check that the list has something in it first, for example with `if len(my_list) > 0:`.'
+index.generic:
+  title: No item at that position
+  message: >-
     On line {line}, you asked for a position that the list doesn't have. Positions start at 0.
   tip: 'The last position is one less than `len(...)`.'
 key.missing:
+  title: That key isn't in the dictionary
+  message: >-
+    On line {line}, the dictionary `{name}` has no key {key}. Its keys are {keys}.
+  tip: 'Check the spelling and capitals, or use `in` to check first.'
+key.empty:
+  title: The dictionary is empty
+  message: >-
+    On line {line}, you asked `{name}` for the key {key}, but `{name}` is empty. It has no keys
+    yet.
+  tip: 'To add to a value that may not be there yet, use `.get(key, 0)`.'
+key.generic:
   title: That key isn't in the dictionary
   message: >-
     On line {line}, the dictionary has no key {key}.

@@ -783,6 +783,29 @@ button.run {
   border-left: 4px solid var(--accent);
   padding-left: 0.6rem;
 }
+.trace-annotated {
+  list-style: none;
+  padding: 0.5rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.trace-annotated li {
+  display: grid;
+  gap: 0.1rem;
+}
+.trace-line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.trace-note {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: #fff3c4;
+}
+.trace-note::before {
+  content: '↳ Byte: ';
+  font-weight: 700;
+}
 .real-error {
   background: #1d1726;
   color: #ffd8d1;

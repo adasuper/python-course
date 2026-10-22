@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getPyHost, type PyHost } from '../../scripts/lib/pyHost';
@@ -43,8 +43,22 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['def f(a):\n    return a\nf(1, 2)', 'type.arg_count'],
   ['x = None\nprint(x + 1)', 'type.none_value'],
   ['x = 5\nx()', 'type.not_callable', { what: 'int' }],
-  ['print([1, 2][5])', 'index.out_of_range'],
-  ['d = {"gems": 1}\nprint(d["gold"])', 'key.missing', { key: "'gold'" }],
+  ['print([1, 2][5])', 'index.out_of_range', { name: '[1, 2]', length: '2', last: '1', index: '5' }],
+  // Which list, how long, and which position (worked out without re-running any code).
+  [
+    'shelf = ["a", "b", "c"]\nprint(shelf[3])',
+    'index.out_of_range',
+    { name: 'shelf', length: '3', last: '2' },
+  ],
+  ['def f(xs):\n    return xs[len(xs)]\nf([1, 2])', 'index.out_of_range', { name: 'xs', index: '2' }, 2],
+  ['grid = [[1, 2], [3]]\nprint(grid[1][1])', 'index.out_of_range', { name: 'grid[1]', length: '1' }],
+  ['word = "owl"\nprint(word[-4])', 'index.out_of_range', { unit: 'characters', index: '-4' }],
+  ['shelf = []\nprint(shelf[0])', 'index.empty', { name: 'shelf', index: '0' }],
+  ['shelf = [1]\nshelf.pop()\nshelf.pop()', 'index.pop_empty', {}, 3],
+  ['i = 9\nprint([1, 2][i * 2])', 'index.generic'],
+  ['d = {"gems": 1}\nprint(d["gold"])', 'key.missing', { key: "'gold'", name: 'd', keys: "'gems'" }],
+  ['d = {}\nd["x"] += 1', 'key.empty', { key: "'x'", name: 'd' }],
+  ['d = {"a": 1}\nd.pop("b")', 'key.generic', { key: "'b'" }],
   ['print(1 / 0)', 'zero_division'],
   ['int("abc")', 'value.int_conversion', { text: "'abc'" }],
   ['float("x")', 'value.float_conversion'],
@@ -117,6 +131,23 @@ describe('error translation', () => {
         !tested.has(k) && !(k in ELSEWHERE) && !elsewhere.includes(`'${k}'`) && !world.includes(`'${k}'`),
     );
     expect(missing).toEqual([]);
+  });
+
+  it('has a template in content/errors.yaml for every key the code can produce (F-FBK-08)', () => {
+    const yaml = readFileSync(join(import.meta.dirname, '../../content/errors.yaml'), 'utf8');
+    const templates = new Set([...yaml.matchAll(/^([a-z_.]+):\s*$/gm)].map((m) => m[1]!));
+    const dirs = ['../../src/python/codeweald', '../../src/runtime'].map((d) => join(import.meta.dirname, d));
+    const produced = new Set(['generic', 'zero_division']);
+    for (const dir of dirs)
+      for (const file of readdirSync(dir)) {
+        const text = readFileSync(join(dir, file), 'utf8');
+        for (const m of text.matchAll(
+          /["']((?:syntax|indent|name|type|index|key|value|attribute|limits|api|sandbox|stage|fill|import|input)\.[a-z_]+)["']/g,
+        ))
+          produced.add(m[1]!);
+      }
+    expect(produced.size).toBeGreaterThan(60);
+    expect([...produced].filter((k) => !templates.has(k))).toEqual([]);
   });
 
   it('turns a broken quest map into a clear error', () => {

@@ -9,7 +9,7 @@ import {
   indentUnit,
   syntaxHighlighting,
 } from '@codemirror/language';
-import { setDiagnostics, type Diagnostic } from '@codemirror/lint';
+import { lintKeymap, setDiagnostics, type Diagnostic } from '@codemirror/lint';
 import { Compartment, EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
 import {
   Decoration,
@@ -181,6 +181,8 @@ export function Editor({
       keymap.of([
         { key: 'Mod-Enter', run: () => (callbacks.current.onRun?.(), true) },
         indentWithTab,
+        // Ctrl+Shift+M lists the error under the code, and F8 moves to it.
+        ...lintKeymap,
         ...defaultKeymap,
         ...historyKeymap,
       ]),

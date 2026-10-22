@@ -139,3 +139,22 @@ test('bonus challenge: shown after a pass, XP given once', async ({ page }) => {
   await expect(page.locator('#feedback')).toContainText('Quest complete!');
   await expect(page.locator('#feedback')).not.toContainText('Bonus challenge complete!');
 });
+
+test('the real error: plain in Region 1, labelled by Byte from Region 10 (F-FBK-10)', async ({ page }) => {
+  const showReal = async () => {
+    await page.getByRole('button', { name: /^▶ Run$/ }).click();
+    await expect(page.locator('#feedback')).toContainText("Can't divide by zero");
+    await page.getByRole('button', { name: 'Show the real Python error' }).click();
+  };
+  await openFixture(page, 'crash');
+  await showReal();
+  await expect(page.locator('pre.real-error')).toContainText('ZeroDivisionError: division by zero');
+  await expect(page.locator('.trace-annotated')).toHaveCount(0);
+
+  await openFixture(page, 'crash', { regionNumber: 10 });
+  await showReal();
+  const trace = page.getByRole('list', { name: /Byte explains each part/ });
+  await expect(trace).toContainText('Where: your spellbook, line 2, inside the function share.');
+  await expect(trace).toContainText('The kind of error is ZeroDivisionError.');
+  await expect(trace.getByRole('listitem')).toHaveCount(6);
+});

@@ -146,6 +146,18 @@ export const t = {
     bonusXp: (xp: number) => `+${xp} XP`,
     bonusGained: (n: number, xp: number) => `Bonus challenge${n > 1 ? 's' : ''} complete! +${xp} XP`,
   },
+  trace: {
+    heading: 'Byte explains each part of the real error',
+    intro: 'Python lists the steps that led to the error. The newest step is last.',
+    where: (n: number) => `Where: your spellbook, line ${n}.`,
+    whereIn: (n: number, fn: string) => `Where: your spellbook, line ${n}, inside the function ${fn}.`,
+    code: 'The code on that line.',
+    pointer: 'The marks point at where Python noticed the problem.',
+    error: (type: string, message: string) =>
+      message
+        ? `The kind of error is ${type}. After the colon, Python says what went wrong: ${message}`
+        : `The kind of error is ${type}.`,
+  },
   replay: {
     controls: 'Replay controls',
     play: 'Play',

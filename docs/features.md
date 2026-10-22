@@ -830,7 +830,7 @@ As a Student in Region 10, I want Byte to label the parts of a real traceback, s
 **Acceptance criteria**
 - From Region 10 on, the real-error view annotates the file, line, error type and message.
 
-Priority: Should · Phase: 4 · Spec: §6.8 · Brief: §4
+Priority: Should · Phase: 4 (delivered early, in M2.3) · Spec: §6.8 · Brief: §4
 
 ### F-FBK-11 — Three hints when I'm stuck
 As a Student, I want up to three hints that get more helpful, so that I can get unstuck without being given the answer.

@@ -159,10 +159,9 @@ def _runtime(exc, source, info):
         else:
             info["key"] = "type.generic"
     elif isinstance(exc, IndexError):
-        info["key"] = "index.out_of_range"
+        _index_error(exc, source, info)
     elif isinstance(exc, KeyError):
-        info["key"] = "key.missing"
-        params["key"] = repr(exc.args[0]) if exc.args else ""
+        _key_error(exc, source, info)
     elif isinstance(exc, ZeroDivisionError):
         info["key"] = "zero_division"
     elif isinstance(exc, ValueError):
@@ -188,6 +187,123 @@ def _runtime(exc, source, info):
     ):
         # [0] * 10**9 runs out of memory; [0] * 2**40 is too big to even try.
         info["key"] = "limits.memory"
+
+
+# ----- which list or dictionary? --------------------------------------------------
+# "No item at that position" helps more as "`shelf` has 3 items, so its positions go from 0
+# to 2. You asked for position 3." To say that, look at the subscripts on the error line and
+# work out their values from the student's variables, without running any of their code:
+# only names, literals, len(), unary minus, + and -, and indexing into built-in lists, strings,
+# tuples and dictionaries are looked at.
+
+
+class _Unknown(Exception):
+    pass
+
+
+def _student_frame(exc):
+    frame = None
+    tb = exc.__traceback__
+    while tb is not None:
+        if tb.tb_frame.f_code.co_filename == SPELLBOOK:
+            frame = tb.tb_frame
+        tb = tb.tb_next
+    return frame
+
+
+SAFE_CONTAINERS = (list, tuple, str, dict)
+
+
+def _peek(node, frame):
+    """The value of a simple expression in the student's frame, or raise _Unknown."""
+    if isinstance(node, ast.Constant):
+        return node.value
+    if isinstance(node, (ast.List, ast.Tuple, ast.Dict)):
+        try:
+            return ast.literal_eval(node)
+        except ValueError:
+            raise _Unknown from None
+    if isinstance(node, ast.Name):
+        for scope in (frame.f_locals, frame.f_globals):
+            if node.id in scope:
+                return scope[node.id]
+        raise _Unknown
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        value = _peek(node.operand, frame)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return -value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub)):
+        left, right = _peek(node.left, frame), _peek(node.right, frame)
+        if all(isinstance(v, int) and not isinstance(v, bool) for v in (left, right)):
+            return left + right if isinstance(node.op, ast.Add) else left - right
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "len":
+        if len(node.args) == 1 and not node.keywords:
+            value = _peek(node.args[0], frame)
+            if type(value) in SAFE_CONTAINERS:
+                return len(value)
+    if isinstance(node, ast.Subscript):
+        container, index = _peek(node.value, frame), _peek(node.slice, frame)
+        if type(container) in SAFE_CONTAINERS:
+            try:
+                return container[index]
+            except (IndexError, KeyError, TypeError):
+                raise _Unknown from None
+    raise _Unknown
+
+
+def _subscripts_on(source, line):
+    tree = _parse(source)
+    if tree is None or line is None:
+        return []
+    found = [n for n in ast.walk(tree) if isinstance(n, ast.Subscript) and n.lineno == line]
+    return sorted(found, key=lambda n: n.col_offset)
+
+
+def _index_error(exc, source, info):
+    params = info["params"]
+    info["key"] = "index.generic"
+    if str(exc) == "pop from empty list":
+        info["key"] = "index.pop_empty"
+        return
+    frame = _student_frame(exc)
+    if frame is None:
+        return
+    for node in _subscripts_on(source, info["line"]):
+        try:
+            container, index = _peek(node.value, frame), _peek(node.slice, frame)
+        except _Unknown:
+            continue
+        if type(container) not in (list, tuple, str) or type(index) is not int:
+            continue
+        if -len(container) <= index < len(container):
+            continue
+        params.update(name=ast.unparse(node.value), index=str(index), length=str(len(container)))
+        params["unit"] = "characters" if isinstance(container, str) else "items"
+        params["last"] = str(len(container) - 1)
+        info["key"] = "index.empty" if not container else "index.out_of_range"
+        return
+
+
+def _key_error(exc, source, info):
+    params = info["params"]
+    missing = exc.args[0] if exc.args else None
+    params["key"] = repr(missing) if exc.args else ""
+    info["key"] = "key.generic"
+    frame = _student_frame(exc)
+    if frame is None:
+        return
+    for node in _subscripts_on(source, info["line"]):
+        try:
+            container, key = _peek(node.value, frame), _peek(node.slice, frame)
+        except _Unknown:
+            continue
+        if type(container) is not dict or key in container or key != missing:
+            continue
+        params["name"] = ast.unparse(node.value)
+        keys = [repr(k) for k in list(container)[:6]]
+        params["keys"] = ", ".join(keys) + (", …" if len(container) > 6 else "")
+        info["key"] = "key.missing" if container else "key.empty"
+        return
 
 
 def _name_error(exc, source, line, info):

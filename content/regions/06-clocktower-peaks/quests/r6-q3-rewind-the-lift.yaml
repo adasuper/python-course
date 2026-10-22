@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-q3-rewind-the-lift
+region: clocktower-peaks
+title: Rewind the Lift
+type: modify
+npc: nell_pulley
+learning_outcome: Use a for loop with range() to rewrite a while-loop counter program in fewer lines.
+csta: [2-AP-12]
+estimated_minutes: 7
+prerequisites: [r6-q2-the-clockmakers-loop]
+retrieval: [r5]
+vocabulary: [for loop, range, loop variable]
+
+story_intro: |
+  Nell Pulley pats a creaky wooden lift. "A miner from the Endless Mines wrote its program. It works! But it's long, and the lift reads every line out loud. Creak, creak, creak."
+
+  The program uses a `while` loop with a counter, just like in the mines. A [[for loop]] can do the same job in fewer lines, because [[range]] does the counting for you.
+goal: Rewrite the lift program with a for loop. The Scroll must show exactly the same lines as before.
+concept_card: |
+  A `while` counter needs three lines: start the counter, check it, add 1. A `for` loop with `range` does all three in one line.
+  ```python
+  for floor in range(1, 6):
+      print(floor)
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_peaks_liftkeeper, name: Nell Pulley }
+
+starter_code: |
+  # Nell's lift: up from floor 1 to floor 5.
+  floor = 1
+  while floor <= 5:
+      print(f"Floor {floor}: clunk!")
+      floor = floor + 1
+  print("Top floor. Mind the gap!")
+
+solution: |
+  # Nell's lift: up from floor 1 to floor 5.
+  for floor in range(1, 6):
+      print(f"Floor {floor}: clunk!")
+  print("Top floor. Mind the gap!")
+
+validators:
+  - id: same-ride
+    type: output
+    expect: |
+      Floor 1: clunk!
+      Floor 2: clunk!
+      Floor 3: clunk!
+      Floor 4: clunk!
+      Floor 5: clunk!
+      Top floor. Mind the gap!
+    fail_hint: The ride must look exactly the same as before. Compare the Scroll with the old program's lines.
+  - id: uses-for
+    type: ast
+    require: [For]
+    forbid: [While]
+    fail_hint: Swap the `while` loop for a `for` loop with `range`.
+  - id: shorter
+    type: ast
+    max_lines: 3
+    fail_hint: The for loop starts `floor` and counts it for you. Delete the lines that did that job by hand.
+
+common_mistakes:
+  - id: still-while
+    detect: { kind: validator_failed, id: uses-for }
+    feedback: >-
+      The lift still uses a `while` loop. Replace it with one `for` line, like
+      `for floor in range(...):`. Then the loop does the counting for you.
+  - id: starts-at-zero
+    detect: { kind: output_regex, pattern: "Floor 0:" }
+    feedback: >-
+      The lift stopped at floor 0. There's no floor 0 in Nell's tower! With one number,
+      `range` starts at 0. Give it a start too: `range(1, ...)`.
+  - id: stops-short
+    detect: { kind: detector, name: range_off_by_one, first: 1, last: 5 }
+    feedback: >-
+      The lift never reaches floor 5! `range` stops just *before* its stop number. To end
+      on 5, the stop must be 6: `range(1, 6)`.
+  - id: adds-by-hand
+    detect: { kind: code_regex, pattern: "^[ \\t]+floor\\s*=\\s*floor\\s*\\+\\s*1" }
+    feedback: >-
+      You don't need `floor = floor + 1` anymore. The for loop gives `floor` its next
+      number on every pass. Delete that line.
+  - id: leftover-lines
+    detect: { kind: validator_failed, id: shorter }
+    feedback: >-
+      The ride is right! Now tidy up. The for loop sets `floor` all by itself, so
+      `floor = 1` isn't needed. Three lines of code are enough.
+  - id: different-ride
+    detect: { kind: validator_failed, id: same-ride }
+    feedback: >-
+      The lines on the Scroll changed. Compare them with the old ride, one line at a time.
+      Every space and full stop counts.
+
+wrong_solutions:
+  - expect_mistake: still-while
+    note: The starter code itself.
+    code: |
+      floor = 1
+      while floor <= 5:
+          print(f"Floor {floor}: clunk!")
+          floor = floor + 1
+      print("Top floor. Mind the gap!")
+  - expect_mistake: stops-short
+    code: |
+      for floor in range(1, 5):
+          print(f"Floor {floor}: clunk!")
+      print("Top floor. Mind the gap!")
+  - expect_mistake: starts-at-zero
+    code: |
+      for floor in range(5):
+          print(f"Floor {floor}: clunk!")
+      print("Top floor. Mind the gap!")
+  - expect_mistake: adds-by-hand
+    code: |
+      for floor in range(1, 6):
+          print(f"Floor {floor}: clunk!")
+          floor = floor + 1
+      print("Top floor. Mind the gap!")
+  - expect_mistake: leftover-lines
+    code: |
+      floor = 1
+      for floor in range(1, 6):
+          print(f"Floor {floor}: clunk!")
+      print("Top floor. Mind the gap!")
+
+hints:
+  - Which floors does the lift visit? The first one and the last one are all `range` needs to know.
+  - "`range(1, 6)` gives 1, 2, 3, 4, 5. Use it in a `for` line. Then delete `floor = 1` and `floor = floor + 1`."
+  - |
+    ```python
+    for floor in range(1, ____):
+        print(f"Floor {floor}: clunk!")
+    print("Top floor. Mind the gap!")
+    ```
+
+story_outro: |
+  The lift glides up without a single creak. "Three lines!" Nell gasps. "It used to take five. Now I have time for a cup of tea on the way up."

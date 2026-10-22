@@ -72,3 +72,33 @@
         print("Dig!")
         break
     print("Out of the loop!")
+# Region 6: Clocktower Peaks
+- id: boots-of-looping
+  name: Boots of Looping
+  icon: boots_of_looping
+  region: clocktower-peaks
+  description: "A [[for loop]] runs once for each value. `range(start, stop, step)` makes the values and stops before `stop`."
+  example: |
+    for step in range(1, 10, 2):
+        print(step)
+- id: bucket-of-totals
+  name: Bucket of Totals
+  icon: bucket_of_totals
+  region: clocktower-peaks
+  description: "An [[accumulator]] starts at 0 and adds a little more each time the loop runs."
+  example: |
+    total = 0
+    for coins in range(1, 5):
+        total = total + coins
+    print(total)
+- id: weavers-loom
+  name: Weaver's Loom
+  icon: weavers_loom
+  region: clocktower-peaks
+  description: "A loop inside a loop runs the inner loop all the way through for every pass of the outer loop. That's a [[nested loop]]."
+  example: |
+    for line in range(2):
+        row = ""
+        for stitch in range(3):
+            row = row + "*"
+        print(row)

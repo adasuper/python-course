@@ -1,0 +1,213 @@
+# yaml-language-server: $schema=../../../schema/region.schema.json
+# Region 6: Clocktower Peaks. for loops, range(start, stop, step), accumulators and
+# nested loops. See docs/curriculum-map.md.
+id: clocktower-peaks
+number: 6
+name: Clocktower Peaks
+concepts:
+  - for loops
+  - range(start, stop, step)
+  - accumulators
+  - nested loops
+
+intro:
+  - speaker: byte
+    text: Welcome to Clocktower Peaks! The air is thin up here. Luckily, my brain is not.
+  - speaker: byte
+    text: The great clock keeps time for all of Codeweald. But its gears slipped. The bells rang 13 times at noon, and Tuesday happened twice last week.
+  - speaker: byte
+    text: The clockmakers need loops that count exactly right. Not 12 and a bit. Not 11 and a sigh. Exactly right.
+
+# The mountain map. One character is one tile. The default legend is in src/game/legend.ts;
+# the entries below add the peaks' own tiles (cliffs, snow, stairs and the great clock).
+overworld:
+  grid: |
+    ^^^^^^^^^^^^AAAAA^^^^^^^^^^^^^
+    ^**P****P**^AAAAA^**P****P***^
+    ^*P*****P***CC@CC***P*****P**^
+    ^**P*****GQ*CCCCC*QG*****P***^
+    ^*****P*****CCDCC*****P*****^^
+    ^***=====:::::::::::=====***^^
+    ^*P*=****L:::::::::L****=*P**^
+    ^^^^/^^^^^^^^///^^^^^^^^/^^^^^
+    ^.p.=....p...///...p.~~.=.p..^
+    ^...==========:======BB=======
+    ^RRRRR.p..G...:...pO.~~.RRRRR^
+    ^WwdwW........:......~~.WwdwW^
+    ^..=....p...:::::...G~~...=..^
+    ^^^/^^^^^^^^^^/^^^^^^~~^^^/^^^
+    ^..===========:======BB====..^
+    ^.RRRR...G....:......~~..RRRR^
+    ^.WdwW........:......~~..WwdW^
+    ^..=..l.....:::::....~~~...=.^
+    ^.....p.....:::::...o~~~~~...^
+    ^^^^^^^^^^^^^^=^^^^^^^^^^^^^^^
+  legend:
+    ".": { tile: peak_ground }
+    "*": { tile: peak_snow }
+    "^": { tile: peak_cliff, solid: true }
+    "/": { tile: peak_stairs }
+    P: { tile: peak_snow, over: peak_pine, solid: true }
+    p: { tile: peak_ground, over: peak_pine, solid: true }
+    o: { tile: peak_ground, over: rock, solid: true }
+    l: { tile: peak_ground, over: lamp_post, solid: true }
+    L: { tile: cobble, over: lamp_post, solid: true }
+    G: { tile: peak_ground, over: clock_gear, solid: true }
+    Q: { tile: cobble, over: clock_bell, solid: true }
+    A: { tile: clock_roof, solid: true }
+    C: { tile: clock_wall, solid: true }
+    "@": { tile: clock_face, solid: true }
+    D: { tile: clock_door, solid: true }
+  objects:
+    - { kind: spawn, at: [14, 18] }
+    - { kind: npc, id: byte, at: [16, 18] }
+    - { kind: npc, id: dinah_dong, at: [10, 4], quest: r6-q1-counting-the-bells }
+    - { kind: npc, id: gerta_gearwright, at: [6, 11], quest: r6-q2-the-clockmakers-loop }
+    - { kind: npc, id: nell_pulley, at: [12, 8], quest: r6-q3-rewind-the-lift }
+    - { kind: npc, id: tollkeeper_copperpot, at: [20, 10], quest: r6-q4-the-toll-bucket }
+    - { kind: npc, id: milo_minute, at: [10, 16], quest: r6-q5-the-skipping-clock }
+    - { kind: npc, id: wren_warpwell, at: [23, 11], quest: r6-q6-the-pattern-weaver }
+    - { kind: npc, id: tick_tock_tick, at: [14, 5], quest: r6-boss-broken-clock }
+    - { kind: npc, id: granny_hourglass, at: [24, 15] }
+    - { kind: board, at: [11, 15] }
+    - { kind: sign, at: [12, 18], text: "Welcome to Clocktower Peaks! Please wind your watch." }
+    - { kind: sign, at: [16, 8], text: "The Great Clocktower. Bells ring on the hour. Mostly." }
+    - { kind: sign, at: [6, 10], text: "Gerta's Gear Shop. Loops fixed while you wait." }
+    - { kind: poi, id: frosty-summit, at: [1, 1] }
+    - { kind: poi, id: eagle-perch, at: [28, 1] }
+    - { kind: poi, id: goat-ledge, at: [1, 18] }
+    - { kind: poi, id: misty-pool, at: [28, 18] }
+    - { kind: exit, at: [29, 9], text: "The road to Dragon's Hoard Caverns (coming soon!)" }
+
+npcs:
+  byte:
+    name: Byte
+    sprite: byte
+    greeting: Brrr! My feathers are frozen stiff. I look magnificent, of course. Just stiff.
+  dinah_dong:
+    name: Dinah Dong
+    sprite: npc_peaks_bellringer
+    greeting: DONG! Sorry. I ring bells all day. Today the noon bell rang 13 times. That's one too many!
+  gerta_gearwright:
+    name: Gerta Gearwright
+    sprite: npc_peaks_clockmaker
+    greeting: A good clock is just a loop that never gets tired. Come, I'll show you mine.
+  nell_pulley:
+    name: Nell Pulley
+    sprite: npc_peaks_liftkeeper
+    greeting: Going up? The lift works fine. Its program is just very, very long.
+  tollkeeper_copperpot:
+    name: Tollkeeper Copperpot
+    sprite: npc_peaks_tollkeeper
+    greeting: Five coins, ten coins, fifteen... I always lose count around forty.
+  milo_minute:
+    name: Milo Minute
+    sprite: npc_peaks_apprentice
+    greeting: I built a clock all by myself! It skips 12 o'clock. And some minutes. Small details.
+  wren_warpwell:
+    name: Wren Warpwell
+    sprite: npc_peaks_weaver
+    greeting: My loom weaves whatever your code prints. Stars, stripes, anything!
+  tick_tock_tick:
+    name: Tick-Tock-Tick
+    sprite: bug_ticktock
+    greeting: Tick! Tock! TICK! I jammed the great clock. Now every hour is MY hour!
+  granny_hourglass:
+    name: Granny Hourglass
+    sprite: npc_peaks_granny
+    greeting: In my day we counted the hours with sand. And patience. Mostly patience.
+
+concept_scene:
+  title: Climbing the for loop
+  analogy: >-
+    A [[for loop]] is like climbing stairs where every step has a number. You know how many
+    steps there are before you start. `range(1, 10, 2)` is a staircase where you skip every
+    other step, and you stop *before* step 10.
+  lines:
+    - speaker: byte
+      text: In the Endless Mines, a `while` loop kept going until something changed. Up here, we know the count before we start.
+    - speaker: byte
+      text: That's a job for a [[for loop]]. It runs its indented lines once for each number that [[range]] makes.
+    - speaker: byte
+      text: Each time around, the [[loop variable]] holds the next number. You never add 1 to it yourself. The loop does that.
+    - speaker: byte
+      text: One thing to remember. `range` stops just *before* its stop number. Ask for `range(1, 4)` and you get 1, 2, 3. No 4. Watch!
+  worked_example:
+    stage: { kind: none }
+    code: |
+      for bell in range(1, 4):
+          print(f"Bell {bell}: DONG!")
+      print("The clock is happy again.")
+    explain:
+      - line: 1
+        text: "`range(1, 4)` makes the numbers 1, 2 and 3. It stops *before* 4."
+      - line: 2
+        text: This line runs once for each number. Each time, `bell` holds the next one.
+      - line: 3
+        text: This line is not indented, so it runs once, after the loop is done.
+
+quests:
+  - r6-q1-counting-the-bells
+  - r6-q2-the-clockmakers-loop
+  - r6-q3-rewind-the-lift
+  - r6-q4-the-toll-bucket
+  - r6-q5-the-skipping-clock
+  - r6-q6-the-pattern-weaver
+boss: r6-boss-broken-clock
+side_quests:
+  - r6-side1-staircase-of-stars
+  - r6-side2-times-table-tower
+
+knowledge_check:
+  items:
+    - kind: predict
+      question: What will this print?
+      code: |
+        for i in range(2, 10, 3):
+            print(i)
+      answer: |
+        2
+        5
+        8
+      explain: "`range(2, 10, 3)` starts at 2 and jumps by 3: 2, 5, 8. The next jump is 11, and that is past 10, so it stops."
+    - kind: mcq
+      question: How many times does this loop run, and what is the first value of `i`?
+      code: |
+        for i in range(5):
+            print("Tick")
+      options:
+        - 5 times. The first value is 0.
+        - 5 times. The first value is 1.
+        - 6 times. The first value is 0.
+      answer: 0
+      explain: "`range(5)` gives 0, 1, 2, 3, 4. That's 5 numbers, and it starts at 0."
+    - kind: predict
+      question: What will this print?
+      code: |
+        total = 0
+        for coins in range(1, 5):
+            total = total + coins
+        print(total)
+      answer: "10"
+      explain: The bucket starts at 0. Then it adds 1, 2, 3 and 4. That makes 10.
+    - kind: predict
+      question: How many stars does the loom weave? Type what this prints.
+      code: |
+        stars = 0
+        for row in range(3):
+            for col in range(4):
+                stars = stars + 1
+        print(f"{stars} stars")
+      answer: 12 stars
+      explain: The inner loop runs 4 times on every pass of the outer loop, and the outer loop makes 3 passes. 3 times 4 is 12.
+
+fragment:
+  id: fragment-rhythm
+  name: "Script Fragment: Rhythm"
+  description: The piece of the Great Script that keeps a steady beat.
+
+pois:
+  - frosty-summit
+  - eagle-perch
+  - goat-ledge
+  - misty-pool

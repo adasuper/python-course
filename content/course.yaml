@@ -37,4 +37,6 @@ regions:
     lessons: 2
   - id: the-endless-mines
     lessons: 2
+  - id: clocktower-peaks
+    lessons: 2
 side_quests: true

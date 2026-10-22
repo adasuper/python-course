@@ -1566,3 +1566,612 @@ Done
 ```
 
    Is 5 less than 3? No. The check is False the very first time, so the loop runs 0 times.
+
+## Region 6 — Clocktower Peaks
+
+**Concepts:** for loops; range(start, stop, step); accumulators; nested loops
+
+**Byte's analogy:** A for loop is like climbing stairs where every step has a number. You know how many steps there are before you start. `range(1, 10, 2)` is a staircase where you skip every other step, and you stop *before* step 10.
+
+### Counting the Bells
+
+`r6-q1-counting-the-bells`
+
+- **Type:** predict
+- **Learning outcome:** Predict the numbers that range() makes for different start, stop, and step values.
+- **CSTA:** 2-AP-12 · **About 6 min**
+- **Goal (as students see it):** Predict the numbers each loop prints. Then run the program to check.
+
+**Code students read:**
+
+```python
+# Dinah's bell practice book
+for bell in range(5):
+    print(bell)
+print("---")
+for bell in range(2, 8):
+    print(bell)
+print("---")
+for bell in range(10, 0, -2):
+    print(bell)
+```
+
+**Answers:**
+
+- What numbers does the first loop, `range(5)`, print? → **0 1 2 3 4**. With one number, `range` starts at 0. It stops just before 5. That's five numbers: 0, 1, 2, 3, 4.
+- What numbers does the second loop, `range(2, 8)`, print? → **2 3 4 5 6 7**. It starts at 2, the first number. It stops just before 8, so 7 is the last bell.
+- The last loop counts down. What numbers does `range(10, 0, -2)` print? → **10 8 6 4 2**. It starts at 10 and takes steps of -2. It stops before 0, so 0 never rings.
+
+**Hints (free, in this order):**
+
+1. Look at each `range` on its own. Find its start, its stop, and its step.
+2. If there's only one number, the start is 0. The stop number is never printed. The third number is the step: how far to jump each time.
+3. (code example)
+
+Here's the first loop, step by step:
+```text
+range(5): start at 0, stop before 5
+0, 1, 2, 3, ____
+```
+
+### The Clockmaker's Loop
+
+`r6-q2-the-clockmakers-loop`
+
+- **Type:** investigate
+- **Learning outcome:** Explain how a for loop's variable changes on each pass.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Run the program, watch the hero climb, and answer Gerta's questions. Try the change one question asks for.
+
+**Code students run:**
+
+```python
+from codeweald import hero
+for step in range(4):
+    print(step)
+    hero.move("right")
+    hero.move("up")
+hero.say("Made it to the bell loft!")
+```
+
+**Answers:**
+
+- Press Run. How many numbers appear on the Scroll of Output? → **4**. `range(4)` makes four numbers, so the loop goes around four times.
+- What is the value of `step` on the very first pass? → **0**. With one number, `range` starts at 0. So `step` is 0 the first time.
+- What is the value of `step` on the last pass? → **3**. `range(4)` stops just before 4. So the last value is 3.
+- Change `range(4)` to `range(1, 5)` and run it again. What is the first number on the Scroll now? → **1**. The hero still climbs four steps. But now `step` counts 1, 2, 3, 4.
+- Who changes `step` from one number to the next? → **The for loop does it by itself, on every pass.**. The for loop hands `step` its next number each time around. You never add 1 to it yourself.
+
+**Hints (free, in this order):**
+
+1. Press Run first. Then watch the Scroll and the stairs at the same time.
+2. Each pass of the loop runs all three indented lines: print `step`, move right, move up. Then `step` gets the next number.
+3. (code example)
+
+Here's the trace of the first two passes:
+```text
+pass 1: step is 0 -> print 0, right, up
+pass 2: step is 1 -> print 1, right, up
+pass 3: step is ____ -> ...
+```
+
+### Rewind the Lift
+
+`r6-q3-rewind-the-lift`
+
+- **Type:** modify
+- **Learning outcome:** Use a for loop with range() to rewrite a while-loop counter program in fewer lines.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Rewrite the lift program with a for loop. The Scroll must show exactly the same lines as before.
+
+**Starter code:**
+
+```python
+# Nell's lift: up from floor 1 to floor 5.
+floor = 1
+while floor <= 5:
+    print(f"Floor {floor}: clunk!")
+    floor = floor + 1
+print("Top floor. Mind the gap!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Nell's lift: up from floor 1 to floor 5.
+for floor in range(1, 6):
+    print(f"Floor {floor}: clunk!")
+print("Top floor. Mind the gap!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *still-while* — The lift still uses a `while` loop. Replace it with one `for` line, like `for floor in range(...):`. Then the loop does the counting for you.
+- *starts-at-zero* — The lift stopped at floor 0. There's no floor 0 in Nell's tower! With one number, `range` starts at 0. Give it a start too: `range(1, ...)`.
+- *stops-short* — The lift never reaches floor 5! `range` stops just *before* its stop number. To end on 5, the stop must be 6: `range(1, 6)`.
+- *adds-by-hand* — You don't need `floor = floor + 1` anymore. The for loop gives `floor` its next number on every pass. Delete that line.
+- *leftover-lines* — The ride is right! Now tidy up. The for loop sets `floor` all by itself, so `floor = 1` isn't needed. Three lines of code are enough.
+- *different-ride* — The lines on the Scroll changed. Compare them with the old ride, one line at a time. Every space and full stop counts.
+
+**Hints (free, in this order):**
+
+1. Which floors does the lift visit? The first one and the last one are all `range` needs to know.
+2. `range(1, 6)` gives 1, 2, 3, 4, 5. Use it in a `for` line. Then delete `floor = 1` and `floor = floor + 1`.
+3. (code example)
+
+```python
+for floor in range(1, ____):
+    print(f"Floor {floor}: clunk!")
+print("Top floor. Mind the gap!")
+```
+
+### The Toll Bucket
+
+`r6-q4-the-toll-bucket`
+
+- **Type:** fill
+- **Learning outcome:** Use an accumulator inside a for loop to add up a range of numbers.
+- **CSTA:** 2-AP-11, 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Fill the two gaps so the program adds up every toll and prints the total.
+
+**Starter code:**
+
+```python
+# Tolls go 5, 10, 15... up to 50 coins.
+first = 5
+last = 50
+____
+for toll in range(first, last + 1, 5):
+    ____
+print(f"The bucket holds {total} coins.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Tolls go 5, 10, 15... up to 50 coins.
+first = 5
+last = 50
+total = 0
+for toll in range(first, last + 1, 5):
+    total = total + toll
+print(f"The bucket holds {total} coins.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *typed-total* — Nice try, but no typing the answer! Copperpot's tolls change every day. Start the bucket at 0, then add each `toll` inside the loop.
+- *reset-inside* — `total = 0` is inside the loop, so the bucket is emptied on every pass! Only the last toll is left. Start the bucket once, before the loop.
+- *replaces* — `total = toll` throws away the coins already in the bucket. Add to them instead: `total = total + toll`.
+- *counts-travelers* — Adding 1 counts the travelers, not their coins. Add the toll each traveler pays: `total = total + toll`.
+- *no-start* — Python doesn't know that name yet. A bucket must exist before you add to it. In the first gap, start it empty: `total = 0`.
+- *other-tolls-fail* — Your bucket is right for 5 to 50, but not for other tolls. Don't type the total. Let the loop add each `toll`, and print `total`.
+
+**Hints (free, in this order):**
+
+1. The bucket needs a starting amount before any traveler pays. What should that be?
+2. In the first gap, start the bucket empty: `total = 0`. In the second gap, add this traveler's toll to what's already there.
+3. (code example)
+
+```python
+total = 0
+for toll in range(first, last + 1, 5):
+    total = ____
+```
+
+### The Skipping Clock
+
+`r6-q5-the-skipping-clock`
+
+- **Type:** fix
+- **Learning outcome:** Fix off-by-one errors in range() so a loop runs the right number of times.
+- **CSTA:** 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix the two ranges so the clock rings every hour from 1 to 12, then ticks at 0, 15, 30 and 45 minutes.
+
+**Starter code:**
+
+```python
+# Ring every hour, from 1 to 12.
+for hour in range(1, 12):
+    print(f"{hour} o'clock: DONG!")
+# Then tick every quarter hour.
+for minute in range(0, 60, 10):
+    print(f"Tick! {minute} minutes")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Ring every hour, from 1 to 12.
+for hour in range(1, 13):
+    print(f"{hour} o'clock: DONG!")
+# Then tick every quarter hour.
+for minute in range(0, 60, 15):
+    print(f"Tick! {minute} minutes")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *adds-one-by-hand* — Don't change `hour` or `minute` inside the loop. The for loop gives them their next value by itself. Fix the numbers inside `range` instead.
+- *skips-twelve* — The clock still skips 12 o'clock! `range` stops just *before* its stop number, so `range(1, 12)` ends at 11. What stop number gives you 12?
+- *steps-ten* — The hours are fixed. Now the little bell ticks every 10 minutes. The third number in `range` is the step. A quarter hour is 15 minutes.
+- *sixty* — 60 minutes is already the next hour! Keep the stop at 60. `range` stops just before it, so 45 is the last tick.
+- *loops-gone* — Milo wants his two loops back! Keep both `for` lines, and fix the numbers inside each `range`.
+- *clock-different* — Close! Compare the Scroll with the plan, one line at a time. Hours 1 to 12, then ticks at 0, 15, 30 and 45 minutes.
+
+**Hints (free, in this order):**
+
+1. Run it and read the Scroll. Which hour is missing? Which minutes are wrong?
+2. `range(1, 12)` stops at 11, so raise the stop by one. In `range(0, 60, 10)`, the 10 is the step. How many minutes are in a quarter hour?
+3. (code example)
+
+```python
+for hour in range(1, ____):
+    print(f"{hour} o'clock: DONG!")
+for minute in range(0, 60, ____):
+    print(f"Tick! {minute} minutes")
+```
+
+### The Pattern Weaver
+
+`r6-q6-the-pattern-weaver`
+
+- **Type:** make
+- **Learning outcome:** Use nested for loops to print a rectangle of symbols.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Use a loop inside a loop to print a rectangle of `*` stars, `width` wide and `height` tall. It must work for any size.
+
+**Starter code:**
+
+```python
+width = 6
+height = 3
+# Weave a rug of * stars: height rows,
+# and each row is width stars wide.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+width = 6
+height = 3
+# Weave a rug of * stars: height rows,
+# and each row is width stars wide.
+for line in range(height):
+    row = ""
+    for stitch in range(width):
+        row = row + "*"
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-loop* — That's a lovely rug, but Wren wants it woven with a loop inside a loop. Make an inner loop that adds one star at a time: `row = row + "*"`.
+- *swapped* — Your rug is turned on its side! The outer loop makes the rows, so it should use `range(height)`. The inner loop makes the stars in a row, so it uses `range(width)`.
+- *too-many-rows* — The loom printed far too many rows! Is `print(row)` inside the inner loop? Move it out one step, so it runs once, after the row is finished.
+- *growing-rows* — Your rows keep getting longer! Each row needs to start empty. Put `row = ""` inside the outer loop, just before the inner loop.
+- *fixed-size* — This rug works, but the loom must weave other sizes too. Use `range(height)` and `range(width)` instead of typing the numbers.
+- *wrong-rug* — The rug doesn't match yet. Wren wants `height` rows, and each row has `width` stars.
+
+**Hints (free, in this order):**
+
+1. Start small. Can you print just one row of `width` stars, with a loop that adds one star at a time?
+2. Put your row-making loop inside a loop that runs `height` times. Start each row with `row = ""`, and print it after the inner loop ends.
+3. (code example)
+
+```python
+for line in range(height):
+    row = ""
+    for stitch in range(width):
+        row = ____
+    print(row)
+```
+
+### The Broken Clock 🐛 boss
+
+`r6-boss-broken-clock`
+
+**Boss:** The Broken Clock (Tick-Tock-Tick). Rebuild the great clock's timetable in three phases. Then Tick-Tock-Tick turns back into a friendly firefly.
+
+#### Phase 1: Hours on the dial
+
+- **Type:** make
+- **Learning outcome:** Use range() with a start and stop to print a sequence.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Use a for loop to print the hours 1 to 12, one per line.
+
+**Starter code:**
+
+```python
+# Print the hours 1 to 12 with a for loop.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Print the hours 1 to 12 with a for loop.
+for hour in range(1, 13):
+    print(hour)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *starts-at-zero* — There's no 0 on a clock! With one number, `range` starts at 0. Give it a start: `range(1, ...)`.
+- *stops-at-eleven* — The dial stops at 11! `range` stops just *before* its stop number. To reach 12, use 13 as the stop.
+- *no-loop* — Tick-Tock-Tick laughs at all those lines. "Too slow!" Use one `for` loop with `range(1, 13)` to print every hour.
+- *too-long* — The dial is right! Now let the loop do all the work. Two lines are enough.
+- *wrong-dial* — Compare the Scroll with a clock face. Just the numbers 1 to 12, one on each line.
+
+**Hints (free, in this order):**
+
+1. Which number does the dial start at? Which number does it end at?
+2. `range` stops just before its stop number. For 1 to 12, use `range(1, 13)`. Print the loop variable on each pass.
+3. (code example)
+
+```python
+for hour in range(1, ____):
+    print(hour)
+```
+
+#### Phase 2: The timetable
+
+- **Type:** make
+- **Learning outcome:** Use nested loops and a range step to print a timetable pattern.
+- **CSTA:** 2-AP-12 · **About 6 min**
+- **Goal (as students see it):** Use a minute loop inside the hour loop to print the timetable, one row per hour, from 1 to 12.
+
+**Starter code:**
+
+```python
+for hour in range(1, 13):
+    print(hour)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+for hour in range(1, 13):
+    row = f"{hour}:"
+    for minute in range(0, 60, 15):
+        row = row + f" {minute}"
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-loop* — Tick-Tock-Tick snickers. "Where's the second loop?" Put a minute loop inside the hour loop. It adds each minute to the row.
+- *typed-minutes* — No typing the minutes! Let `range` count them for you with a step: `range(0, 60, 15)`.
+- *step-ten* — The bell chimes every 15 minutes, not every 10. The third number in `range` is the step.
+- *too-many-rows* — The timetable has far too many rows! Is `print(row)` inside the minute loop? Move it out one step, so each hour prints just one row.
+- *growing-rows* — The rows keep getting longer! Start a fresh row on every pass of the hour loop, just before the minute loop.
+- *wrong-rows* — Compare the timetable with the example, row by row. Each row is the hour, a colon, then the minutes with a space before each one.
+
+**Hints (free, in this order):**
+
+1. Look at one row. Which part comes from the hour loop? Which parts come from a minute loop?
+2. Inside the hour loop, start a row with `row = f"{hour}:"`. Then loop with `range(0, 60, 15)` and add each minute with `row = row + f" {minute}"`. Print the row after the minute loop.
+3. (code example)
+
+```python
+for hour in range(1, 13):
+    row = f"{hour}:"
+    for minute in range(0, 60, ____):
+        row = row + f" {minute}"
+    print(row)
+```
+
+#### Phase 3: Count the chimes
+
+- **Type:** make
+- **Learning outcome:** Use an accumulator to total values across loop passes.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Use a for loop to add up the chimes from 1 to 12 o'clock in `chimes`, then print the total.
+
+**Starter code:**
+
+```python
+# The bell rings 1 time at 1 o'clock,
+# 2 times at 2 o'clock, and so on.
+chimes = 0
+# Add up the chimes from 1 to 12 o'clock.
+
+print(f"Total chimes: {chimes}")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# The bell rings 1 time at 1 o'clock,
+# 2 times at 2 o'clock, and so on.
+chimes = 0
+# Add up the chimes from 1 to 12 o'clock.
+for hour in range(1, 13):
+    chimes = chimes + hour
+print(f"Total chimes: {chimes}")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *typed-in* — Tick-Tock-Tick spots the typed number. "Cheater, cheater, clock eater!" Let a for loop add each hour's chimes to `chimes`.
+- *reset-inside* — `chimes = 0` inside the loop empties the count on every pass! Keep it before the loop, so the chimes pile up.
+- *counts-hours* — Adding 1 counts the hours, not the chimes. At each hour the bell rings `hour` times, so add `hour`.
+- *stops-short* — You forgot 12 o'clock, the loudest hour of all! `range` stops just before its stop number. Use 13.
+- *no-loop* — Use a for loop with `range(1, 13)`. On each pass, add that hour's chimes.
+- *wrong-total* — Not quite. Start `chimes` at 0 before the loop. Then, inside the loop, add `hour` on every pass.
+
+**Hints (free, in this order):**
+
+1. How many chimes at 1 o'clock? At 2 o'clock? What do you add each time?
+2. Loop over the hours with `range(1, 13)`. On each pass, add that hour to the total: `chimes = chimes + hour`.
+3. (code example)
+
+```python
+chimes = 0
+for hour in range(1, 13):
+    chimes = ____
+print(f"Total chimes: {chimes}")
+```
+
+### Staircase of Stars ⭐ side quest
+
+`r6-side1-staircase-of-stars`
+
+- **Type:** make
+- **Learning outcome:** Use nested loops where the inner range depends on the outer loop's variable to draw a triangle.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Print a staircase of `*` stars, `height` rows tall. Row 1 has 1 star, row 2 has 2 stars, and so on. It must work for any height.
+
+**Starter code:**
+
+```python
+height = 4
+# A staircase: 1 star on row 1,
+# 2 stars on row 2, and so on.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+height = 4
+# A staircase: 1 star on row 1,
+# 2 stars on row 2, and so on.
+for step in range(1, height + 1):
+    row = ""
+    for star in range(step):
+        row = row + "*"
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-loop* — Nice stairs! Now weave them with a loop inside a loop. The inner loop adds one star at a time: `row = row + "*"`.
+- *all-same* — That's a rectangle, not a staircase! Every row has the same number of stars. Let the inner `range` use the outer loop's variable, so each row is longer than the one before.
+- *one-short* — Your staircase is one step short. `range(height)` starts at 0, so the first row gets 0 stars. Try `range(1, height + 1)` for the outer loop.
+- *fixed-height* — These stairs work for 4, but not for other towers. Use `height` in the outer `range` instead of typing a number.
+- *wrong-stairs* — Not quite a staircase yet. The first row has 1 star, and each row after it has one more.
+
+**Hints (free, in this order):**
+
+1. Row 1 has 1 star and row 4 has 4 stars. Which loop variable counts 1, 2, 3, 4?
+2. Make the outer loop count `step` from 1 to `height` with `range(1, height + 1)`. Then the inner loop adds `step` stars with `range(step)`.
+3. (code example)
+
+```python
+for step in range(1, height + 1):
+    row = ""
+    for star in range(____):
+        row = row + "*"
+    print(row)
+```
+
+### The Times-Table Tower ⭐ side quest
+
+`r6-side2-times-table-tower`
+
+- **Type:** make
+- **Learning outcome:** Use nested loops to print a multiplication grid.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Use a loop inside a loop to print a times table, `size` rows by `size` columns. Build each cell with an f-string. It must work for any size.
+
+**Starter code:**
+
+```python
+size = 4
+# One row for each number from 1 to size.
+# Each row: that number times 1, 2, 3...
+# all the way up to times size.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+size = 4
+# One row for each number from 1 to size.
+# Each row: that number times 1, 2, 3...
+# all the way up to times size.
+for a in range(1, size + 1):
+    row = ""
+    for b in range(1, size + 1):
+        row = row + f"{a * b} "
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *text-plus-number* — `row` is text, but `a * b` is a number, and Python can't join them. Turn the number into text with an f-string: `row = row + f"{a * b} "`.
+- *one-loop* — Build the tower with a loop inside a loop. The outer loop makes the rows. The inner loop adds one cell at a time.
+- *zero-row* — A row of zeros! With one number, `range` starts at 0. The times table starts at 1, so use `range(1, size + 1)`.
+- *too-many-rows* — The tower printed too many rows! Is `print(row)` inside the inner loop? Move it out one step, so each row prints once.
+- *one-short* — The tower is one row short. `range` stops just before its stop number, so use `size + 1` as the stop.
+- *no-fstring* — The tower is right! Now build each cell with an f-string, like `f"{a * b} "`. It's neater, and it turns the number into text for you.
+- *fixed-size* — This tower works for 4, but not for other sizes. Use `size` in both `range` calls instead of typing a number.
+- *wrong-tower* — Compare your tower with the example, row by row. Each cell is the row number times the column number.
+
+**Hints (free, in this order):**
+
+1. Look at the example. What does the row number times the column number give you?
+2. The outer loop counts `a` from 1 to `size`. Inside it, start `row = ""`, then loop `b` from 1 to `size` and add `f"{a * b} "` to the row.
+3. (code example)
+
+```python
+for a in range(1, size + 1):
+    row = ""
+    for b in range(1, size + 1):
+        row = row + ____
+    print(row)
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+for i in range(2, 10, 3):
+    print(i)
+```
+
+   Answer:
+
+```text
+2
+5
+8
+```
+
+   `range(2, 10, 3)` starts at 2 and jumps by 3: 2, 5, 8. The next jump is 11, and that is past 10, so it stops.
+
+2. How many times does this loop run, and what is the first value of `i`? → **5 times. The first value is 0.**. `range(5)` gives 0, 1, 2, 3, 4. That's 5 numbers, and it starts at 0.
+3. What will this print?
+
+```python
+total = 0
+for coins in range(1, 5):
+    total = total + coins
+print(total)
+```
+
+   Answer:
+
+```text
+10
+```
+
+   The bucket starts at 0. Then it adds 1, 2, 3 and 4. That makes 10.
+
+4. How many stars does the loom weave? Type what this prints.
+
+```python
+stars = 0
+for row in range(3):
+    for col in range(4):
+        stars = stars + 1
+print(f"{stars} stars")
+```
+
+   Answer:
+
+```text
+12 stars
+```
+
+   The inner loop runs 4 times on every pass of the outer loop, and the outer loop makes 3 passes. 3 times 4 is 12.

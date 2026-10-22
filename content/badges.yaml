@@ -69,3 +69,14 @@
   emoji: 🔦
   description: You found every secret corner of the Endless Mines.
   trigger: { kind: pois_visited, region: the-endless-mines }
+# Region 6: Clocktower Peaks
+- id: restorer-clocktower-peaks
+  name: "Region Restorer: Clocktower Peaks"
+  emoji: 🕰️
+  description: You beat Tick-Tock-Tick and got the great clock ticking again.
+  trigger: { kind: boss_defeated, region: clocktower-peaks }
+- id: explorer-clocktower-peaks
+  name: "Explorer: Clocktower Peaks"
+  emoji: 🏔️
+  description: You found all the secret corners up in the peaks.
+  trigger: { kind: pois_visited, region: clocktower-peaks }

@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-q1-counting-the-bells
+region: clocktower-peaks
+title: Counting the Bells
+type: predict
+npc: dinah_dong
+learning_outcome: Predict the numbers that range() makes for different start, stop, and step values.
+csta: [2-AP-12]
+estimated_minutes: 6
+vocabulary: [for loop, range]
+
+story_intro: |
+  Dinah Dong, the bell ringer, flips open a dusty book. "My practice book! Three loops, three ways to count. But I keep losing my place."
+
+  Each loop is a [[for loop]]. It rings once for every number that [[range]] makes. Read each `range` carefully. Where does it start? Where does it stop? Does it skip?
+goal: Predict the numbers each loop prints. Then run the program to check.
+concept_card: |
+  `range` makes the numbers for a `for` loop. It always stops just **before** the stop number.
+  - `range(5)` gives 0, 1, 2, 3, 4. With one number, it starts at 0.
+  - `range(2, 8)` gives 2, 3, 4, 5, 6, 7.
+  - `range(10, 0, -2)` gives 10, 8, 6, 4, 2. The third number is the step. A step below 0 counts down.
+
+stage: { kind: none }
+
+starter_code: |
+  # Dinah's bell practice book
+  for bell in range(5):
+      print(bell)
+  print("---")
+  for bell in range(2, 8):
+      print(bell)
+  print("---")
+  for bell in range(10, 0, -2):
+      print(bell)
+
+prompts:
+  - kind: mcq
+    question: What numbers does the first loop, `range(5)`, print?
+    options:
+      - 0 1 2 3 4
+      - 1 2 3 4 5
+      - 0 1 2 3 4 5
+    answer: 0
+    verify: { kind: none }
+    explain: "With one number, `range` starts at 0. It stops just before 5. That's five numbers: 0, 1, 2, 3, 4."
+    twin:
+      kind: text
+      code: |
+        for bell in range(3):
+            print(bell)
+      question: Here's a twin. What does this print? Put each number on its own line.
+      answer: |
+        0
+        1
+        2
+      explain: "`range(3)` starts at 0 and stops before 3: 0, 1, 2."
+  - kind: mcq
+    question: What numbers does the second loop, `range(2, 8)`, print?
+    options:
+      - 2 3 4 5 6 7
+      - 2 3 4 5 6 7 8
+      - 3 4 5 6 7 8
+    answer: 0
+    verify: { kind: none }
+    explain: "It starts at 2, the first number. It stops just before 8, so 7 is the last bell."
+    twin:
+      kind: text
+      code: |
+        for bell in range(4, 7):
+            print(bell)
+      question: Here's a twin. What does this print? Put each number on its own line.
+      answer: |
+        4
+        5
+        6
+      explain: "Start at 4. Stop before 7. So it prints 4, 5, 6."
+  - kind: mcq
+    question: The last loop counts down. What numbers does `range(10, 0, -2)` print?
+    options:
+      - 10 8 6 4 2
+      - 10 8 6 4 2 0
+      - 8 6 4 2 0
+    answer: 0
+    verify: { kind: none }
+    explain: "It starts at 10 and takes steps of -2. It stops before 0, so 0 never rings."
+    twin:
+      kind: text
+      code: |
+        for bell in range(9, 0, -3):
+            print(bell)
+      question: Here's a twin. What does this print? Put each number on its own line.
+      answer: |
+        9
+        6
+        3
+      explain: "Start at 9 and step down by 3: 9, 6, 3. The next step is 0, and `range` stops before 0."
+
+hints:
+  - Look at each `range` on its own. Find its start, its stop, and its step.
+  - "If there's only one number, the start is 0. The stop number is never printed. The third number is the step: how far to jump each time."
+  - |
+    Here's the first loop, step by step:
+    ```text
+    range(5): start at 0, stop before 5
+    0, 1, 2, 3, ____
+    ```
+
+story_outro: |
+  DONG! DONG! DONG! Dinah counts along and beams. "You read those loops like a bell ringer! Start, stop, step. And never ring the stop number."

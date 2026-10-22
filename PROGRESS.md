@@ -68,9 +68,10 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 - **Tests (all passing):**
   - 156 Vitest tests: Python runtime, error translation, validators, content, save codes,
     storage, progress rules, nickname filter, replay, rich text, schema.
-  - 15 Playwright tests:
+  - 16 Playwright tests:
     - golden path (a new player completes all of Region 1 → items in inventory → reload →
       progress persists)
+    - the map stays still and fills its frame after a quest
     - infinite loop (both safety layers)
     - keyboard-only quest from the map, and Esc+Tab leaving the editor
     - save code restoring in a fresh browser
@@ -78,6 +79,14 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 - **CI:** `.github/workflows/ci.yml` runs lint, format, types, content validation, the
   answer-key check, unit tests, the build with its size budget, and E2E plus axe.
 - **Size:** the app is 0.99 MB gzipped excluding Pyodide (budget 4 MB).
+
+### Fixed after the demo
+
+- **The map jumped every half second after playing a quest.** Phaser's automatic canvas
+  resizing kept reporting changes that weren't real, and each one re-centered the camera. The
+  game now sizes the canvas itself, in whole pixels, and moves the camera only when the size
+  really changes. This also fixes the map staying small after returning from a quest on large
+  screens.
 
 ### Requirement changes during Phase 1
 

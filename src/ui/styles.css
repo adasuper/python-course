@@ -584,6 +584,9 @@ progress.xp {
   width: 100%;
   height: 100%;
 }
+.world-host canvas {
+  display: block;
+}
 .world-help {
   grid-column: 1;
   margin: 0;

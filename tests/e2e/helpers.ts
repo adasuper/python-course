@@ -12,8 +12,8 @@ export function quest(id: string) {
   return q.data;
 }
 
-export async function newPlayer(page: Page, nickname = 'Clever Newt') {
-  await page.goto('/');
+export async function newPlayer(page: Page, nickname = 'Clever Newt', url = '/') {
+  await page.goto(url);
   await page.getByRole('button', { name: /New adventurer/ }).click();
   await page.getByLabel('Your nickname').fill(nickname);
   await page.getByRole('button', { name: 'Start my adventure' }).click();

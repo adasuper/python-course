@@ -133,6 +133,7 @@ class OverworldScene extends Phaser.Scene {
   private npcSprites = new Map<string, Phaser.GameObjects.Sprite>();
   private cols = 0;
   private rows = 0;
+  private laidOutFor = '';
   reducedMotion = false;
 
   constructor() {
@@ -145,6 +146,7 @@ class OverworldScene extends Phaser.Scene {
     this.markerTexts.clear();
     this.npcSprites.clear();
     this.moving = false;
+    this.laidOutFor = '';
   }
 
   create() {
@@ -236,17 +238,23 @@ class OverworldScene extends Phaser.Scene {
   }
 
   layout() {
-    const cam = this.cameras.main;
     const w = this.scale.width;
     const h = this.scale.height;
+    // Phaser also sends 'resize' when only the canvas moved on the page. Re-running the
+    // layout then would snap the camera, so only a real size change counts.
+    if (this.laidOutFor === `${w}x${h}`) return;
+    this.laidOutFor = `${w}x${h}`;
+    const cam = this.cameras.main;
     const worldW = this.cols * TILE;
     const worldH = this.rows * TILE;
     const fit = Math.min(w / worldW, h / worldH);
     const zoom = Math.max(2, Math.min(4, fit));
     cam.setZoom(zoom);
-    cam.setBounds(0, 0, worldW, worldH);
+    // A map smaller than the view sits in the middle: widen the bounds around it.
+    const padX = Math.max(0, (w / zoom - worldW) / 2);
+    const padY = Math.max(0, (h / zoom - worldH) / 2);
+    cam.setBounds(-padX, -padY, worldW + padX * 2, worldH + padY * 2);
     cam.startFollow(this.hero, true, 0.2, 0.2);
-    if (worldW * zoom < w || worldH * zoom < h) cam.centerOn(worldW / 2, worldH / 2);
   }
 
   updateMarkers(markers: Record<string, Marker>) {
@@ -578,19 +586,38 @@ export class WorldView implements ReplayView {
       parent: this.host,
       backgroundColor: '#20192b',
       banner: false,
-      scale: { mode: Phaser.Scale.RESIZE, width: 640, height: 400 },
+      // The canvas is sized by fit() below, not by Phaser's RESIZE mode. RESIZE polls the
+      // page every 500 ms and counts fractional sizes and positions as changes, which made
+      // the map jump.
+      scale: { mode: Phaser.Scale.NONE, width: 640, height: 400 },
       render: { smoothPixelArt: true, powerPreference: 'low-power' },
       input: { keyboard: false, gamepad: false },
       audio: { noAudio: true },
       scene: [BootScene, OverworldScene, StageScene],
     });
     this.ready = new Promise((resolve) => this.game.events.once('codeweald-booted', () => resolve()));
+    void this.ready.then(() => this.fit());
+    new ResizeObserver(() => this.fit()).observe(this.host);
+    // Tests and debugging (only with ?dev in the URL) can inspect the Phaser game.
+    if (new URLSearchParams(location.search).has('dev')) {
+      (window as unknown as { __codewealdGame?: Phaser.Game }).__codewealdGame = this.game;
+    }
   }
 
   /** Move the canvas into a screen's placeholder element. */
   mount(parent: HTMLElement) {
     if (this.host.parentElement !== parent) parent.appendChild(this.host);
-    requestAnimationFrame(() => this.game.scale.refresh());
+    this.fit();
+  }
+
+  /** Make the canvas exactly as big as its holder, in whole pixels. */
+  private fit() {
+    if (!this.game.isBooted) return;
+    const box = this.host.getBoundingClientRect();
+    const w = Math.floor(box.width);
+    const h = Math.floor(box.height);
+    if (w < 1 || h < 1) return;
+    if (w !== this.game.scale.width || h !== this.game.scale.height) this.game.scale.resize(w, h);
   }
 
   setReducedMotion(on: boolean) {

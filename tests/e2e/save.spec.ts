@@ -13,7 +13,7 @@ test('a save code restores progress, including items, in a brand-new browser', a
   await hudSave.click();
   const dialog = page.getByRole('dialog', { name: 'Save your progress' });
   const code = await dialog.locator('#save-code').inputValue();
-  expect(code).toMatch(/^CW1-/);
+  expect(code).toMatch(/^CW2-/);
   await dialog.getByRole('button', { name: 'Copy save code' }).click();
   await dialog.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(hudSave).not.toContainText('Unsaved progress');
@@ -38,6 +38,8 @@ test('a save code restores progress, including items, in a brand-new browser', a
   await other.keyboard.press('Escape');
   await other.getByRole('button', { name: /Inventory/ }).click();
   await expect(other.locator('.items')).toContainText('Quill of Printing');
+  // Version 2 save codes keep badges too.
+  await expect(other.locator('.badge-card.earned')).not.toHaveCount(0);
   await fresh.close();
 });
 

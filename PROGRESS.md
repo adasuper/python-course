@@ -33,8 +33,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | M2.2 Accessible Parsons (complete) | ✅ Done (manual screen-reader check pending) |
 | M2.3 Full error translation | ✅ Done |
 | M2.4 Feedback engine | ✅ Done |
-| M2.5 Progression | Next |
-| M2.6 Spellbook reference | — |
+| M2.5 Progression | ✅ Done |
+| M2.6 Spellbook reference | Next |
 | M2.7 Workshop | — |
 | M2.8 Save polish | — |
 | M2.9 Settings and a11y features | — |
@@ -117,6 +117,24 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   do `output_regex` and `state` mistakes.
 - **Hint modes from the deploy config** (all three tiers, only the nudge, or none) are tested end
   to end.
+
+#### M2.5 Progression
+
+- **Badges:** `content/badges.yaml` (8 badges now) and a badge engine (`state/badges.ts`) checked
+  after every change. Triggers: first quest of a type, no hints, 5 distinct attempts, a pass
+  after 4 failed tries, counters (real-error views, Workshop runs, rubber-duck chats), boss
+  defeated, all secret corners, side quests, knowledge checks, and a quest's `rewards.badge`.
+  Explorer, Review Riddler, Side Questor II/III, Duck Whisperer and Great Scriptwright need later
+  content; their triggers are ready.
+- **Celebrations:** badges and level-ups pop up as toasts and are announced. With reduced motion
+  nothing moves.
+- **Notebook:** the inventory has searchable item cards that open a page with the runnable
+  example, the quest it came from (and its concept card), and the glossary words it uses, plus
+  shelves for Script Fragments and badges (earned or not yet).
+- **Saving:** profiles are now schema 3 (badges, Workshop and duck counters), with a tested
+  migration. Save codes are version 2 (`CW2-…`): they keep bonus challenges and earned badges,
+  so restoring no longer lets bonus XP be earned twice. Phase 1 `CW1-` codes still restore, and
+  a test decodes a real one.
 
 ## Phase 1 — Vertical slice ✅
 
@@ -271,8 +289,5 @@ of them are now closed:
   could speed up the first screen.
 - **CSTA wording:** the descriptions are paraphrased. Verify them verbatim against
   csteachers.org (unreachable from the build environment).
-- **Bonus challenges and save codes:** the save code doesn't record which bonus challenges are
-  done yet, so after restoring from a save code they can be earned again. The progress file
-  keeps them. The new save-code format in M2.5 fixes this.
 - **Public answers:** the repository is now public, so anyone can read the solutions in
   `content/` and `docs/solutions.md`. The deployed game itself contains no solution code.

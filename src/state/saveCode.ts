@@ -1,6 +1,8 @@
 // Save codes: progress as copy-and-paste text (docs/specs.md §12.4, §12.5).
-// Format: "CW1-" + Crockford Base32 in groups of 5; the last group is a CRC-16 check.
+// Format: "CW2-" + Crockford Base32 in groups of 5; the last group is a CRC-16 check.
+// Version 2 adds bonus challenges and earned badges; version 1 codes still restore.
 import type { Course } from '../content/types';
+import { awardBadges } from './badges';
 import { emptyRecord, newProfile, type Profile, type QuestRecord } from './profile';
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -8,7 +10,7 @@ const NICK_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567
 const ATTEMPT_BUCKETS = [0, 1, 2, 3, 4, 6, 10, 20];
 const MINUTE_BUCKETS = [0, 2, 5, 10, 15, 20, 30, 45];
 const EPOCH = Date.UTC(2026, 0, 1);
-const VERSION = 1;
+const VERSION = 2;
 
 class BitWriter {
   bits: number[] = [];
@@ -87,6 +89,19 @@ export function encodeSaveCode(p: Profile, course: Course, choices: Choices, now
     ),
     4,
   );
+  // Version 2: bonus challenges done, per quest that has any (each with its own count, so a
+  // code still lines up if a later version of the course adds challenges)…
+  for (const id of course.questOrder) {
+    const bonus = (course.questInfo[id]?.bonus ?? []).slice(0, 7);
+    if (!bonus.length) continue;
+    w.write(bonus.length, 3);
+    for (const key of bonus) w.write(p.quests[id]?.bonus?.includes(key) ? 1 : 0, 1);
+  }
+  // …and every earned badge, in badges.yaml order. Most could be worked out again from the
+  // quests, but not all (Tinkerer, Error Reader…), so all are kept.
+  const badges = course.badges.slice(0, 255);
+  w.write(badges.length, 8);
+  for (const b of badges) w.write(b.id in p.badges ? 1 : 0, 1);
   const bits = w.bits;
   while (bits.length % 5) bits.push(0);
   const check = crc16(bits);
@@ -99,7 +114,7 @@ export function encodeSaveCode(p: Profile, course: Course, choices: Choices, now
         (bits[i]! << 4) | (bits[i + 1]! << 3) | (bits[i + 2]! << 2) | (bits[i + 3]! << 1) | bits[i + 4]!
       ];
   }
-  return `CW1-${body.match(/.{1,5}/g)!.join('-')}`;
+  return `CW${VERSION}-${body.match(/.{1,5}/g)!.join('-')}`;
 }
 
 export type DecodeResult =
@@ -110,7 +125,7 @@ export function decodeSaveCode(code: string, course: Course, choices: Choices): 
   const cleaned = code
     .trim()
     .toUpperCase()
-    .replace(/^CW[1IL]/, '')
+    .replace(/^CW[1-9IL]/, '')
     .replace(/[\s-]/g, '')
     .replace(/[IL]/g, '1')
     .replace(/O/g, '0');
@@ -136,7 +151,8 @@ export function decodeSaveCode(code: string, course: Course, choices: Choices): 
   if (payloadEnd < 0) return { ok: false, reason: 'typo' };
   try {
     const r = new BitReader(bits.slice(0, payloadEnd));
-    if (r.read(4) !== VERSION) return { ok: false, reason: 'version' };
+    const version = r.read(4);
+    if (version < 1 || version > VERSION) return { ok: false, reason: 'version' };
     const contentHash = r.read(16);
     const id8 = r.read(32).toString(16).padStart(8, '0');
     const days = r.read(16);
@@ -178,7 +194,27 @@ export function decodeSaveCode(code: string, course: Course, choices: Choices): 
       at: null,
       quest: null,
     };
-    profile.createdOn = new Date(EPOCH + days * 86_400_000).toISOString().slice(0, 10);
+    const exported = new Date(EPOCH + days * 86_400_000).toISOString().slice(0, 10);
+    if (version >= 2) {
+      for (const id of course.questOrder) {
+        if (!(course.questInfo[id]?.bonus ?? []).length) continue;
+        const keys = course.questInfo[id]!.bonus;
+        const count = r.read(3);
+        for (let i = 0; i < count; i++) {
+          const done = r.read(1) === 1;
+          const rec = profile.quests[id];
+          if (done && rec && keys[i]) (rec.bonus ??= []).push(keys[i]!);
+        }
+      }
+      const badgeCount = r.read(8);
+      for (let i = 0; i < badgeCount; i++) {
+        const badge = course.badges[i];
+        if (r.read(1) === 1 && badge) profile.badges[badge.id] = exported;
+      }
+    }
+    // Badges that follow from the restored quests (all of them, for a version 1 code).
+    awardBadges(profile, course, exported);
+    profile.createdOn = exported;
     const started = Object.keys(profile.quests).length > 0;
     profile.seen = {
       opening: started,

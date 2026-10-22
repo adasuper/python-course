@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../schema/badges.schema.json
+# Badges reward good habits and exploring, never speed (docs/specs.md §11.6).
+# Save codes keep earned badges in this order, so add new badges at the end.
+# Explorer, Duck Whisperer, Review Riddler, Side Questor II/III and Great Scriptwright
+# arrive with the content they need (Phases 3 and 4); the triggers already exist.
+- id: first-bug-squashed
+  name: First Bug Squashed
+  emoji: 🐞
+  description: You fixed your first buggy spell.
+  trigger: { kind: quest_type_completed, type: fix }
+- id: clean-cast
+  name: Clean Cast
+  emoji: ✨
+  description: You finished a quest without opening any hints.
+  trigger: { kind: completed_without_hints }
+- id: tinkerer
+  name: Tinkerer
+  emoji: 🔧
+  description: You tried 5 different versions of your code in one quest.
+  trigger: { kind: distinct_attempts, count: 5 }
+- id: never-give-up
+  name: Never Give Up
+  emoji: 🌱
+  description: You kept trying after 4 attempts that didn't work, and you finished the quest.
+  trigger: { kind: passed_after_failures, count: 4 }
+- id: error-reader
+  name: Error Reader
+  emoji: 🔎
+  description: You opened the real Python error 5 times. Reading errors is a real coder's skill!
+  trigger: { kind: counter, counter: realErrorViews, count: 5 }
+- id: restorer-hearthvale
+  name: "Region Restorer: Hearthvale"
+  emoji: 🏡
+  description: You beat the Village Crier Bug and saved Hearthvale.
+  trigger: { kind: boss_defeated, region: hearthvale-village }
+- id: side-questor-1
+  name: Side Questor I
+  emoji: ⭐
+  description: You finished 3 side quests.
+  trigger: { kind: side_quests, count: 3 }
+- id: workshop-inventor
+  name: Workshop Inventor
+  emoji: 🛠️
+  description: You ran 10 of your own programs in the Workshop.
+  trigger: { kind: counter, counter: workshopRuns, count: 10 }

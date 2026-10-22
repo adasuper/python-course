@@ -83,8 +83,8 @@ export function Toasts({ onCopyCode, onSaveFile }: { onCopyCode: () => void; onS
     <div class="toasts">
       {toasts.value.map((toast) => (
         <div key={toast.id} class={`toast toast-${toast.kind}`}>
-          <span aria-hidden="true">
-            {toast.kind === 'save-point' ? '💾' : toast.kind === 'reward' ? '✨' : 'ℹ️'}
+          <span aria-hidden="true" class="toast-icon">
+            {toast.icon ?? (toast.kind === 'save-point' ? '💾' : toast.kind === 'reward' ? '✨' : 'ℹ️')}
           </span>
           <span>{toast.text}</span>
           {toast.kind === 'save-point' && (

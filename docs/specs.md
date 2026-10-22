@@ -850,7 +850,7 @@ once the region's core quests are done.
 | `content/regions/NN-slug/quests/*.yaml` | One quest per file |
 | `content/glossary.yaml` | Terms |
 | `content/items.yaml` | Concept items (name, icon, description = concept summary, linked concept card) |
-| `content/badges.yaml` | Badges (name, icon, description, trigger) |
+| `content/badges.yaml` | Badges (name, emoji, description, trigger), in save-code order |
 | `content/errors.yaml` | Friendly error templates by key |
 | `content/workshop.yaml` | Sandbox maps |
 
@@ -1072,7 +1072,7 @@ pois: [old-oak, mossy-well, hidden-glade]    # secret corners for the Explorer b
 | File | Shape (one entry) |
 |---|---|
 | `items.yaml` | `{ id, name, icon, description, concept_card, region, example?: code }` |
-| `badges.yaml` | `{ id, name, icon, description, trigger: { kind: first_fix \| no_hints \| distinct_attempts \| failed_then_passed \| all_pois \| real_error_views \| duck_used \| boss_defeated \| all_checks \| side_quests \| workshop_runs \| capstone, n?: number, region?: id } }` |
+| `badges.yaml` | `{ id, name, emoji, description, trigger }`, where `trigger.kind` is `quest_type_completed {type}` · `completed_without_hints` · `distinct_attempts {count}` · `passed_after_failures {count}` · `counter {counter: realErrorViews \| workshopRuns \| duckChats, count}` · `boss_defeated {region}` · `pois_visited {region}` · `side_quests {count}` · `checks_completed {count}` · `quest_completed {quest}`. A quest's `rewards.badge` also awards a badge. New badges go at the end (save codes store them in file order). |
 | `glossary.yaml` | `{ term, definition (≤ 2 sentences), example?, related?: [term] }` |
 | `errors.yaml` | `{ key: { title, message, tip?, glossary?: [term] } }` with `{line}`, `{name}`, `{suggestion}` placeholders |
 | `workshop.yaml` | `{ id, name, description, stage }` (same stage format as quests) |
@@ -1150,8 +1150,13 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 ### 11.4 Inventory / Notebook
 
 - A grid of item cards, each a focusable button. Enter opens a detail page with the concept
-  summary, worked example (runnable), related quests and glossary.
-- Searchable. Script Fragments appear on a separate shelf.
+  summary, worked example (runnable, with Byte's explanation if it shows an error on purpose),
+  the quest it came from (with that quest's concept card once completed) and the glossary
+  terms it uses.
+- Searchable (name and summary). Script Fragments and badges appear on separate shelves.
+- **Celebrations** (F-PRG-08): badges and level-ups pop up as dismissible toasts, announced in
+  the polite live region (messages that arrive together are joined). The pop is one 0.5 s scale
+  animation, never a flash, and reduced motion turns it off.
 
 ### 11.5 Spellbook (editor + reference)
 
@@ -1180,7 +1185,9 @@ variables after each run. Each one is a labelled jar with its name, value and ty
 ### 11.6 Badges
 
 Badges are defined in `badges.yaml` with a trigger. Triggers are evaluated in
-`state/badges.ts` after every state change.
+`state/badges.ts` after every state change (`store.update`); a new badge is stored with the date
+and celebrated with a toast. Badges are never taken away. The inventory shows every badge,
+earned or "not earned yet", so students can see what they could aim for.
 
 | Badge | Trigger |
 |---|---|
@@ -1292,7 +1299,9 @@ the profile.
 This is a text code for moving progress between devices, or handing it in by pasting it into
 an LMS text box. It needs no file handling.
 
-- **Format:** `CW1-` + Crockford Base32 in groups of 5, ending in a CRC-16 check group.
+- **Format:** `CW2-` + Crockford Base32 in groups of 5, ending in a CRC-16 check group. The
+  4-bit version inside says how to read the rest; version 1 codes (`CW1-`, Phase 1) still
+  restore.
 - **Payload** (bit-packed, varints):
   - content version hash (16 bits)
   - a short profile id (32 random bits, so a restore can recognise the same adventurer on
@@ -1305,9 +1314,12 @@ an LMS text box. It needs no file handling.
     (3: 0, 1, 2, 3, 4–5, 6–9, 10–19, 20+) and time bucket (3: <2, 2–5, 5–10, 10–15, 15–20,
     20–30, 30–45, 45+ min)
   - knowledge-check best scores
-  - a special-badge bitset
+  - version 2: for each quest with bonus challenges, their count (3 bits) and which are done
+  - version 2: a bitset of earned badges in `badges.yaml` order (with its length first)
 
-  Items and most badges are re-derived from completions.
+  Items are re-derived from completions. All earned badges are stored, because some can't be
+  worked out again (Tinkerer, Error Reader); a restore also awards any badge the restored
+  quests earn (all of them, for a version 1 code).
 - **Size:** about 95 quests × 10 bits + header ≈ 155 bytes ≈ **250 characters**. That is fine
   to copy and paste, too long to type by hand. Code drafts are not included (use the file
   for those).

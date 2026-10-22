@@ -146,6 +146,30 @@ export interface QuestInfo {
   phases: string[];
   sideQuest: boolean;
   prerequisites: string[];
+  /** A badge this quest awards directly (`rewards.badge`). */
+  badge: string | null;
+  /** Its bonus challenges, as the quest record stores them ("phase/id" in a boss). */
+  bonus: string[];
+}
+
+export type BadgeTrigger =
+  | { kind: 'quest_type_completed'; type: QuestType }
+  | { kind: 'completed_without_hints' }
+  | { kind: 'distinct_attempts'; count: number }
+  | { kind: 'passed_after_failures'; count: number }
+  | { kind: 'counter'; counter: 'realErrorViews' | 'workshopRuns' | 'duckChats'; count: number }
+  | { kind: 'boss_defeated'; region: string }
+  | { kind: 'pois_visited'; region: string }
+  | { kind: 'side_quests'; count: number }
+  | { kind: 'checks_completed'; count: number }
+  | { kind: 'quest_completed'; quest: string };
+
+export interface Badge {
+  id: string;
+  name: string;
+  emoji: string;
+  description: Rich;
+  trigger: BadgeTrigger;
 }
 
 export interface GlossaryEntry {
@@ -175,7 +199,8 @@ export interface Course {
   title: string;
   contentVersion: string;
   opening: DialogueLine[];
-  regions: { id: string; number: number; name: string; enabled: boolean; lessons: number }[];
+  /** `pois`: the region's secret corners (for the Explorer badge). */
+  regions: { id: string; number: number; name: string; enabled: boolean; lessons: number; pois: string[] }[];
   /** Every quest id in a stable order; save codes depend on it. */
   questOrder: string[];
   /** Small facts about every quest, so progress can be read without loading regions. */
@@ -183,6 +208,8 @@ export interface Course {
   sideQuests: boolean;
   glossary: Record<string, GlossaryEntry>;
   items: Record<string, Item>;
+  /** In badges.yaml order; save codes depend on it. */
+  badges: Badge[];
   errors: Record<string, ErrorTemplate>;
 }
 

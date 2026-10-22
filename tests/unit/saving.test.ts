@@ -27,6 +27,15 @@ describe('migrations (F-SAV-03)', () => {
     expect(p.nickname).toBe('Old Newt');
   });
 
+  it('2 → 3 adds badges and the Workshop and Duck counters, keeping the error counter', () => {
+    const v2 = MIGRATIONS[1]!(v1Profile());
+    (v2.counters as Record<string, number>).realErrorViews = 4;
+    const p = MIGRATIONS[2]!(v2) as unknown as Profile;
+    expect(p.schemaVersion).toBe(3);
+    expect(p.badges).toEqual({});
+    expect(p.counters).toEqual({ realErrorViews: 4, workshopRuns: 0, duckChats: 0 });
+  });
+
   it('runs the whole chain up to the current schema', () => {
     expect(migrateProfile(v1Profile()).schemaVersion).toBe(CURRENT_SCHEMA);
     const current = newProfile('New', 'avatar-1', 'moss', 'one');
@@ -48,8 +57,9 @@ describe('migrations (F-SAV-03)', () => {
     const old = v1Profile();
     await set(`profile:${old.id as string}`, old, createStore('codeweald', 'kv'));
     const loaded = (await storage.profiles()).find((p) => p.id === old.id);
-    expect(loaded?.schemaVersion).toBe(2);
-    expect(loaded?.counters.realErrorViews).toBe(0);
+    expect(loaded?.schemaVersion).toBe(CURRENT_SCHEMA);
+    expect(loaded?.counters).toEqual({ realErrorViews: 0, workshopRuns: 0, duckChats: 0 });
+    expect(loaded?.badges).toEqual({});
 
     const file = makeProgressFile(old as unknown as Profile, {}, { id: 'c', contentVersion: 'v' } as Course);
     const parsed = parseProgressFile(JSON.stringify(file));
@@ -90,10 +100,19 @@ const course = {
         phases: q === 'boss' ? ['p1', 'p2', 'p3'] : [],
         sideQuest: false,
         prerequisites: [],
+        badge: null,
+        bonus: q === 'c' ? ['one', 'two', 'three'] : q === 'boss' ? ['p2/extra'] : [],
       },
     ]),
   ),
   sideQuests: true,
+  badges: ['first', 'second', 'third', 'fourth'].map((id) => ({
+    id,
+    name: id,
+    emoji: '⭐',
+    description: [],
+    trigger: { kind: 'counter', counter: 'duckChats', count: 99 },
+  })),
 } as unknown as Course;
 const choices = { avatars: ['avatar-1', 'avatar-2', 'avatar-3'], themes: ['ember', 'moss', 'tide'] };
 
@@ -123,6 +142,12 @@ function randomProfile(r: (n: number) => number): Profile {
     if (q === 'boss') p.quests[q]!.phasesDone = ['p1', 'p2', 'p3'].filter(() => r(2) === 1);
   }
   if (r(2)) p.checks.one = { best: r(5), latest: 0, total: 5, attempts: 1 };
+  for (const [q, keys] of [
+    ['c', ['one', 'two', 'three']],
+    ['boss', ['p2/extra']],
+  ] as const)
+    if (p.quests[q]) p.quests[q]!.bonus = keys.filter(() => r(2) === 1);
+  for (const b of ['first', 'second', 'third', 'fourth']) if (r(2)) p.badges[b] = '2026-10-01';
   p.location.region = r(2) ? 'one' : 'two';
   return p;
 }
@@ -148,6 +173,8 @@ describe('save codes under fuzzing (F-SAV-07)', () => {
         expect(q.quests[id]?.hintsUsed).toBe(p.quests[id]?.hintsUsed);
       }
       expect(q.checks.one?.best).toBe(p.checks.one?.best);
+      expect(Object.keys(q.badges).sort()).toEqual(Object.keys(p.badges).sort());
+      for (const id of ['c', 'boss']) expect(q.quests[id]?.bonus ?? []).toEqual(p.quests[id]?.bonus ?? []);
     }
   });
 

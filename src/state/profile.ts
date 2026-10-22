@@ -42,10 +42,14 @@ export interface Settings {
 export interface Counters {
   /** Times "Show the real Python error" was opened (the Error Reader badge). */
   realErrorViews: number;
+  /** Programs run in the Workshop (Workshop Inventor). */
+  workshopRuns: number;
+  /** Rubber-duck chats with Byte (Duck Whisperer, Region 10). */
+  duckChats: number;
 }
 
 export interface Profile {
-  schemaVersion: 2;
+  schemaVersion: 3;
   id: string;
   nickname: string;
   avatarId: string;
@@ -55,6 +59,8 @@ export interface Profile {
   quests: Record<string, QuestRecord>;
   checks: Record<string, CheckRecord>;
   items: string[];
+  /** Earned badges: id → the date it was earned. */
+  badges: Record<string, string>;
   poisVisited: Record<string, string[]>;
   seen: { opening: boolean; regionIntros: string[]; conceptScenes: string[] };
   /** Where the student left off: region, map position and the quest that was open. */
@@ -86,7 +92,7 @@ export function newProfile(
   defaults: Partial<Pick<Settings, 'textScale' | 'reducedMotion' | 'replaySpeed'>> = {},
 ): Profile {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     id: crypto.randomUUID(),
     nickname,
     avatarId,
@@ -96,6 +102,7 @@ export function newProfile(
     quests: {},
     checks: {},
     items: [],
+    badges: {},
     poisVisited: {},
     seen: { opening: false, regionIntros: [], conceptScenes: [] },
     location: { region: firstRegion, at: null, quest: null },
@@ -105,7 +112,7 @@ export function newProfile(
       ...(defaults.reducedMotion !== undefined && { reducedMotion: defaults.reducedMotion }),
       ...(defaults.replaySpeed !== undefined && { replaySpeed: defaults.replaySpeed }),
     },
-    counters: { realErrorViews: 0 },
+    counters: { realErrorViews: 0, workshopRuns: 0, duckChats: 0 },
     lastSavedOutHash: null,
   };
 }

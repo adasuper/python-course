@@ -146,6 +146,10 @@ export const t = {
     bonusXp: (xp: number) => `+${xp} XP`,
     bonusGained: (n: number, xp: number) => `Bonus challenge${n > 1 ? 's' : ''} complete! +${xp} XP`,
   },
+  celebrate: {
+    levelUp: (level: number, title: string) => `Level up! You are now level ${level}: ${title}.`,
+    badge: (name: string) => `Badge earned: ${name}!`,
+  },
   trace: {
     heading: 'Byte explains each part of the real error',
     intro: 'Python lists the steps that led to the error. The newest step is last.',
@@ -251,8 +255,21 @@ export const t = {
   },
   inventory: {
     heading: 'Inventory',
+    items: 'Concept items',
     empty: 'Your bag is empty. Finish quests to earn items!',
     fragments: 'Script Fragments',
+    search: 'Search your items',
+    found: (n: number) => (n === 1 ? '1 item found.' : `${n} items found.`),
+    noMatch: 'No items match that search.',
+    badges: 'Badges',
+    badgeCount: (n: number, total: number) => `${n} of ${total} earned`,
+    earnedOn: (date: string) => `Earned on ${date}`,
+    notYet: 'Not earned yet',
+    example: 'Example',
+    runExample: 'Run the example',
+    noOutput: 'This example prints nothing.',
+    related: 'Where you learned it',
+    words: 'Words to know',
   },
   storageMemory: "This browser can't save your progress. Use Save progress before you leave!",
 } as const;

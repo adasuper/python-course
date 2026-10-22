@@ -1,7 +1,7 @@
 // Brief §7: axe-core checks on the main screens (WCAG 2.1 AA rules).
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { newPlayer, openFixture } from './helpers';
+import { newPlayer, openFixture, quest, solveBody } from './helpers';
 
 async function scan(page: Page, label: string) {
   const results = await new AxeBuilder({ page: page as never })
@@ -93,6 +93,22 @@ test('knowledge check', async ({ page }) => {
   await scan(page, 'knowledge check');
   await page.getByRole('button', { name: 'Check my answers' }).click();
   await scan(page, 'knowledge check results');
+});
+
+test('notebook: items, badges and an item page', async ({ page }) => {
+  await page.goto('./?dev#/dev/quest/r1-q5-criers-crooked-announcement');
+  await solveBody(page, quest('r1-q5-criers-crooked-announcement') as never);
+  await page
+    .locator('#feedback')
+    .getByRole('button', { name: /Back to the map/ })
+    .click();
+  await page.getByRole('button', { name: /Inventory/ }).click();
+  await expect(page.locator('.badge-card.earned')).not.toHaveCount(0);
+  await scan(page, 'notebook with badges');
+  await page.getByRole('button', { name: /Spyglass of Errors/ }).click();
+  await page.getByRole('button', { name: 'Run the example' }).click();
+  await expect(page.locator('.error-explain')).toBeVisible();
+  await scan(page, 'item page');
 });
 
 test('Parsons listboxes with lines in both lists and one picked up', async ({ page }) => {

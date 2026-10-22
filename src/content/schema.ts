@@ -501,6 +501,44 @@ export const ItemsSchema = z.array(
   }),
 );
 
+/** What earns a badge (docs/specs.md §11.6). None of them reward speed. */
+const BadgeTrigger = z.discriminatedUnion('kind', [
+  // The first completed quest of this type (First Bug Squashed: fix).
+  z.strictObject({ kind: z.literal('quest_type_completed'), type: z.enum([...QUEST_TYPES, 'boss']) }),
+  // Any quest completed without opening a hint (Clean Cast).
+  z.strictObject({ kind: z.literal('completed_without_hints') }),
+  // This many different programs run in one quest (Tinkerer).
+  z.strictObject({ kind: z.literal('distinct_attempts'), count: z.number().int().min(1) }),
+  // A quest completed after at least this many attempts that didn't pass (Never Give Up).
+  z.strictObject({ kind: z.literal('passed_after_failures'), count: z.number().int().min(1) }),
+  // A profile counter reaches a number (Error Reader, Workshop Inventor, Duck Whisperer).
+  z.strictObject({
+    kind: z.literal('counter'),
+    counter: z.enum(['realErrorViews', 'workshopRuns', 'duckChats']),
+    count: z.number().int().min(1),
+  }),
+  // The region's boss is defeated (Region Restorer).
+  z.strictObject({ kind: z.literal('boss_defeated'), region: Slug }),
+  // Every secret corner of the region found (Explorer).
+  z.strictObject({ kind: z.literal('pois_visited'), region: Slug }),
+  // This many side quests completed (Side Questor).
+  z.strictObject({ kind: z.literal('side_quests'), count: z.number().int().min(1) }),
+  // This many knowledge checks done (Review Riddler).
+  z.strictObject({ kind: z.literal('checks_completed'), count: z.number().int().min(1) }),
+  // One particular quest completed (Great Scriptwright: the capstone).
+  z.strictObject({ kind: z.literal('quest_completed'), quest: QuestId }),
+]);
+
+export const BadgesSchema = z.array(
+  z.strictObject({
+    id: Slug,
+    name: z.string().max(40),
+    emoji: z.string().max(8),
+    description: z.string(),
+    trigger: BadgeTrigger,
+  }),
+);
+
 export const ErrorsSchema = z.record(
   z.string(),
   z.strictObject({ title: z.string(), message: z.string(), tip: z.string().optional() }),
@@ -514,6 +552,7 @@ export type RegionFile = z.infer<typeof RegionSchema>;
 export type CourseFile = z.infer<typeof CourseSchema>;
 export type GlossaryFile = z.infer<typeof GlossarySchema>;
 export type ItemsFile = z.infer<typeof ItemsSchema>;
+export type BadgesFile = z.infer<typeof BadgesSchema>;
 export type ErrorsFile = z.infer<typeof ErrorsSchema>;
 export type Validator = z.infer<typeof ValidatorSchema>;
 export type Stage = z.infer<typeof StageSchema>;

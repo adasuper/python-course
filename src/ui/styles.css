@@ -266,6 +266,28 @@ textarea {
 .toast-save-point {
   border-color: var(--accent);
 }
+/* Badges and level-ups: one gentle pop, never a flash (F-PRG-08). Reduced motion turns
+   every animation off (see the end of this file). */
+.toast-celebrate {
+  border-color: var(--accent);
+  font-weight: 700;
+  animation: celebrate-pop 500ms ease-out 1;
+}
+.toast-celebrate .toast-icon {
+  font-size: 1.6rem;
+}
+/* Scale only: fading the opacity would leave the text below contrast for a moment. */
+@keyframes celebrate-pop {
+  0% {
+    transform: scale(0.85);
+  }
+  70% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 
 /* ----- screens ----- */
 .screen {
@@ -1059,6 +1081,60 @@ button.run {
   display: flex;
   gap: 0.8rem;
   align-items: flex-start;
+}
+.item-card {
+  width: 100%;
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink);
+}
+.item-name {
+  display: block;
+  font-size: 1.1rem;
+}
+.item-summary {
+  display: block;
+}
+.item-page {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+}
+.inventory-screen section.card {
+  margin-bottom: 0.8rem;
+}
+.search input {
+  margin-left: 0.3rem;
+}
+.badges {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.badge-card {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.badge-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.badge-card.not-yet {
+  border-style: dashed;
+}
+.badge-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+.glossary-list dt {
+  font-weight: 700;
+}
+.glossary-list dd {
+  margin: 0 0 0.5rem;
 }
 
 .loading-panel {

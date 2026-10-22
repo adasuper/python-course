@@ -9,7 +9,7 @@ import { CheckScreen } from './screens/Check';
 import { CreditsScreen } from './screens/Credits';
 import { ConceptScreen } from './screens/Concept';
 import { CreatorScreen } from './screens/Creator';
-import { InventoryScreen } from './screens/Inventory';
+import { InventoryScreen, ItemScreen } from './screens/Inventory';
 import { OverworldScreen } from './screens/Overworld';
 import { StoryScreen } from './screens/Story';
 import { TitleScreen } from './screens/Title';
@@ -63,6 +63,9 @@ export function App() {
       break;
     case 'inventory':
       screen = <InventoryScreen />;
+      break;
+    case 'item':
+      screen = <ItemScreen key={r.id} id={r.id} />;
       break;
     case 'credits':
       screen = <CreditsScreen />;

@@ -39,6 +39,7 @@ const ProfileSchema = z.object({
     z.object({ best: z.number(), latest: z.number(), total: z.number(), attempts: z.number() }),
   ),
   items: z.array(z.string().max(64)).max(200),
+  badges: z.record(z.string().max(64), z.string().max(10)),
   poisVisited: z.record(z.string().max(64), z.array(z.string().max(64)).max(50)),
   seen: z.object({
     opening: z.boolean(),
@@ -59,7 +60,11 @@ const ProfileSchema = z.object({
     font: z.enum(['atkinson', 'opendyslexic', 'system']),
   }),
   lastSavedOutHash: z.string().max(16).nullable(),
-  counters: z.object({ realErrorViews: z.number().int().min(0).max(1e6) }),
+  counters: z.object({
+    realErrorViews: z.number().int().min(0).max(1e6),
+    workshopRuns: z.number().int().min(0).max(1e6),
+    duckChats: z.number().int().min(0).max(1e6),
+  }),
 });
 
 const FileSchema = z.object({

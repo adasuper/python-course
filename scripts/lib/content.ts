@@ -8,6 +8,7 @@ import type { z } from 'zod';
 import {
   CourseSchema,
   ErrorsSchema,
+  BadgesSchema,
   GlossarySchema,
   ItemsSchema,
   parseQuest,
@@ -16,6 +17,7 @@ import {
   type CourseFile,
   type ErrorsFile,
   type GlossaryFile,
+  type BadgesFile,
   type ItemsFile,
   type NormalQuestFile,
   type PhaseFile,
@@ -60,6 +62,7 @@ export interface LoadedContent {
   course: Located<CourseFile> | null;
   glossary: GlossaryFile;
   items: ItemsFile;
+  badges: BadgesFile;
   errors: ErrorsFile;
   regions: (Located<RegionFile> & { dir: string })[];
   quests: Map<string, Located<QuestFile> & { regionDir: string }>;
@@ -138,6 +141,7 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
     course: null,
     glossary: [],
     items: [],
+    badges: [],
     errors: {},
     regions: [],
     quests: new Map(),
@@ -148,6 +152,7 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
   if (course) out.course = { file: rel(courseFile), ...course };
   out.glossary = parseWith(join(root, 'glossary.yaml'), GlossarySchema, problems)?.data ?? [];
   out.items = parseWith(join(root, 'items.yaml'), ItemsSchema, problems)?.data ?? [];
+  out.badges = parseWith(join(root, 'badges.yaml'), BadgesSchema, problems)?.data ?? [];
   out.errors = parseWith(join(root, 'errors.yaml'), ErrorsSchema, problems)?.data ?? {};
 
   const regionsDir = join(root, 'regions');
@@ -309,6 +314,19 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
       add('content/glossary.yaml', `"${g.term}": keep the definition to 2 sentences (it has ${sentences})`);
   });
 
+  const badgeIds = new Set<string>();
+  const regionIds = new Set(content.regions.map((r) => r.data.id));
+  content.badges.forEach((b, i) => {
+    const at = `badge ${i + 1} (${b.id})`;
+    if (badgeIds.has(b.id)) add('content/badges.yaml', `${at}: the id is used twice`);
+    badgeIds.add(b.id);
+    const tr = b.trigger;
+    if ((tr.kind === 'boss_defeated' || tr.kind === 'pois_visited') && !regionIds.has(tr.region))
+      add('content/badges.yaml', `${at}: region "${tr.region}" does not exist`);
+    if (tr.kind === 'quest_completed' && !content.quests.has(tr.quest))
+      add('content/badges.yaml', `${at}: quest "${tr.quest}" does not exist`);
+  });
+
   if (content.course) {
     const course = content.course;
     course.data.regions.forEach((r, i) => {
@@ -332,6 +350,12 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     });
     if (quest.rewards.item && !items.has(quest.rewards.item))
       add(q.file, `reward item "${quest.rewards.item}" is not in items.yaml`, q.locate(['rewards', 'item']));
+    if (quest.rewards.badge && !badgeIds.has(quest.rewards.badge))
+      add(
+        q.file,
+        `reward badge "${quest.rewards.badge}" is not in badges.yaml`,
+        q.locate(['rewards', 'badge']),
+      );
     if (quest.type !== 'boss' && !quest.concept_card)
       add(q.file, 'concept_card is required (it is shown in the Spellbook)', q.locate(['type']));
   }
@@ -686,7 +710,14 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
     opening: course.opening.map((l) => ({ speaker: l.speaker, text: rich(l.text) })),
     regions: course.regions.map((r) => {
       const reg = content.regions.find((x) => x.data.id === r.id)!.data;
-      return { id: r.id, number: reg.number, name: reg.name, enabled: r.enabled, lessons: r.lessons };
+      return {
+        id: r.id,
+        number: reg.number,
+        name: reg.name,
+        enabled: r.enabled,
+        lessons: r.lessons,
+        pois: reg.pois,
+      };
     }),
     questOrder,
     questInfo: Object.fromEntries(
@@ -707,6 +738,12 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
           phases: q.type === 'boss' ? q.phases.map((p) => p.id) : [],
           sideQuest: q.side_quest,
           prerequisites: q.prerequisites,
+          badge: q.rewards.badge ?? null,
+          // Bonus challenges, as the quest record stores them (phase/id in a boss).
+          bonus:
+            q.type === 'boss'
+              ? q.phases.flatMap((p) => p.bonus.map((b) => `${p.id}/${b.id}`))
+              : q.bonus.map((b) => b.id),
         },
       ]),
     ),
@@ -730,6 +767,13 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
         },
       ]),
     ),
+    badges: content.badges.map((b) => ({
+      id: b.id,
+      name: b.name,
+      emoji: b.emoji,
+      description: rich(b.description),
+      trigger: b.trigger,
+    })),
     errors: Object.fromEntries(
       Object.entries(content.errors).map(([k, v]) => [
         k,

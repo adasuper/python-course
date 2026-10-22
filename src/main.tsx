@@ -95,6 +95,8 @@ function exposeTestHooks() {
             phases: quest.type === 'boss' ? quest.phases.map((ph) => ph.id) : [],
             sideQuest: false,
             prerequisites: [],
+            badge: quest.rewards.badge,
+            bonus: quest.type === 'boss' ? [] : quest.bonus.map((b) => b.id),
           },
         },
       };

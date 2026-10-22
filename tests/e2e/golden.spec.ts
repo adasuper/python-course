@@ -11,8 +11,12 @@ test('a new player completes Region 1 and keeps their progress after a reload', 
     await solveQuest(page, id);
   }
   await page.getByRole('button', { name: /Inventory/ }).click();
-  await expect(page.getByRole('heading', { name: 'Quill of Printing' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Quill of Printing/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: region.fragment.name })).toBeVisible();
+  // Badges earned on the way (F-PRG-06): the fix quest, the boss and the side quest.
+  const badges = page.getByRole('region', { name: /Badges/ });
+  await expect(badges.locator('.earned', { hasText: 'First Bug Squashed' })).toHaveCount(1);
+  await expect(badges.locator('.earned', { hasText: 'Region Restorer: Hearthvale' })).toHaveCount(1);
 
   // The knowledge check opens after the boss (F-BOS-04), and answering everything right scores full marks.
   await page.getByRole('button', { name: /Back to the map/ }).click();
@@ -36,5 +40,6 @@ test('a new player completes Region 1 and keeps their progress after a reload', 
     `(${region.quests.length + 1}/${region.quests.length + 1})`,
   );
   await page.getByRole('button', { name: /Inventory/ }).click();
-  await expect(page.getByRole('heading', { name: 'Quill of Printing' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Quill of Printing/ })).toBeVisible();
+  await expect(page.locator('.badge-card.earned', { hasText: 'Region Restorer: Hearthvale' })).toHaveCount(1);
 });

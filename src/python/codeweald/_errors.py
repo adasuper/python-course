@@ -444,13 +444,32 @@ def real_traceback(exc, lines):
 
 def stuck_while(source, line):
     """For a runaway `while` loop on `line`: (True, names its condition reads that nothing in
-    the loop changes). (False, []) when the loop there is not a `while`."""
+    the loop changes, in the order they are written). (False, []) when the loop there is not a
+    `while`.
+
+    Names that are only called or asked (`len(...)`, `world.look()`, `hero.position()`) can
+    give a new answer each time, so they are never blamed. A list or dictionary changed with
+    a method (`gems.append(...)`, `gems.pop()`) counts as changed."""
     tree = _parse(source)
     if tree is None:
         return False, []
     for node in ast.walk(tree):
         if isinstance(node, ast.While) and node.lineno == line:
-            read = sorted({n.id for n in ast.walk(node.test) if isinstance(n, ast.Name)})
+            asked = set()
+            for n in ast.walk(node.test):
+                if isinstance(n, ast.Call):
+                    func = n.func
+                    if isinstance(func, ast.Name):
+                        asked.add(func.id)
+                    elif isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+                        asked.add(func.value.id)
+            read = []
+            names = sorted(
+                (n for n in ast.walk(node.test) if isinstance(n, ast.Name)), key=lambda n: (n.lineno, n.col_offset)
+            )
+            for n in names:
+                if n.id not in read and n.id not in asked:
+                    read.append(n.id)
             changed = set()
             for inner in ast.walk(node):
                 if isinstance(inner, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
@@ -459,6 +478,15 @@ def stuck_while(source, line):
                         changed |= {n.id for n in ast.walk(target) if isinstance(n, ast.Name)}
                 elif isinstance(inner, (ast.For, ast.With)) and isinstance(getattr(inner, "target", None), ast.Name):
                     changed.add(inner.target.id)
+                elif isinstance(inner, ast.Delete):
+                    for target in inner.targets:
+                        changed |= {n.id for n in ast.walk(target) if isinstance(n, ast.Name)}
+                elif (
+                    isinstance(inner, ast.Call)
+                    and isinstance(inner.func, ast.Attribute)
+                    and isinstance(inner.func.value, ast.Name)
+                ):
+                    changed.add(inner.func.value.id)
             return True, [name for name in read if name not in changed]
     return False, []
 

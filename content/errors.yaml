@@ -268,6 +268,11 @@ limits.loop_while_unchanged:
   message: >-
     The `while` loop on line {line} checks `{name}`, but nothing inside the loop changes `{name}`. So the condition stays True, and the loop ran {budget} times before Byte stopped it.
   tip: Change `{name}` inside the loop, for example `{name} = {name} + 1`, so the condition can turn False.
+limits.busy_while_unchanged:
+  title: Your loop might be running forever!
+  message: >-
+    The `while` loop on line {line} checks `{name}`, but nothing inside the loop changes `{name}`. So the condition stays True, and the loop kept going until Byte stopped it.
+  tip: Change `{name}` inside the loop, so the condition can turn False. Or use `break` to jump out.
 limits.actions:
   title: The hero is exhausted
   message: >-

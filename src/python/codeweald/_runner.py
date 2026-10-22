@@ -136,12 +136,14 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
             outcome.error = _game_error("limits.loop_while", line, budget=limits["loopBudget"])
         else:
             outcome.error = _game_error("limits.loop", line, budget=limits["loopBudget"])
-    except ActionBudgetExceeded:
+    except ActionBudgetExceeded as exc:
         outcome.status = "action-budget"
-        outcome.error = _game_error("limits.actions", None, budget=limits["maxActions"])
-    except OutputBudgetExceeded:
+        outcome.error = _busy_while(source, exc) or _game_error("limits.actions", None, budget=limits["maxActions"])
+    except OutputBudgetExceeded as exc:
         outcome.status = "output-budget"
-        outcome.error = _game_error("limits.output", None, budget=limits["maxOutputChars"])
+        outcome.error = _busy_while(source, exc) or _game_error(
+            "limits.output", None, budget=limits["maxOutputChars"]
+        )
     except (ProgramExit, SystemExit):
         pass
     except BaseException as exc:  # noqa: BLE001 - every student error is reported, never raised
@@ -153,6 +155,23 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
         outcome.loop_iterations = MONITOR.count
         outcome.lines = MONITOR.lines
     return outcome
+
+
+def _busy_while(source, exc):
+    """A runaway `while` loop that moves or prints wears out the hero (or the scroll) before
+    its loop budget: if the loop never changes what its condition checks, say so."""
+    line = None
+    tb = exc.__traceback__
+    while tb is not None:
+        if tb.tb_frame.f_code.co_filename == SPELLBOOK:
+            line = tb.tb_lineno
+        tb = tb.tb_next
+    if line is None:
+        return None
+    is_while, unchanged = stuck_while(source, loop_line(source, line))
+    if not (is_while and unchanged):
+        return None
+    return _game_error("limits.busy_while_unchanged", loop_line(source, line), name=unchanged[0])
 
 
 GAP = re.compile(r"_{3,}")

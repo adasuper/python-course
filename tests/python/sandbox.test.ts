@@ -117,6 +117,42 @@ describe('budgets', () => {
     expect(r.error).toMatchObject({ key: 'limits.loop', line: 2 });
   });
 
+  it('blames the name written first, and never one that is only called or asked', () => {
+    const guess = py.run({ code: 'guess = 1\ndepth = 5\nwhile guess != depth:\n    x = 1' });
+    expect(guess.error).toMatchObject({ key: 'limits.loop_while_unchanged', params: { name: 'guess' } });
+    const asked = py.run({
+      code: 'from codeweald import world\nsteps = 0\nwhile world.look() != "x" and steps < 3:\n    pass',
+      stage: { kind: 'grid', grid: 'H.' },
+    });
+    // world.look() is an action, so the hero wears out first.
+    expect(asked.error).toMatchObject({ key: 'limits.busy_while_unchanged', params: { name: 'steps' } });
+    // A list changed with a method is changed.
+    const gems = py.run({ code: 'gems = [1]\nwhile len(gems) > 0:\n    gems.append(1)\n    gems.pop(0)' });
+    expect(gems.error).toMatchObject({ key: 'limits.loop_while', line: 2 });
+  });
+
+  it('says the same when a stuck loop wears out the hero or the scroll first', () => {
+    const walk = py.run({
+      code: 'from codeweald import hero\nsteps = 0\nwhile steps < 3:\n    hero.face("left")\n    hero.face("right")',
+      stage: { kind: 'grid', grid: 'H.' },
+    });
+    expect(walk.status).toBe('action-budget');
+    expect(walk.error).toMatchObject({
+      key: 'limits.busy_while_unchanged',
+      line: 3,
+      params: { name: 'steps' },
+    });
+    const shout = py.run({ code: 'n = 0\nwhile n < 2:\n    print("dig dig dig dig")' });
+    expect(shout.status).toBe('output-budget');
+    expect(shout.error).toMatchObject({ key: 'limits.busy_while_unchanged', line: 2, params: { name: 'n' } });
+    // A loop that does change its name keeps the plain message.
+    const tired = py.run({
+      code: 'from codeweald import hero\nn = 0\nwhile n < 10 ** 6:\n    hero.face("left")\n    n += 1',
+      stage: { kind: 'grid', grid: 'H.' },
+    });
+    expect(tired.error).toMatchObject({ key: 'limits.actions' });
+  });
+
   it('does not blame a name the loop does change', () => {
     const r = py.run({ code: 'steps = 0\nwhile steps < 10:\n    steps = steps - 1' });
     expect(r.error).toMatchObject({ key: 'limits.loop_while', line: 2 });

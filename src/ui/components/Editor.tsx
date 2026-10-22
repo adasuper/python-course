@@ -186,3 +186,35 @@ export function Editor({
 
   return <div class="editor" ref={host} />;
 }
+
+export const CODE_SIZE_MIN = 12;
+export const CODE_SIZE_MAX = 28;
+
+/** A− / A+ buttons for the editor's font size (12–28 px), saved per profile. */
+export function CodeSize({ size, onChange }: { size: number; onChange(size: number): void }) {
+  const clamp = (n: number) => Math.min(CODE_SIZE_MAX, Math.max(CODE_SIZE_MIN, n));
+  return (
+    <div class="code-size" role="group" aria-label={t.quest.codeSize}>
+      <span aria-hidden="true">{t.quest.codeSize}</span>
+      <button
+        type="button"
+        class="small"
+        aria-label={t.quest.codeSmaller}
+        disabled={size <= CODE_SIZE_MIN}
+        onClick={() => onChange(clamp(size - 2))}
+      >
+        A−
+      </button>
+      <output aria-live="polite">{size} px</output>
+      <button
+        type="button"
+        class="small"
+        aria-label={t.quest.codeBigger}
+        disabled={size >= CODE_SIZE_MAX}
+        onClick={() => onChange(clamp(size + 2))}
+      >
+        A+
+      </button>
+    </div>
+  );
+}

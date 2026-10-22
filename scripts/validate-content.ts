@@ -5,6 +5,7 @@ import { crossCheck, loadContent, units, type Problem } from './lib/content';
 import { checkRegion, checkUnit } from './lib/contentCheck';
 import { getPyHost } from './lib/pyHost';
 import { reportProblems } from './lib/report';
+import { above, FLAG_ABOVE, readingLevels } from './reading-level';
 
 async function main() {
   const started = Date.now();
@@ -27,6 +28,12 @@ async function main() {
   const all = units(content);
   console.log(
     `✓ content OK: ${content.regions.length} region(s), ${content.quests.size} quest(s), ${all.length} playable unit(s) checked in ${((Date.now() - started) / 1000).toFixed(1)} s`,
+  );
+  const hard = above(readingLevels(), FLAG_ABOVE);
+  console.log(
+    hard.length
+      ? `⚠ reading level: ${hard.length} text(s) above grade ${FLAG_ABOVE} — run npm run reading-level for the list`
+      : `✓ reading level: no text above grade ${FLAG_ABOVE}`,
   );
 }
 

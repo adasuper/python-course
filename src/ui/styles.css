@@ -710,6 +710,26 @@ progress.xp {
   border-radius: 8px;
   overflow: hidden;
 }
+.editor-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.editor-tools p {
+  margin: 0.4rem 0;
+}
+.code-size {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.code-size output {
+  min-width: 3.2em;
+  text-align: center;
+}
 .run-bar {
   display: flex;
   flex-wrap: wrap;

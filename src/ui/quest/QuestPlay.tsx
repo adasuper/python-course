@@ -9,7 +9,7 @@ import type { RunRequest, RunResult } from '../../runtime/protocol';
 import { recordAttempt, useHint, type Reward } from '../../state/progress';
 import { announce, config, course, getRunner, getStorage, profile, toast, update } from '../../state/store';
 import { LoadingPanel } from '../components/Common';
-import { Editor } from '../components/Editor';
+import { CodeSize, Editor } from '../components/Editor';
 import { JarShelf, OutputScroll, type OutLine } from '../components/Output';
 import { RichText } from '../components/RichText';
 import { prefersReducedMotion } from '../flow';
@@ -308,9 +308,15 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
               error={editorError}
               label={isPredict ? 'Code to read (read only)' : t.quest.editorLabel}
             />
-            <p id="editor-help" class="muted small-text">
-              ⌨️ {t.quest.editorHelp}
-            </p>
+            <div class="editor-tools">
+              <p id="editor-help" class="muted small-text">
+                ⌨️ {t.quest.editorHelp}
+              </p>
+              <CodeSize
+                size={p.settings.editorFontSize}
+                onChange={(n) => update((x) => void (x.settings.editorFontSize = n))}
+              />
+            </div>
           </div>
         )}
 

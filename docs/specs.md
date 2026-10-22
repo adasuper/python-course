@@ -1548,7 +1548,7 @@ build, so what was tested is exactly what gets published.
 | Test | `checks` | ESLint → Prettier check |
 | Test | `unit` | `validate-content` (schema, cross-refs, all solutions, wrong solutions) → answer key up to date → Vitest (TS + Python suites) |
 | Test | `e2e` | download `site` → serve it under its real base path → Playwright Chromium; axe. Offline and throttled smoke tests join in Phases 2 and 6. |
-| Test | `reading-level` *(Phase 2)* | report artifact + job summary |
+| Test | `reading-level` | `npm run reading-level` → report artifact + job summary; fails above grade 9 |
 | Deploy | `deploy` | `main` only (push or manual run), after every test job passes → publish `site` to GitHub Pages |
 
 - Every push and pull request runs Build and Test. The npm cache is keyed on the lockfile

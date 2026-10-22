@@ -1415,7 +1415,7 @@ As a Content author, I want a command that creates a valid quest file, so that I
 **Acceptance criteria**
 - `npm run new-quest -- --region 4 --type make --slug river-ferry` creates a schema-valid file with TODO markers for every required field.
 
-Priority: Should · Phase: 5 · Spec: §10.6 · Brief: §6
+Priority: Should · Phase: 1 (delivered with the content pipeline, M1.4) · Spec: §10.6 · Brief: §6
 
 ### F-AUT-10 — A guide for writing quests
 As a Content author, I want a step-by-step quest-writing guide, so that I can add quests on my own.
@@ -1555,7 +1555,7 @@ Priority: Must · Phase: 1 · Spec: §18.3 · Brief: §7
 ### F-QA-05 — CI on every push
 As a Maintainer, I want a GitHub Actions workflow, so that every change is checked automatically.
 **Acceptance criteria**
-- `.github/workflows/ci-cd.yml` runs on every push and pull request in stages: **Build** (`build`: size budget, `site` artifact), then **Test** (`checks`, `unit` with content validation, `e2e` against that same build, and `reading-level` from Phase 2), then **Deploy** (F-DEP-09). It uses the npm cache, which includes Pyodide.
+- `.github/workflows/ci-cd.yml` runs on every push and pull request in stages: **Build** (`build`: size budget, `site` artifact), then **Test** (`checks`, `unit` with content validation, `e2e` against that same build, and `reading-level`), then **Deploy** (F-DEP-09). It uses the npm cache, which includes Pyodide.
 - A phase is done only when CI is green (General rules).
 
 Priority: Must · Phase: 1 · Spec: §19.1 · Brief: §7, §9

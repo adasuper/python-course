@@ -98,7 +98,7 @@ ____
 - **Type:** parsons
 - **Learning outcome:** Arrange move and say instructions in order so the hero reaches the well and greets the miller.
 - **CSTA:** 2-AP-10 · **About 7 min**
-- **Goal (as students see it):** Put the lines in order so the hero walks to the miller without bumping into anything, then says good morning.
+- **Goal (as students see it):** Put the lines in order. The hero must walk to the miller without bumping into anything. Then the hero says good morning.
 
 **Reference solution** (other correct answers also pass — the checks test behavior):
 
@@ -277,7 +277,7 @@ print("Mind the chickens.")
 
 `r1-boss-village-crier-bug`
 
-**Boss:** The Village Crier Bug (Clangle). Fix the announcement in three phases to turn Clangle back into a friendly firefly.
+**Boss:** The Village Crier Bug (Clangle). Fix the announcement in three phases. Then Clangle turns back into a friendly firefly.
 
 #### Phase 1: Unjam the bell
 
@@ -368,7 +368,7 @@ print("Bring a friend and a basket.")
 - **Type:** modify
 - **Learning outcome:** Document a program with comments that explain each part.
 - **CSTA:** 2-AP-19 · **About 4 min**
-- **Goal (as students see it):** Walk the hero to the tile in front of the podium, say "Hear ye!", and add a comment above the walking part and above the speaking part.
+- **Goal (as students see it):** Walk the hero to the tile in front of the podium. Then say "Hear ye!". Add a comment above the walking part, and one above the talking part.
 
 **Starter code:**
 

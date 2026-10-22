@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-q5-three-paths
+region: forked-road-forest
+title: Three Paths at the Fork
+type: parsons
+npc: nimbus
+learning_outcome: Arrange if/elif/else lines with correct indentation so the hero takes the right path for each weather report.
+csta: [2-AP-12]
+estimated_minutes: 8
+prerequisites: [r4-q4-crooked-branches]
+vocabulary: [elif, else, indentation, branch]
+# Nimbus reports the weather. Students can also type their own answers (on by default).
+inputs: ["rain"]
+interactive_input: true
+
+story_intro: |
+  Nimbus looks up at the clouds. "Three paths, three kinds of weather! Sun means the meadow, up the hill. Rain means the mushroom grove on the right. Mushrooms love rain! Anything else, like fog, means the lantern lane on the left."
+
+  The scraps of the spell are here, but they're jumbled. Put them in order, and push each `hero.move` line in under its own condition. Use [[elif]] for the middle path. One scrap doesn't belong.
+goal: Put the lines in order with the right indents, so the hero takes the right path for sun, rain, or anything else.
+concept_card: |
+  `elif` means "else if". Python checks the conditions from the top down and walks only the **first** path whose condition is `True`. `else` catches everything left over.
+  ```python
+  if weather == "sun":
+      hero.move("up", 2)
+  elif weather == "rain":
+      hero.move("right", 3)
+  else:
+      hero.move("left", 3)
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    ####U####
+    #l##.####
+    #L..H..R#
+    #l##N####
+  facing: down
+  legend:
+    "#": { tile: grass, object: forest_pine, look: tree }
+    l: { tile: grass, object: lamp_post, look: lamp }
+    ".": { tile: forest_floor }
+    H: { tile: forest_floor, hero: true }
+    U: { tile: flowers }
+    R: { tile: forest_floor, object: forest_mushrooms, solid: false, name: mushroom grove, look: mushrooms }
+    L: { tile: cobble }
+    N: { tile: forest_floor, object: npc }
+  npcs:
+    N: { name: Nimbus, sprite: npc_weather_nimbus }
+
+parsons:
+  fixed_top:
+    - from codeweald import hero
+  lines:
+    - weather = input("Sun, rain or fog? ")
+    - 'if weather == "sun":'
+    - '    hero.move("up", 2)'
+    - 'elif weather == "rain":'
+    - '    hero.move("right", 3)'
+    - 'else:'
+    - '    hero.move("left", 3)'
+  distractors:
+    - 'if weather == "rain":'
+    - 'elif weather = "rain":'
+  indent: true
+
+validators:
+  - id: paths
+    type: hidden_tests
+    mode: inputs
+    compare: [state]
+    cases:
+      - { inputs: ["sun"] }
+      - { inputs: ["rain"] }
+      - { inputs: ["fog"] }
+      - { inputs: ["snow"] }
+  - id: shape
+    type: ast
+    require: [If]
+    require_else: true
+    min_count: { If: 2 }
+    fail_hint: Use `if`, `elif` and `else`, one for each path.
+
+common_mistakes:
+  - id: one-equals
+    detect: { kind: error, key: syntax.assign_in_condition }
+    feedback: >-
+      One scrap uses `=`, which *stores* a value. To compare, Python needs `==`. Swap that scrap for the
+      one with `==`.
+  - id: not-indented
+    detect: { kind: error, key: indent.expected }
+    feedback: >-
+      Each `hero.move` line must be pushed in under its own `if`, `elif` or `else`. Use the indent
+      buttons (or the → key) to push it in.
+  - id: else-too-soon
+    detect: { kind: error, key: syntax.generic, message_regex: follows an 'else' }
+    feedback: >-
+      `else` must come last. It catches everything left over, so no `elif` can come after it.
+  - id: two-ifs
+    detect: { kind: code_regex, pattern: '^if weather == "rain"' }
+    feedback: >-
+      A second `if` starts a brand new question, so Python checks it even after the sun path! Use the
+      `elif` scrap instead. Then only one path runs.
+  - id: wrong-way
+    detect: { kind: validator_failed, id: paths }
+    feedback: >-
+      The hero took the wrong path for one of the weather reports. Check that each `hero.move` line sits
+      right under its own condition: sun goes up, rain goes right, anything else goes left.
+
+wrong_solutions:
+  - order: [0, 1, 2, 7, 4, 5, 6]
+    expect_mistake: two-ifs
+    note: With "sun", the hero walks up, then the else path walks it into a tree.
+  - order: [0, 1, 2, 8, 4, 5, 6]
+    expect_mistake: one-equals
+  - order: [0, 1, 2, 5, 6, 3, 4]
+    expect_mistake: else-too-soon
+  - order: [0, 1, 4, 3, 2, 5, 6]
+    expect_mistake: wrong-way
+    note: The moves for sun and rain are swapped.
+
+hints:
+  - Start by asking for the weather. Then check for sun, then rain, and leave everything else to `else`.
+  - "`if`, `elif` and `else` line up on the left. Each `hero.move` line is pushed in under its own condition. Use `elif`, not a second `if`."
+  - |
+    ```python
+    weather = input("Sun, rain or fog? ")
+    if weather == "sun":
+        hero.move("up", 2)
+    ____
+        hero.move("right", 3)
+    else:
+        hero.move("left", 3)
+    ```
+
+story_outro: |
+  Nimbus claps. "Sun, rain, fog. You sent the hero the right way every time!" A cloud drifts by. It looks a little like a signpost.

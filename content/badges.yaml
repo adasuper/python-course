@@ -48,3 +48,14 @@
   emoji: 🧭
   description: You found every secret corner of Hearthvale.
   trigger: { kind: pois_visited, region: hearthvale-village }
+# Region 4: Forked Road Forest
+- id: restorer-forked-road-forest
+  name: "Region Restorer: Forked Road Forest"
+  emoji: 🌲
+  description: You beat the Riddle Gate and saved Forked Road Forest.
+  trigger: { kind: boss_defeated, region: forked-road-forest }
+- id: explorer-forked-road-forest
+  name: "Explorer: Forked Road Forest"
+  emoji: 🍄
+  description: You found every secret corner of Forked Road Forest.
+  trigger: { kind: pois_visited, region: forked-road-forest }

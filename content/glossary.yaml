@@ -83,3 +83,60 @@
   definition: Your character in a quest. You control the hero with instructions like hero.move("up").
   example: '`hero.say("Hi!")`'
   related: [instruction]
+# Region 4: Forked Road Forest
+- term: boolean
+  definition: A value that is either True or False. A comparison like gold >= 10 gives back a boolean.
+  example: '`print(5 > 3)` shows **True**.'
+  related: [comparison, condition]
+- term: comparison
+  definition: A check that compares two values with ==, !=, <, >, <= or >=. The answer is always True or False.
+  example: '`gold >= 10` asks: is gold at least 10?'
+  related: [boolean, condition]
+- term: condition
+  definition: A question in your code whose answer is True or False. An if statement runs its lines only when its condition is True.
+  example: '`if gold >= 10:` has the condition `gold >= 10`.'
+  related: [if statement, comparison, boolean]
+- term: if statement
+  definition: Code that runs some lines only when a condition is True. The if line ends with a colon, and the lines inside are indented.
+  example: |
+    ```python
+    if gold >= 10:
+        print("You may pass.")
+    ```
+  related: [condition, else, elif, indentation]
+- term: else
+  definition: The part of an if statement that runs when the condition is False.
+  example: |
+    ```python
+    if gold >= 10:
+        print("You may pass.")
+    else:
+        print("Come back later.")
+    ```
+  related: [if statement, elif]
+- term: elif
+  definition: Short for "else if". It checks another condition when the ones above it were False.
+  example: |
+    ```python
+    if weather == "sun":
+        print("Up the hill!")
+    elif weather == "rain":
+        print("To the mushroom grove!")
+    ```
+  related: [if statement, else]
+- term: branch
+  definition: One of the paths an if statement can take. Only one branch runs each time.
+  example: An `if` with an `else` has two branches.
+  related: [if statement, else]
+- term: indentation
+  definition: The spaces at the start of a line. Python uses indentation to see which lines belong inside an if.
+  example: |
+    ```python
+    if gold >= 10:
+        print("This line is indented by 4 spaces.")
+    ```
+  related: [if statement, syntax]
+- term: compound condition
+  definition: A condition built from smaller ones, joined with and or or.
+  example: '`age >= 10 and gold >= 3` is True only when both parts are True.'
+  related: [condition, boolean]

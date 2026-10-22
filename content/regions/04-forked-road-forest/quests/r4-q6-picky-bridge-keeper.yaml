@@ -1,0 +1,203 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-q6-picky-bridge-keeper
+region: forked-road-forest
+title: The Picky Bridge Keeper
+type: modify
+npc: tobias
+learning_outcome: Use and, or, and not to combine conditions in a working program.
+csta: [2-AP-12]
+estimated_minutes: 8
+prerequisites: [r4-q5-three-paths]
+vocabulary: [compound condition, condition, boolean]
+# Spaced retrieval: int(input()) from Merchant's Crossing.
+retrieval: [r3]
+rewards: { item: twin-keys-of-and-or }
+# The traveler answers the keeper's two questions. Students can also type their own answers.
+inputs: ["11", "2"]
+interactive_input: true
+
+story_intro: |
+  Tobias Toll adjusts his tall hat. "My old rule was simple: 10 or older may cross. But today I have NEW rules!"
+
+  1. You must be **10 or older**, *and* you must carry **at least 3 gold**.
+  2. Grandparents, **70 or older**, cross for free. Gold *or* no gold!
+
+  Python joins conditions with `and` and `or` to make a [[compound condition]]. Careful: the keeper's questions use `input()`, and `input()` always hands back text. Remember `int()` from Merchant's Crossing?
+goal: Change the if so travelers cross when they are 10 or older and have at least 3 gold, or when they are 70 or older. Keep both messages the same.
+concept_card: |
+  `and` is `True` only when **both** sides are True. `or` is `True` when **at least one** side is True. `not` flips `True` to `False`, and `False` to `True`.
+  ```python
+  print(True and False)   # False
+  print(True or False)    # True
+  print(not True)         # False
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_villager_a, name: A traveler }
+    - { sprite: npc_bridge_tobias, name: Tobias Toll }
+
+starter_code: |
+  age = int(input("How old are you? "))
+  gold = input("How much gold? ")
+  if age >= 10:
+      print("You may cross the bridge.")
+  else:
+      print("Sorry, no crossing today.")
+
+solution: |
+  age = int(input("How old are you? "))
+  gold = int(input("How much gold? "))
+  if (age >= 10 and gold >= 3) or age >= 70:
+      print("You may cross the bridge.")
+  else:
+      print("Sorry, no crossing today.")
+
+validators:
+  - id: travelers
+    type: hidden_tests
+    mode: inputs
+    compare: [output]
+    cases:
+      - { inputs: ["11", "2"] }
+      - { inputs: ["11", "5"] }
+      - { inputs: ["9", "5"] }
+      - { inputs: ["72", "0"] }
+      - { inputs: ["10", "3"] }
+      - { inputs: ["9", "3"] }
+  - id: and-or
+    type: ast
+    require: [And, Or]
+    fail_hint: Join the rules with `and` and `or`.
+
+common_mistakes:
+  - id: gold-is-text
+    detect: { kind: error, type: TypeError, message_regex: not supported between }
+    feedback: >-
+      `input()` always hands back text, like `"5"`, and text can't be compared with a number. Wrap the
+      gold question in `int(...)`, just like the age question on line 1.
+  - id: words-changed
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            if ctx.error:
+                return False
+            return "You may cross the bridge." not in ctx.output and "Sorry, no crossing today." not in ctx.output
+    feedback: >-
+      Tobias only understands his own two messages. Keep them exactly as they were:
+      "You may cross the bridge." and "Sorry, no crossing today."
+  - id: needs-both
+    detect: { kind: hidden_case_fails, validator: travelers, case: 0 }
+    feedback: >-
+      An 11-year-old with only 2 gold got across! The age rule and the gold rule must *both* be True.
+      That's what `and` is for.
+  - id: grandparents
+    detect: { kind: hidden_case_fails, validator: travelers, case: 3 }
+    feedback: >-
+      Grandpa Gus is 72 and has no gold. He should cross for free! Add `or age >= 70` to your condition.
+  - id: at-least
+    detect: { kind: hidden_case_fails, validator: travelers, case: 4 }
+    feedback: >-
+      What about a traveler who is exactly 10, with exactly 3 gold? "At least" includes the number
+      itself, so use `>=`.
+  - id: check-rules
+    detect: { kind: validator_failed, id: travelers }
+    feedback: >-
+      One traveler got the wrong answer. Check each rule again: 10 or older *and* at least 3 gold,
+      *or* 70 or older. Kids under 10 can't cross, even with gold.
+  - id: use-and-or
+    detect: { kind: validator_failed, id: and-or }
+    feedback: >-
+      Every traveler gets the right answer. Nice! But Tobias wants one `if` that uses `and` and `or`.
+      Can you join the rules that way?
+
+wrong_solutions:
+  - expect_mistake: words-changed
+    note: The right rules, but new messages.
+    code: |
+      age = int(input("How old are you? "))
+      gold = int(input("How much gold? "))
+      if (age >= 10 and gold >= 3) or age >= 70:
+          print("Cross!")
+      else:
+          print("Go home.")
+  - expect_mistake: gold-is-text
+    note: The gold answer is still text.
+    code: |
+      age = int(input("How old are you? "))
+      gold = input("How much gold? ")
+      if (age >= 10 and gold >= 3) or age >= 70:
+          print("You may cross the bridge.")
+      else:
+          print("Sorry, no crossing today.")
+  - expect_mistake: needs-both
+    note: or instead of and.
+    code: |
+      age = int(input("How old are you? "))
+      gold = int(input("How much gold? "))
+      if age >= 10 or gold >= 3 or age >= 70:
+          print("You may cross the bridge.")
+      else:
+          print("Sorry, no crossing today.")
+  - expect_mistake: grandparents
+    code: |
+      age = int(input("How old are you? "))
+      gold = int(input("How much gold? "))
+      if age >= 10 and gold >= 3:
+          print("You may cross the bridge.")
+      else:
+          print("Sorry, no crossing today.")
+  - expect_mistake: at-least
+    code: |
+      age = int(input("How old are you? "))
+      gold = int(input("How much gold? "))
+      if (age > 10 and gold > 3) or age >= 70:
+          print("You may cross the bridge.")
+      else:
+          print("Sorry, no crossing today.")
+  - expect_mistake: use-and-or
+    note: Right answers, but with elif instead of and/or.
+    code: |
+      age = int(input("How old are you? "))
+      gold = int(input("How much gold? "))
+      if age >= 70:
+          print("You may cross the bridge.")
+      elif age >= 10:
+          if gold >= 3:
+              print("You may cross the bridge.")
+          else:
+              print("Sorry, no crossing today.")
+      else:
+          print("Sorry, no crossing today.")
+
+hints:
+  - Which two things must both be true for most travelers? And who crosses for free?
+  - Join the age rule and the gold rule with `and`. Then add `or age >= 70`. Also look at line 2. `input()` gives text, so the gold needs `int(...)`.
+  - |
+    ```python
+    gold = int(input("How much gold? "))
+    if (age >= 10 and gold >= 3) or ____:
+    ```
+
+bonus:
+  - id: storm-rule
+    description: "Storms close the bridge! Add `stormy = True` at the top, and use `not stormy` so nobody crosses in a storm."
+    xp: 15
+    check:
+      type: custom
+      python: |
+        def check(ctx):
+            if ctx.tree is None or not any(isinstance(n, ast.Not) for n in ast.walk(ctx.tree)):
+                return Fail()
+            try:
+                calm = ctx.run(vars={"stormy": False}, inputs=["11", "5"])
+                storm = ctx.run(vars={"stormy": True}, inputs=["11", "5"])
+            except Exception:
+                return Fail()
+            ok = "may cross" in calm.output and "may cross" not in storm.output
+            return Pass() if ok else Fail()
+
+story_outro: |
+  Tobias Toll tips his tall hat. "Rules, rules, glorious rules! And your spell follows every one." He hands you the **Twin Keys of And & Or**. One key needs both locks to agree. The other needs just one.

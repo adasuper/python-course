@@ -1,0 +1,194 @@
+# yaml-language-server: $schema=../../../schema/region.schema.json
+# Region 2: Whispering Library. Variables, assignment, naming rules, joining strings and
+# f-strings. See docs/curriculum-map.md.
+id: whispering-library
+number: 2
+name: Whispering Library
+concepts:
+  - variables
+  - assignment and reassignment
+  - naming rules
+  - joining strings with +
+  - f-strings
+
+intro:
+  - speaker: narrator
+    text: The books of the Whispering Library talk in hushed voices. Right now, they are whispering complaints.
+  - speaker: byte
+    text: When the Great Script broke, every label fell off the shelves. Now nobody can find a thing, and the books are VERY grumpy.
+  - speaker: byte
+    text: Madame Quill, the Head Librarian, needs an apprentice who knows how to name things. Luckily, I know an owl who knows an apprentice.
+
+# The library. One character is one tile; F wood floor, K bookshelf, u rug, D reading table.
+overworld:
+  grid: |
+    ##############################
+    #FFFFFFFFFFFFFFFFFFFFFFFFFFFF#
+    #FKKKKKFFKKKKKFFFKKKKKFFKKKKF#
+    #FFFFFFFFFFFFFFFFFFFFFFFFFFFF#
+    #FKKKKKFFKKKKKFFFKKKKKFFKKKKF#
+    #FFFFFFFFFFFFFFFFFFFFFFFFFFFF#
+    #FFFFFFFFFFuuuuuuuuuuFFFFFFFF#
+    #FDFFFDFFFFuuuuuuuuuuFFFFDFFF#
+    #FFFFFFFFFFuuuuuuuuuuFFFFFFFF#
+    #FKKKFFFFFFuuuuuuuuuuFFFFFKKK#
+    #FKKKFFFFFFuuuuuuuuuuFFFFFKKK#
+    #FFFFFFFFFFFFFFFFFFFFFFFFFFFF#
+    #FFFDDFFFFFFFFFFFFFFFFFFDDFFF#
+    #FFFFFFFFFFFFFFFFFFFFFFFFFFFF#
+    #FKKKKKFFKKKKKFFFKKKKKFFKKKKF#
+    #FFFFFFFFFFFFFFFFFFFFFFFFFFFF#
+    #FKKKKKFFKKKKKFFFKKKKKFFKKKKF#
+    #FFFFFFFFFFFFFFFFFFFFFFFFFFFF#
+    #FFFFFFFFFFFFF::FFFFFFFFFFFFF#
+    #############::###############
+  legend:
+    F: { tile: wood_floor }
+    K: { tile: bookshelf, solid: true }
+    u: { tile: rug }
+    D: { tile: wood_floor, over: reading_table, solid: true }
+  objects:
+    - { kind: spawn, at: [14, 18] }
+    - { kind: npc, id: byte, at: [15, 18], quest: r2-q1-labeled-jars }
+    - { kind: npc, id: tobin, at: [7, 3], quest: r2-q2-the-shelf-swap }
+    - { kind: npc, id: primm, at: [23, 5], quest: r2-q3-rules-for-names }
+    - { kind: npc, id: dot, at: [5, 11], quest: r2-q4-catalog-card }
+    - { kind: npc, id: inka, at: [24, 11], quest: r2-q5-the-magic-ink }
+    - { kind: npc, id: quill, at: [15, 8], quest: r2-q6-library-card }
+    - { kind: npc, id: swapsy, at: [15, 15], quest: r2-boss-mislabeled-archive }
+    - { kind: npc, id: bartholomew, at: [10, 13] }
+    - { kind: board, at: [12, 11] }
+    - { kind: sign, at: [2, 17], text: "Quiet, please! The books are sleeping. Well, most of them." }
+    - { kind: sign, at: [27, 17], text: "Mysteries this way. Or maybe that way. It's a mystery." }
+    - { kind: poi, id: dusty-corner, at: [1, 1] }
+    - { kind: poi, id: map-nook, at: [28, 1] }
+    - { kind: poi, id: lost-and-found, at: [1, 17] }
+    - { kind: poi, id: poetry-perch, at: [28, 13] }
+    - { kind: exit, at: [13, 19], text: "The road to Merchant's Crossing." }
+
+npcs:
+  byte:
+    name: Byte
+    sprite: byte
+    greeting: Shh. Libraries are for whispering. Also for learning about jars. Mostly jars.
+  tobin:
+    name: Tobin Turnpage
+    sprite: npc_shelver
+    greeting: I put the dragon books away. Then I moved them. Now I can't remember where they are!
+  primm:
+    name: Archivist Primm
+    sprite: npc_archivist
+    greeting: Every name in my archive follows the rules. Every. Single. One. Well, they did.
+  dot:
+    name: Dot Dewey
+    sprite: npc_cataloguer
+    greeting: My catalog cards are all squished together. "Findthe book" is not a sentence!
+  inka:
+    name: Inka Blot
+    sprite: npc_inkmaker
+    greeting: I make magic ink. It writes words that change by themselves. Want to try?
+  quill:
+    name: Madame Quill
+    sprite: npc_librarian
+    greeting: Welcome, apprentice. A library is only as good as its labels.
+  swapsy:
+    name: Swapsy
+    sprite: bug_swapsy
+    greeting: Flutter-flutter! I swapped ALL the labels! The title is the author now! Hee hee!
+  bartholomew:
+    name: Bartholomew
+    sprite: npc_reader
+    greeting: I have read this page 40 times. The ending still surprises me.
+
+concept_scene:
+  title: What is a variable?
+  analogy: >-
+    A [[variable]] is a labeled jar. The label is the name, and what is inside is the
+    [[value]]. You can pour out the old value and put in a new one, but the jar holds only one
+    thing at a time.
+  lines:
+    - speaker: byte
+      text: '`book = "The Owl Who Coded"` makes a jar named `book` and puts the text inside. Read the `=` as "gets": book gets the text.'
+    - speaker: byte
+      text: Then `print(book)` shows what is IN the jar. But `print("book")`, with quotes, shows just the word book.
+    - speaker: byte
+      text: You can join text and jars with `+`. Or use an [[f-string]], which puts a jar's value right inside the text.
+    - speaker: byte
+      text: Watch this little program. Notice which lines show the jar's value. Then go label some jars!
+  worked_example:
+    stage: { kind: none }
+    code: |
+      book = "The Owl Who Coded"
+      shelf = "Mysteries"
+      print(book)
+      print("Find " + book + " on the " + shelf + " shelf.")
+      print(f"{book} lives on the {shelf} shelf.")
+    explain:
+      - line: 1
+        text: The jar `book` gets the text "The Owl Who Coded". This is an [[assignment]].
+      - line: 2
+        text: A second jar, `shelf`, gets the text "Mysteries".
+      - line: 3
+        text: No quotes around `book`, so Python shows what is inside the jar.
+      - line: 4
+        text: The `+` signs [[join|concatenate]] text and jars into one sentence. Look at the spaces inside the quotes.
+      - line: 5
+        text: The `f` before the quote makes an [[f-string]]. Each `{jar}` is replaced by its value.
+
+quests:
+  - r2-q1-labeled-jars
+  - r2-q2-the-shelf-swap
+  - r2-q3-rules-for-names
+  - r2-q4-catalog-card
+  - r2-q5-the-magic-ink
+  - r2-q6-library-card
+boss: r2-boss-mislabeled-archive
+side_quests:
+  - r2-side1-the-swap-trick
+
+knowledge_check:
+  items:
+    - kind: mcq
+      question: Which one is a valid variable name?
+      options:
+        - gold_coins
+        - 2coins
+        - gold coins
+        - gold-coins
+      answer: 0
+      explain: A name can use letters, numbers and `_`, but it can't start with a number, and it can't have spaces or dashes.
+    - kind: predict
+      question: What will this print?
+      code: |
+        pet = "owl"
+        pet = "bat"
+        print(pet)
+      answer: bat
+      explain: The jar holds one thing at a time. The second line pours out "owl" and puts in "bat".
+    - kind: predict
+      question: What will this print?
+      code: |
+        name = "Ada"
+        book = "Maps"
+        print(f"{name} reads {book}.")
+      answer: Ada reads Maps.
+      explain: In an f-string, each `{jar}` is replaced by the value inside the jar.
+    - kind: mcq
+      question: What is the difference between `print(name)` and `print("name")`?
+      options:
+        - The first shows what is inside the jar `name`. The second shows the word name.
+        - There is no difference.
+        - The first shows the word name. The second shows what is inside the jar.
+      answer: 0
+      explain: Without quotes, Python looks inside the jar. With quotes, it's just text.
+
+fragment:
+  id: fragment-names
+  name: "Script Fragment: Names"
+  description: The piece of the Great Script that remembers things by name.
+
+pois:
+  - dusty-corner
+  - map-nook
+  - lost-and-found
+  - poetry-perch

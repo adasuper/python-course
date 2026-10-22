@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-q4-catalog-card
+region: whispering-library
+title: Glue the Catalog Card
+type: fill
+npc: dot
+learning_outcome: Use + to join strings and variables into one sentence, with spaces in the right places.
+csta: [2-AP-11]
+estimated_minutes: 7
+prerequisites: [r2-q3-rules-for-names]
+vocabulary: [concatenate, variable, string]
+locked: true
+
+story_intro: |
+  Dot Dewey holds up a catalog card. It says *"Findthe book onthe shelf"*. "The words are glued together wrong! Can you fix my card maker?"
+
+  The `+` sign [[joins|concatenate]] strings into one longer string. It does not add any spaces for you, so put the spaces inside the quotes.
+goal: Fill the two gaps so the card reads exactly "Find The Owl Who Coded on the Mysteries shelf."
+concept_card: |
+  `+` **joins** strings. It never adds spaces by itself.
+  ```python
+  print("Find" + "Owls")    # FindOwls
+  print("Find " + "Owls")   # Find Owls
+  ```
+  You can join jars too: `"Find " + book`.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_cataloguer, name: Dot Dewey }
+
+starter_code: |
+  book = "The Owl Who Coded"
+  shelf = "Mysteries"
+  card = "Find " + ____ + " on the " + shelf + ____
+  print(card)
+
+solution: |
+  book = "The Owl Who Coded"
+  shelf = "Mysteries"
+  card = "Find " + book + " on the " + shelf + " shelf."
+  print(card)
+
+validators:
+  - id: card
+    type: output
+    expect: Find The Owl Who Coded on the Mysteries shelf.
+    fail_hint: Compare your card with the goal, letter by letter. Look closely at the spaces.
+  - id: other-books
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - vars: { book: Moonlight Maps, shelf: Atlases }
+    fail_hint: Use the jar `book` in the first gap, so the card works for any book.
+
+common_mistakes:
+  - id: word-not-jar
+    detect: { kind: output_regex, pattern: "Find book" }
+    feedback: >-
+      Your card says "Find book". With quotes, `"book"` is just the word. Without quotes, `book`
+      is the jar, and Python uses what is inside it.
+  - id: missing-space
+    detect: { kind: output_regex, pattern: "Mysteriesshelf" }
+    feedback: >-
+      Your words are glued together: "Mysteriesshelf". `+` never adds a space. Start the last
+      string with a space: `" shelf."`
+  - id: typed-the-title
+    detect: { kind: hidden_case_fails, validator: other-books, case: 0 }
+    feedback: >-
+      The card looks right, but you typed the title again instead of using the jar. Put `book`
+      (no quotes) in the first gap, so the card works for every book.
+
+wrong_solutions:
+  - expect_mistake: word-not-jar
+    code: |
+      book = "The Owl Who Coded"
+      shelf = "Mysteries"
+      card = "Find " + "book" + " on the " + shelf + " shelf."
+      print(card)
+  - expect_mistake: missing-space
+    code: |
+      book = "The Owl Who Coded"
+      shelf = "Mysteries"
+      card = "Find " + book + " on the " + shelf + "shelf."
+      print(card)
+  - expect_mistake: typed-the-title
+    code: |
+      book = "The Owl Who Coded"
+      shelf = "Mysteries"
+      card = "Find " + "The Owl Who Coded" + " on the " + shelf + " shelf."
+      print(card)
+
+hints:
+  - The first gap is the book's title. Which jar holds it?
+  - "The first gap is the jar `book`, with no quotes. The second gap is a string that starts with a space: `\" shelf.\"`"
+  - |
+    ```python
+    card = "Find " + book + " on the " + shelf + ____
+    ```
+
+story_outro: |
+  Dot reads the new card out loud. "Find The Owl Who Coded on the Mysteries shelf. PERFECT spaces!" She files it with a happy little stamp.

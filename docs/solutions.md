@@ -475,3 +475,503 @@ Eat
 
 3. Which line will Python skip? → **# Feed the chickens**. A line that starts with `#` is a comment. Python skips it.
 4. An error message says "line 3". Where do you look first? → **Line 3 of my code**. Start at line 3. Sometimes the real slip is just above it, so check that line too.
+
+## Region 2 — Whispering Library
+
+**Concepts:** variables; assignment and reassignment; naming rules; joining strings with +; f-strings
+
+**Byte's analogy:** A variable is a labeled jar. The label is the name, and what is inside is the value. You can pour out the old value and put in a new one, but the jar holds only one thing at a time.
+
+### The Labeled Jars
+
+`r2-q1-labeled-jars`
+
+- **Type:** predict
+- **Learning outcome:** Predict what a program prints when it stores text in a variable and then prints the variable.
+- **CSTA:** 2-AP-11 · **About 6 min**
+- **Goal (as students see it):** Read the program and predict what each print line shows. Then run it to check.
+
+**Code students read:**
+
+```python
+book = "The Owl Who Coded"
+print(book)
+print("book")
+```
+
+**Answers:**
+
+- Line 2 is `print(book)`, with no quotes. What does it show? → **The Owl Who Coded**. No quotes, so Python looks inside the jar named `book` and shows what it holds.
+- Line 3 is `print("book")`, with quotes. What does it show? → **book**. With quotes, `"book"` is just a string. Python shows the word book, not the jar's value.
+- Now type exactly what the whole program prints, one line at a time. → **The Owl Who Coded book**. First the jar's value, then the word book.
+
+**Hints (free, in this order):**
+
+1. Look for quotes. Text in quotes is shown as it is. A name without quotes is a jar.
+2. `print(book)` opens the jar called `book`. `print("book")` just shows the word.
+3. (code example)
+
+The Scroll will show two lines:
+```text
+The Owl Who ____
+book
+```
+
+### The Shelf Swap
+
+`r2-q2-the-shelf-swap`
+
+- **Type:** investigate
+- **Learning outcome:** Trace a variable's value line by line as it is reassigned.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Run the program, watch the Scroll, and answer Tobin's questions. Try the changes the questions ask for!
+
+**Code students run:**
+
+```python
+shelf = "Mysteries"
+print(shelf)
+shelf = "Dragons"
+print(shelf)
+```
+
+**Answers:**
+
+- Run the program. How many lines appear on the Scroll of Output? → **2**. There are two `print` lines, so there are two lines on the Scroll.
+- After line 3 runs, what is inside the jar `shelf`? → **"Dragons"**. Line 3 poured out "Mysteries" and put in "Dragons".
+- Change line 3 to `shelf = "Poems"` and run it. What is the second line on the Scroll now? → **Poems**. The jar now gets "Poems" on line 3, so line 4 shows Poems.
+- Put the code back. Now delete line 1, `shelf = "Mysteries"`, and run it. What happens? → **Python shows an error.**. Line 2 tries to look in a jar that has no label yet, so Python shows a NameError.
+
+**Hints (free, in this order):**
+
+1. Read the program from the top. After each line, say out loud what is in the jar `shelf`.
+2. After line 1, `shelf` holds "Mysteries". After line 3, it holds "Dragons". The old value is gone.
+3. (code example)
+
+Trace it line by line:
+```text
+line 1: shelf gets "Mysteries"
+line 2: prints Mysteries
+line 3: shelf gets "Dragons"
+line 4: prints ____
+```
+
+### Rules for Names
+
+`r2-q3-rules-for-names`
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix variable names that break Python's naming rules.
+- **CSTA:** 2-AP-11, 2-AP-17 · **About 7 min**
+- **Goal (as students see it):** Fix the four bad names so the program prints the archive card. Use the names that the print lines already use.
+
+**Starter code:**
+
+```python
+book title = "Moonlight Maps"
+2nd_shelf = "Atlases"
+book-count = 12
+print(book_title)
+print(shelf_2)
+print(Book_count)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+book_title = "Moonlight Maps"
+shelf_2 = "Atlases"
+book_count = 12
+print(book_title)
+print(shelf_2)
+print(book_count)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *space-or-dash* — A name can't have a space or a dash in it. Python reads `book title` as two names, and `book-count` as "book minus count". Use an underscore instead: `book_title`, `book_count`.
+- *starts-with-number* — A name can't start with a number. Move the number to the end, like the print line does: `shelf_2`.
+- *capital-letter* — Python is case-sensitive. `Book_count` with a capital B is a different jar from `book_count`. Make the names match exactly.
+- *values-changed* — The names work now, but the card changed. Keep the same values the starter code had.
+
+**Hints (free, in this order):**
+
+1. Run it and read the error. Which line does it point to? Fix one name, then run again.
+2. Look at the print lines: they use `book_title`, `shelf_2` and `book_count`. Make lines 1 to 3 use the same names, and fix the capital B on line 6.
+3. (code example)
+
+```python
+book_title = "Moonlight Maps"
+shelf_2 = "Atlases"
+____ = 12
+print(book_title)
+print(shelf_2)
+print(book_count)
+```
+
+### Glue the Catalog Card
+
+`r2-q4-catalog-card`
+
+- **Type:** fill
+- **Learning outcome:** Use + to join strings and variables into one sentence, with spaces in the right places.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Fill the two gaps so the card reads exactly "Find The Owl Who Coded on the Mysteries shelf."
+
+**Starter code:**
+
+```python
+book = "The Owl Who Coded"
+shelf = "Mysteries"
+card = "Find " + ____ + " on the " + shelf + ____
+print(card)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+book = "The Owl Who Coded"
+shelf = "Mysteries"
+card = "Find " + book + " on the " + shelf + " shelf."
+print(card)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *word-not-jar* — Your card says "Find book". With quotes, `"book"` is just the word. Without quotes, `book` is the jar, and Python uses what is inside it.
+- *missing-space* — Your words are glued together: "Mysteriesshelf". `+` never adds a space. Start the last string with a space: `" shelf."`
+- *typed-the-title* — The card looks right, but you typed the title again instead of using the jar. Put `book` (no quotes) in the first gap, so the card works for every book.
+
+**Hints (free, in this order):**
+
+1. The first gap is the book's title. Which jar holds it?
+2. The first gap is the jar `book`, with no quotes. The second gap is a string that starts with a space: `" shelf."`
+3. (code example)
+
+```python
+card = "Find " + book + " on the " + shelf + ____
+```
+
+### The Magic Ink
+
+`r2-q5-the-magic-ink`
+
+- **Type:** modify
+- **Learning outcome:** Use an f-string to place variable values inside a sentence.
+- **CSTA:** 2-AP-11 · **About 8 min**
+- **Goal (as students see it):** Rewrite the print line with one f-string. The Scroll must show exactly the same sentence as before.
+
+**Starter code:**
+
+```python
+name = "Ada"
+book = "The Owl Who Coded"
+print("Dear " + name + ", " + book + " is ready for you.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+name = "Ada"
+book = "The Owl Who Coded"
+print(f"Dear {name}, {book} is ready for you.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *missing-f* — Your note shows the braces, like `{name}`. The magic needs an `f` right before the first quote: `f"Dear {name}, ..."`.
+- *still-plus* — The note is right, but it still uses `+`. Rewrite the whole sentence as one f-string, with `{name}` and `{book}` inside it.
+- *typed-values* — You typed Ada's name into the text. Use `{name}` and `{book}` so the ink fills in whoever the reader is.
+
+**Hints (free, in this order):**
+
+1. Where do the two jars go in the sentence? Those spots become `{name}` and `{book}`.
+2. Start with `print(f"Dear ` and type the rest of the sentence. Put `{name}` and `{book}` where the jars go. No `+` signs!
+3. (code example)
+
+```python
+print(f"Dear {name}, ____ is ready for you.")
+```
+
+### Make a Library Card
+
+`r2-q6-library-card`
+
+- **Type:** make
+- **Learning outcome:** Write a program that stores three facts in clearly named variables and prints them as a library card.
+- **CSTA:** 2-AP-11 · **About 10 min**
+- **Goal (as students see it):** Store a name, a book title and a page count in the jars `name`, `book` and `pages`. Print the card, then walk to Madame Quill and make the hero say the card is ready.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+# Store the three facts in jars here.
+
+# Print the card here.
+
+# Walk to Madame Quill and say the card is ready.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+# Store the three facts in jars here.
+name = "Ada"
+book = "The Owl Who Coded"
+pages = 120
+# Print the card here.
+print(f"Name: {name}")
+print(f"Book: {book}")
+print(f"Pages: {pages}")
+# Walk to Madame Quill and say the card is ready.
+hero.move("right", 5)
+hero.say("My card is ready!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *pages-as-text* — `pages` should hold a number you can count, like `120`, with no quotes. With quotes, `"120"` is just text that looks like a number.
+- *typed-into-print* — Your card looks right, but the facts are typed into the print lines. Print the jars instead, like `f"Name: {name}"`, so the card works for every reader.
+- *not-delivered* — The card is perfect! Now deliver it: walk right until you stand next to Madame Quill, then use `hero.say("My card is ready!")`.
+
+**Hints (free, in this order):**
+
+1. Start with the jars. Pick a name, a book title and a page count, like `pages = 120`.
+2. Print each line with an f-string, like `print(f"Book: {book}")`. Then `hero.move("right", 5)` and `hero.say(...)`.
+3. (code example)
+
+```python
+name = "Ada"
+book = "The Owl Who Coded"
+pages = 120
+print(f"Name: {name}")
+print(f"Book: ____")
+print(f"Pages: {pages}")
+hero.move("right", 5)
+hero.say("My card is ready!")
+```
+
+### The Mislabeled Archive 🐛 boss
+
+`r2-boss-mislabeled-archive`
+
+**Boss:** The Mislabeled Archive (Swapsy the Label Moth). Fix the jars, update a record, and print the archive card. Each phase is saved on its own.
+
+#### Phase 1: Unswap the jars
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix variables that hold the wrong values.
+- **CSTA:** 2-AP-11, 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Fix the three jars so each one holds the right value. Don't change the print lines.
+
+**Starter code:**
+
+```python
+title = "Professor Hoot"
+author = "Mysteries"
+shelf = "The Owl Who Coded"
+print("Title: " + title)
+print("Author: " + author)
+print("Shelf: " + shelf)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = "Mysteries"
+print("Title: " + title)
+print("Author: " + author)
+print("Shelf: " + shelf)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *moved-the-labels* — The Scroll might look right, but you moved the print labels, not the values. The jars still hold the wrong things. Fix lines 1 to 3 instead.
+- *some-jars-wrong* — Some jars still hold the wrong value. Check each line of the Scroll against the card.
+
+**Hints (free, in this order):**
+
+1. Read the card Swapsy scrambled. Which value belongs in the `title` jar?
+2. Change only the values in lines 1 to 3. The title is "The Owl Who Coded".
+3. (code example)
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = ____
+```
+
+#### Phase 2: Found it!
+
+- **Type:** modify
+- **Learning outcome:** Use reassignment to update a stored value.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** After the first print, put "found" in the jar `status`, then print the same line again.
+
+**Starter code:**
+
+```python
+title = "The Owl Who Coded"
+status = "missing"
+print(title + " is " + status)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+title = "The Owl Who Coded"
+status = "missing"
+print(title + " is " + status)
+status = "found"
+print(title + " is " + status)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *new-jar* — You made a new jar. Use the same jar instead: `status = "found"` pours out "missing" and puts in "found".
+- *typed-found* — The Scroll says found, but the jar `status` still holds "missing". Store the new value in the jar with `status = "found"`, then print the jar.
+
+**Hints (free, in this order):**
+
+1. The jar `status` needs a new value between the two prints.
+2. Add `status = "found"` after the first print, then copy the print line below it.
+3. (code example)
+
+```python
+print(title + " is " + status)
+status = ____
+print(title + " is " + status)
+```
+
+#### Phase 3: The display card
+
+- **Type:** make
+- **Learning outcome:** Use an f-string to display stored values in a required format.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Print the display card with one print and one f-string that uses all three jars.
+
+**Starter code:**
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = "Mysteries"
+# Print the display card with one f-string:
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = "Mysteries"
+# Print the display card with one f-string:
+print(f"{title} by {author} (shelf: {shelf})")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *missing-f* — The card shows the braces. Put an `f` right before the first quote.
+- *not-fstring* — The card looks right, but it is not an f-string yet. Use `f"{title} by ..."`.
+- *typed-values* — You typed the book's facts into the text. Use `{title}`, `{author}` and `{shelf}` instead.
+
+**Hints (free, in this order):**
+
+1. Which three jars does the card use? Each one becomes a `{jar}` inside the f-string.
+2. Start with `print(f"{title} by ` and keep going. The brackets and the colon are just text.
+3. (code example)
+
+```python
+print(f"{title} by {author} (shelf: ____)")
+```
+
+### The Swap Trick ⭐ side quest
+
+`r2-side1-the-swap-trick`
+
+- **Type:** fill
+- **Learning outcome:** Use a third variable to swap the values of two variables.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Fill the two gaps so the two shelves swap, and no book gets lost.
+
+**Starter code:**
+
+```python
+shelf_a = "Dragons"
+shelf_b = "Poems"
+temp = ____
+shelf_a = shelf_b
+shelf_b = ____
+print("Shelf A: " + shelf_a)
+print("Shelf B: " + shelf_b)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+shelf_a = "Dragons"
+shelf_b = "Poems"
+temp = shelf_a
+shelf_a = shelf_b
+shelf_b = temp
+print("Shelf A: " + shelf_a)
+print("Shelf B: " + shelf_b)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *lost-a-book* — Oh no, both shelves hold the same books now! Once `shelf_a = shelf_b` runs, the old value of `shelf_a` is gone. Keep it safe in `temp` first, with `temp = shelf_a`.
+- *typed-words* — It works for Dragons and Poems, but you typed the words. Use the jars, like `temp = shelf_a`, so the trick works for any two shelves.
+
+**Hints (free, in this order):**
+
+1. Before `shelf_a` gets a new value, where can you keep its old value safe?
+2. The first gap saves Shelf A in the spare jar. The second gap gives Shelf B what you saved.
+3. (code example)
+
+```python
+temp = shelf_a
+shelf_a = shelf_b
+shelf_b = ____
+```
+
+### Knowledge check
+
+1. Which one is a valid variable name? → **gold_coins**. A name can use letters, numbers and `_`, but it can't start with a number, and it can't have spaces or dashes.
+2. What will this print?
+
+```python
+pet = "owl"
+pet = "bat"
+print(pet)
+```
+
+   Answer:
+
+```text
+bat
+```
+
+   The jar holds one thing at a time. The second line pours out "owl" and puts in "bat".
+
+3. What will this print?
+
+```python
+name = "Ada"
+book = "Maps"
+print(f"{name} reads {book}.")
+```
+
+   Answer:
+
+```text
+Ada reads Maps.
+```
+
+   In an f-string, each `{jar}` is replaced by the value inside the jar.
+
+4. What is the difference between `print(name)` and `print("name")`? → **The first shows what is inside the jar `name`. The second shows the word name.**. Without quotes, Python looks inside the jar. With quotes, it's just text.

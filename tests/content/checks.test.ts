@@ -212,11 +212,22 @@ describe('random needs a seed (F-EXE-10)', () => {
 
 describe('pacing summary (F-AUT-11)', () => {
   it('adds up the regions, lessons, quests and minutes that course.yaml turns on', () => {
-    const real = pacing(loadContent());
-    expect(real).toMatchObject({ regions: 1, lessons: 2, quests: 7, sideQuests: 1, skipped: [] });
-    expect(real.minutes).toBeGreaterThan(50);
-    expect(pacingLine(real)).toMatch(/^pacing: 1 region\(s\), 2 lesson\(s\), 7 quest\(s\) and bosses \+ 1 side/);
-    const root = brokenCopy({ 'course.yaml': (t) => t.replace('side_quests: true', 'side_quests: false') });
-    expect(pacing(loadContent(root))).toMatchObject({ sideQuests: 0, quests: 7 });
+    // Only Hearthvale on: every later region gets `enabled: false`.
+    const onlyFirst = (t: string) =>
+      t.replace(/( {2}- id: (?!hearthvale-village)[\w-]+\n)( {4}lessons: \d+)/g, '$1    enabled: false\n$2');
+    const root = brokenCopy({ 'course.yaml': onlyFirst });
+    const first = pacing(loadContent(root));
+    expect(first).toMatchObject({ regions: 1, lessons: 2, quests: 7, sideQuests: 1 });
+    expect(first.skipped).toContain('whispering-library');
+    expect(first.minutes).toBeGreaterThan(50);
+    expect(pacingLine(first)).toMatch(/^pacing: 1 region\(s\), 2 lesson\(s\), 7 quest\(s\) and bosses \+ 1 side/);
+    expect(pacingLine(first)).toContain('left out: whispering-library');
+    const noSide = brokenCopy({
+      'course.yaml': (t) => onlyFirst(t).replace('side_quests: true', 'side_quests: false'),
+    });
+    expect(pacing(loadContent(noSide))).toMatchObject({ sideQuests: 0, quests: 7 });
+    // The whole course counts every region it turns on.
+    const all = pacing(loadContent());
+    expect(all.regions).toBe(loadContent().course!.data.regions.filter((r) => r.enabled).length);
   });
 });

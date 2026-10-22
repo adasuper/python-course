@@ -83,3 +83,32 @@
   definition: Your character in a quest. You control the hero with instructions like hero.move("up").
   example: '`hero.say("Hi!")`'
   related: [instruction]
+# Region 2: Whispering Library
+- term: variable
+  definition: A name for a value, like a labeled jar. You store a value in it with `=`.
+  example: '`gold = 12` stores 12 in a variable named `gold`.'
+  related: [value, assignment]
+- term: value
+  definition: The thing stored in a variable, like a number or a piece of text.
+  example: 'In `pet = "owl"`, the value is `"owl"`.'
+  related: [variable]
+- term: assignment
+  definition: Storing a value in a variable with `=`. Read `=` as "gets".
+  example: '`score = 10` means "score gets 10".'
+  related: [variable, reassign]
+- term: reassign
+  definition: To store a new value in a variable that already has one. The old value is gone.
+  example: |
+    ```python
+    pet = "owl"
+    pet = "bat"
+    ```
+  related: [assignment, variable]
+- term: concatenate
+  definition: To join strings into one longer string with `+`. It never adds spaces for you.
+  example: '`"Find " + "owls"` gives `"Find owls"`.'
+  related: [string]
+- term: f-string
+  definition: A string with an `f` before the first quote. Each `{name}` inside it is replaced by that variable's value.
+  example: '`f"Hi {name}!"` shows `Hi Ada!` when `name` is `"Ada"`.'
+  related: [string, variable]

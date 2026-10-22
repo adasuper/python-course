@@ -91,10 +91,12 @@ export async function solveBody(page: Page, body: Body) {
     .selectOption('instant')
     .catch(() => {});
   if (body.type === 'predict') {
-    for (const prompt of body.prompts ?? []) {
+    // Each prompt in its own fieldset: two prompts may share an option's words.
+    for (const [i, prompt] of (body.prompts ?? []).entries()) {
+      const fieldset = page.locator('.predict fieldset.prompt').nth(i);
       if (prompt.kind === 'mcq')
-        await page.getByRole('radio', { name: prompt.options[prompt.answer]!, exact: true }).first().check();
-      else await page.getByRole('textbox', { name: /Your prediction/ }).fill(prompt.answer);
+        await fieldset.getByRole('radio', { name: prompt.options[prompt.answer]!, exact: true }).check();
+      else await fieldset.getByRole('textbox', { name: /Your prediction/ }).fill(prompt.answer);
     }
     await page.getByRole('button', { name: /Lock in/ }).click();
     await page.getByRole('button', { name: /Run to check/ }).click();
@@ -122,6 +124,13 @@ export async function solveBody(page: Page, body: Body) {
       const indent = (line.length - line.trimStart().length) / 4;
       const placed = page.locator('.parsons-spell .parsons-item').last();
       for (let k = 0; k < indent; k++) await placed.locator('button[title="Indent more"]').click();
+    }
+    await page.getByRole('button', { name: /^▶ Run$/ }).click();
+  } else if (body.type === 'fill') {
+    // Locked lines can't be replaced wholesale: fill each gap, the way a student does.
+    for (const value of gapAnswers(body.starter_code, solutionCode(body))) {
+      await page.getByRole('button', { name: /Next gap/ }).click();
+      await page.keyboard.insertText(value);
     }
     await page.getByRole('button', { name: /^▶ Run$/ }).click();
   } else {
@@ -164,6 +173,21 @@ export async function defeatTheFirstBoss(page: Page) {
     .locator('#feedback')
     .getByRole('button', { name: /Back to the map/ })
     .click();
+}
+
+/** What goes in each `____` gap of a fill quest, read off its solution (same lines, in order). */
+export function gapAnswers(starter: string, solution: string): string[] {
+  const starterLines = starter.split('\n');
+  const solutionLines = solution.split('\n');
+  const answers: string[] = [];
+  starterLines.forEach((line, i) => {
+    if (!line.includes('____')) return;
+    const pattern = new RegExp(`^${line.split('____').map(escape).join('(.*?)')}$`);
+    const match = pattern.exec(solutionLines[i] ?? '');
+    if (!match) throw new Error(`gap line ${i + 1} doesn't line up with the solution`);
+    answers.push(...match.slice(1));
+  });
+  return answers;
 }
 
 function escape(s: string) {

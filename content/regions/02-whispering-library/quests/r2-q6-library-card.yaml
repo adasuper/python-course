@@ -1,0 +1,162 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-q6-library-card
+region: whispering-library
+title: Make a Library Card
+type: make
+npc: quill
+learning_outcome: Write a program that stores three facts in clearly named variables and prints them as a library card.
+csta: [2-AP-11]
+estimated_minutes: 10
+prerequisites: [r2-q5-the-magic-ink]
+vocabulary: [variable, value, f-string, hero]
+
+story_intro: |
+  Madame Quill peers at you over her glasses. "Every reader needs a library card. Make one. Use jars for the facts, so the card maker works for anyone."
+
+  The card must show three facts, each stored in its own [[variable]]: the reader's `name`, the `book`, and the number of `pages` (a number, not text). Print it in this shape, with your own facts:
+  ```text
+  Name: Ada
+  Book: The Owl Who Coded
+  Pages: 120
+  ```
+goal: Store a name, a book title and a page count in the jars `name`, `book` and `pages`. Print the card, then walk to Madame Quill and make the hero say the card is ready.
+concept_card: |
+  Good variable names say what they hold: `pages` is better than `x`. Store each fact once, then use the jar everywhere:
+  ```python
+  name = "Ada"
+  print(f"Name: {name}")
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    #########
+    #H.....N#
+    #########
+  facing: right
+  npcs:
+    N: { sprite: npc_librarian, name: Madame Quill }
+
+starter_code: |
+  from codeweald import hero
+  # Store the three facts in jars here.
+
+  # Print the card here.
+
+  # Walk to Madame Quill and say the card is ready.
+
+solution: |
+  from codeweald import hero
+  # Store the three facts in jars here.
+  name = "Ada"
+  book = "The Owl Who Coded"
+  pages = 120
+  # Print the card here.
+  print(f"Name: {name}")
+  print(f"Book: {book}")
+  print(f"Pages: {pages}")
+  # Walk to Madame Quill and say the card is ready.
+  hero.move("right", 5)
+  hero.say("My card is ready!")
+
+validators:
+  - id: card-shape
+    type: output
+    match: regex
+    expect_regex: "Name: .+\\nBook: .+\\nPages: \\d+"
+    fail_hint: Print three lines that start with "Name:", "Book:" and "Pages:".
+  - id: name-jar
+    type: variable
+    name: name
+    value_type: str
+    fail_hint: Store the reader's name, as text, in a jar named `name`.
+  - id: book-jar
+    type: variable
+    name: book
+    value_type: str
+    fail_hint: Store the book's title, as text, in a jar named `book`.
+  - id: pages-jar
+    type: variable
+    name: pages
+    value_type: int
+    fail_hint: Store the page count as a number, with no quotes, in a jar named `pages`.
+  - id: from-jars
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - vars: { name: Zed, book: Moonlight Maps, pages: 7 }
+    fail_hint: Print the jars, not the words, so the card works for any reader.
+  - id: delivered
+    type: state
+    hero_at: [6, 1]
+    said_contains: ready
+    fail_hint: Walk to the tile next to Madame Quill and make the hero say the card is ready.
+
+common_mistakes:
+  - id: pages-as-text
+    detect: { kind: validator_failed, id: pages-jar }
+    feedback: >-
+      `pages` should hold a number you can count, like `120`, with no quotes. With quotes,
+      `"120"` is just text that looks like a number.
+  - id: typed-into-print
+    detect: { kind: hidden_case_fails, validator: from-jars, case: 0 }
+    feedback: >-
+      Your card looks right, but the facts are typed into the print lines. Print the jars instead,
+      like `f"Name: {name}"`, so the card works for every reader.
+  - id: not-delivered
+    detect: { kind: validator_failed, id: delivered }
+    feedback: >-
+      The card is perfect! Now deliver it: walk right until you stand next to Madame Quill, then use
+      `hero.say("My card is ready!")`.
+
+wrong_solutions:
+  - expect_mistake: pages-as-text
+    code: |
+      from codeweald import hero
+      name = "Ada"
+      book = "The Owl Who Coded"
+      pages = "120"
+      print(f"Name: {name}")
+      print(f"Book: {book}")
+      print(f"Pages: {pages}")
+      hero.move("right", 5)
+      hero.say("My card is ready!")
+  - expect_mistake: typed-into-print
+    code: |
+      from codeweald import hero
+      name = "Ada"
+      book = "The Owl Who Coded"
+      pages = 120
+      print("Name: Ada")
+      print("Book: The Owl Who Coded")
+      print("Pages: 120")
+      hero.move("right", 5)
+      hero.say("My card is ready!")
+  - expect_mistake: not-delivered
+    code: |
+      from codeweald import hero
+      name = "Ada"
+      book = "The Owl Who Coded"
+      pages = 120
+      print(f"Name: {name}")
+      print(f"Book: {book}")
+      print(f"Pages: {pages}")
+
+hints:
+  - Start with the jars. Pick a name, a book title and a page count, like `pages = 120`.
+  - "Print each line with an f-string, like `print(f\"Book: {book}\")`. Then `hero.move(\"right\", 5)` and `hero.say(...)`."
+  - |
+    ```python
+    name = "Ada"
+    book = "The Owl Who Coded"
+    pages = 120
+    print(f"Name: {name}")
+    print(f"Book: ____")
+    print(f"Pages: {pages}")
+    hero.move("right", 5)
+    hero.say("My card is ready!")
+    ```
+
+story_outro: |
+  Madame Quill stamps your card with a satisfying THUNK. "Name, book, pages. All in jars. You may borrow anything you like." She almost smiles.

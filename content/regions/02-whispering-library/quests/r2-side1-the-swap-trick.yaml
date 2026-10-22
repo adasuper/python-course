@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-side1-the-swap-trick
+region: whispering-library
+title: The Swap Trick
+type: fill
+side_quest: true
+learning_outcome: Use a third variable to swap the values of two variables.
+csta: [2-AP-11]
+estimated_minutes: 7
+vocabulary: [variable, value, assignment]
+locked: true
+
+story_intro: |
+  A note on the Quest Board says: *"HELP! The Dragons books are on the Poems shelf, and the Poems books are on the Dragons shelf. Please swap them. Do NOT lose any books. — Tobin"*
+
+  Swapping two jars is tricky. If you pour jar B into jar A, whatever was in A is gone forever! The trick: first pour A into a spare jar called `temp`.
+goal: Fill the two gaps so the two shelves swap, and no book gets lost.
+concept_card: |
+  To swap two jars, use a third one:
+  ```python
+  temp = a   # keep a safe
+  a = b      # a gets b
+  b = temp   # b gets the old a
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_shelver, name: Tobin Turnpage }
+
+starter_code: |
+  shelf_a = "Dragons"
+  shelf_b = "Poems"
+  temp = ____
+  shelf_a = shelf_b
+  shelf_b = ____
+  print("Shelf A: " + shelf_a)
+  print("Shelf B: " + shelf_b)
+
+solution: |
+  shelf_a = "Dragons"
+  shelf_b = "Poems"
+  temp = shelf_a
+  shelf_a = shelf_b
+  shelf_b = temp
+  print("Shelf A: " + shelf_a)
+  print("Shelf B: " + shelf_b)
+
+validators:
+  - id: swapped
+    type: output
+    expect: |
+      Shelf A: Poems
+      Shelf B: Dragons
+    fail_hint: Shelf A should now hold Poems, and Shelf B should hold Dragons.
+  - id: any-books
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - vars: { shelf_a: Maps, shelf_b: Songs }
+    fail_hint: Use the jars, not the words, so the trick works for any two shelves.
+
+common_mistakes:
+  - id: lost-a-book
+    detect: { kind: output_regex, pattern: "Shelf A: (\\w+)\\nShelf B: \\1$" }
+    feedback: >-
+      Oh no, both shelves hold the same books now! Once `shelf_a = shelf_b` runs, the old value of
+      `shelf_a` is gone. Keep it safe in `temp` first, with `temp = shelf_a`.
+  - id: typed-words
+    detect: { kind: hidden_case_fails, validator: any-books, case: 0 }
+    feedback: >-
+      It works for Dragons and Poems, but you typed the words. Use the jars, like `temp = shelf_a`,
+      so the trick works for any two shelves.
+
+wrong_solutions:
+  - expect_mistake: lost-a-book
+    code: |
+      shelf_a = "Dragons"
+      shelf_b = "Poems"
+      temp = shelf_b
+      shelf_a = shelf_b
+      shelf_b = temp
+      print("Shelf A: " + shelf_a)
+      print("Shelf B: " + shelf_b)
+  - expect_mistake: typed-words
+    code: |
+      shelf_a = "Dragons"
+      shelf_b = "Poems"
+      temp = "Dragons"
+      shelf_a = shelf_b
+      shelf_b = temp
+      print("Shelf A: " + shelf_a)
+      print("Shelf B: " + shelf_b)
+
+hints:
+  - Before `shelf_a` gets a new value, where can you keep its old value safe?
+  - The first gap saves Shelf A in the spare jar. The second gap gives Shelf B what you saved.
+  - |
+    ```python
+    temp = shelf_a
+    shelf_a = shelf_b
+    shelf_b = ____
+    ```
+
+story_outro: |
+  Dragons on the Dragons shelf, Poems on the Poems shelf, and not a single book lost. Tobin cheers so loudly that three books shush him.

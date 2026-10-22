@@ -61,7 +61,7 @@ export function WorldMapScreen() {
                 type="button"
                 class="small"
                 disabled={r.status === 'locked' || r.here}
-                aria-label={t.worldMap.travelTo(r.name)}
+                aria-label={r.here ? undefined : t.worldMap.travelTo(r.name)}
                 onClick={() => void enterRegion(r.id)}
               >
                 {r.here ? t.worldMap.here : t.worldMap.travel}

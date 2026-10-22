@@ -1,8 +1,59 @@
 # Progress
 
-## Current phase: 3 — Regions 2–6 (next)
+## Current phase: 3 — Regions 2–6 (in progress)
 
 Phase 2 (core loop polish) is done: see "Phase 2 — Core loop polish ✅" below.
+
+### Phase 3 milestones
+
+| Milestone | Status |
+|---|---|
+| M3.0 Groundwork: world map, travel, Phase 3 mechanics | ✅ Done |
+| M3.1 Region 2: Whispering Library | ✅ Done |
+| M3.2 Region 3: Merchant's Crossing | In progress |
+| M3.3 Region 4: Forked Road Forest | In progress |
+| M3.4 Region 5: The Endless Mines | In progress |
+| M3.5 Region 6: Clocktower Peaks | In progress |
+| M3.6 World map polish, badges, reading-level pass, final check | — |
+
+### Done in Phase 3
+
+#### M3.0 Groundwork
+
+- **World map** (F-WLD-08): every region, Restored, Open or Locked in words and icons, with a
+  road picture. **Travel** opens the next region (its intro and concept scene the first time).
+  Reach it from the HUD, a map exit, or the "boss defeated" feedback.
+- **Course length** (F-AUT-11): regions left out with `enabled: false` are skipped in gating,
+  and `npm run content` prints a pacing summary (regions, lessons, quests, side quests,
+  minutes).
+- **NPCs hand over answers** (F-EXE-12): an `input()` answer from the quest's queue appears in
+  a speech bubble over the first named character on stage, and the narration says "The
+  merchant says: 5".
+- **Runaway `while` loops** (Region 5): the message names the variable the condition reads
+  that nothing in the loop changes.
+- **The tapestry** (Region 6): `stage: { kind: none, view: tapestry }` shows printed patterns
+  on a loom.
+- **Explorer badges:** content checks require a Region Restorer badge for every region and an
+  Explorer badge for every region with secret corners. Hearthvale's Explorer badge is new.
+- **For region authors:** each region's art lives in its own file (`src/art/regions/rN.ts`),
+  dev routes open any region's concept scene or map (`/?dev#/dev/concept/<id>`,
+  `/?dev#/dev/region/<id>`), and `CODEWEALD_PORT` lets several checkouts run E2E tests at once.
+
+#### M3.1 Region 2: Whispering Library
+
+- The library map (wood floors, bookshelves, a reading rug), 8 characters including Madame
+  Quill, and Swapsy the Label Moth.
+- Concept scene "What is a variable?" (the labeled jar), 6 quests (predict, investigate,
+  fix, fill, modify, make), the 3-phase boss "The Mislabeled Archive", the side quest "The
+  Swap Trick", and a 4-item knowledge check, all following the curriculum map.
+- Items: Jar of Labels and Ink of Formatting. 6 new glossary words (variable, value,
+  assignment, reassign, concatenate, f-string). Restorer and Explorer badges.
+- Hidden tests make sure students use their variables, not typed-in words; targeted feedback
+  for the classic slips ("Findthe" spaces, `print("book")` vs `print(book)`, a missing `f`,
+  swapping without a spare jar).
+- E2E: the concept scene, the map, every quest with its reference solution, the boss, the
+  knowledge check, and the road from Hearthvale on the world map, with axe on the map, a
+  quest and the world map.
 
 **Live site:** <https://adasuper.github.io/python-course/> (deployed from `main`).
 

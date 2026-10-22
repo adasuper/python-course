@@ -33,7 +33,10 @@ test('Spellbook pages fill up as quests are done, and work by keyboard', async (
   await page.getByRole('tab', { name: 'Worked examples' }).click();
   await expect(panel.locator('.code-block')).not.toHaveCount(0);
   await page.getByRole('tab', { name: 'Concept scenes' }).click();
-  await panel.getByRole('button', { name: /Watch again/ }).click();
+  await panel
+    .locator('li', { hasText: 'Hearthvale Village' })
+    .getByRole('button', { name: /Watch again/ })
+    .click();
   await expect(page.locator('.concept-screen')).toBeVisible();
 
   // The glossary: A–Z, search, and words not met yet.

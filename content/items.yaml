@@ -23,3 +23,21 @@
   example: |
     print("Hi)
     # SyntaxError on line 1: the quote never closed.
+# Region 2: Whispering Library
+- id: jar-of-labels
+  name: Jar of Labels
+  icon: jar
+  region: whispering-library
+  description: "A [[variable]] is a name for a value. `=` puts a value in the jar, and a new value replaces the old one."
+  example: |
+    shelf = "Mysteries"
+    shelf = "Dragons"
+    print(shelf)   # Dragons
+- id: ink-of-formatting
+  name: Ink of Formatting
+  icon: inkwell
+  region: whispering-library
+  description: "An [[f-string]], like `f\"Hi {name}\"`, puts a variable's value inside text."
+  example: |
+    name = "Ada"
+    print(f"Hi {name}!")

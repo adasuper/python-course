@@ -61,7 +61,7 @@ overworld:
     - { kind: poi, id: mill-meadow, at: [28, 1] }
     - { kind: poi, id: chicken-corner, at: [1, 18] }
     - { kind: poi, id: river-nook, at: [28, 18] }
-    - { kind: exit, at: [13, 19], text: "The road to the Whispering Library. (Coming soon!)" }
+    - { kind: exit, at: [13, 19], text: "The road to the Whispering Library." }
 
 npcs:
   byte:

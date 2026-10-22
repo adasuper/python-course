@@ -48,3 +48,13 @@
   emoji: 🧭
   description: You found every secret corner of Hearthvale.
   trigger: { kind: pois_visited, region: hearthvale-village }
+- id: restorer-whispering-library
+  name: "Region Restorer: Whispering Library"
+  emoji: 📚
+  description: You beat Swapsy the Label Moth and put every label back.
+  trigger: { kind: boss_defeated, region: whispering-library }
+- id: explorer-whispering-library
+  name: "Explorer: Whispering Library"
+  emoji: 🧭
+  description: You found all the secret spots in the library.
+  trigger: { kind: pois_visited, region: whispering-library }

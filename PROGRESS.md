@@ -2,6 +2,8 @@
 
 ## Current phase: 1 — Vertical slice ✅ (ready for review)
 
+**Live site:** <https://adasuper.github.io/python-course/> (deployed from `main`).
+
 ### How to try the demo
 
 You need Node.js 22 or newer.
@@ -121,10 +123,6 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 
 ### Known issues
 
-- **Deploys need GitHub Pages turned on:** Settings → Pages → Source: "GitHub Actions".
-  Until then, runs on `main` skip the deploy job with a warning.
-- **Old branch:** `claude/new-session-aahe56` is still the repository's default branch, so
-  GitHub won't delete it. Make `main` the default branch, then delete the old one.
 - **Art direction:** this is the first look. Please react to the mood and palette (Q6).
 - **Narrow screens:** the quest screen stacks its panels vertically below 1100 px wide.
   Tabs are planned for Phase 2.

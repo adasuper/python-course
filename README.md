@@ -19,8 +19,9 @@ grades 6–8.
 
 ## Status
 
-**Phase 1 — vertical slice.** Region 1 (Hearthvale Village) is playable end to end. See
-[PROGRESS.md](PROGRESS.md) for what's done, what's next and known issues.
+**Phase 1 — vertical slice.** Region 1 (Hearthvale Village) is playable end to end. Play
+it at <https://adasuper.github.io/python-course/>. See [PROGRESS.md](PROGRESS.md) for
+what's done, what's next and known issues.
 
 ## Try the demo
 

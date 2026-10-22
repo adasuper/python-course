@@ -418,7 +418,9 @@ A "show all output now" button skips ahead. Output is capped by `maxOutputChars`
 
 Each run gets a seed (random per run, or fixed per quest via `seed:`). The same seed, code
 and inputs always give the same result. This is required for replay-on-input and for stable
-hidden tests. Quests that use `random` (Region 11) test with several fixed seeds.
+hidden tests. Quests that use `random` (Region 11) test with several fixed seeds. Answering
+`input()` questions re-runs with the same seed. `validate-content` asks a quest whose code
+uses `random` for a `seed:`, unless it has `hidden_tests` with `mode: seed`.
 
 ### 6.8 Error translation
 

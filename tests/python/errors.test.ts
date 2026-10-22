@@ -18,6 +18,9 @@ const DEEP =
 // One fixture per classifier row in docs/specs.md §6.8, pinned to Python 3.14 messages.
 const CASES: [string, string, Record<string, string>?, number?][] = [
   ['print("Hear ye!)', 'syntax.unclosed_string', {}, 1],
+  ['note = """Dear baker,\nPlease bake bread.', 'syntax.unclosed_string', {}, 1],
+  ['shelf = [1, 2, 3', 'syntax.unclosed_bracket', { bracket: '[', closer: ']' }, 1],
+  ['jar = {"gold": 3', 'syntax.unclosed_bracket', { bracket: '{', closer: '}' }, 1],
   ['print("Market at noon!"', 'syntax.unclosed_bracket', { bracket: '(', closer: ')' }, 1],
   ['print("hi"))', 'syntax.extra_bracket'],
   ['print "hi"', 'syntax.print_no_parens'],
@@ -41,6 +44,7 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['print(5 + "a")', 'type.number_plus_str'],
   ['for i in range("5"):\n    pass', 'type.str_as_int'],
   ['def f(a):\n    return a\nf(1, 2)', 'type.arg_count'],
+  ['def heal(hp, bonus):\n    return hp + bonus\nheal(5)', 'type.arg_count'],
   ['x = None\nprint(x + 1)', 'type.none_value'],
   ['x = 5\nx()', 'type.not_callable', { what: 'int' }],
   ['print([1, 2][5])', 'index.out_of_range', { name: '[1, 2]', length: '2', last: '1', index: '5' }],

@@ -464,3 +464,163 @@ describe('mistake detectors', () => {
     expect(DETECTOR_NAMES).toHaveLength(15);
   });
 });
+
+// Every validator field, not just every validator type (Phase 2 audit).
+describe('validator fields', () => {
+  const treasure = {
+    kind: 'grid' as const,
+    grid: 'Hg$C',
+    chests: { C: { code: '42', loot: ['crown'] } },
+  };
+  const loot =
+    'from codeweald import hero\nhero.move("right")\nhero.pick_up()\nhero.move("right")\nhero.pick_up()\n' +
+    'hero.open_chest(42)\nhero.say("Mine!")\nhero.say("All mine!")';
+
+  it('output: normalize options and a fuzzy threshold', () => {
+    const out = (code: string, spec: Record<string, unknown>) =>
+      check(code, [{ type: 'output', ...spec } as ValidatorSpec]).passed;
+    expect(out('print("HELLO, World!")', { expect: 'hello world', normalize: ['case', 'punctuation'] })).toBe(
+      true,
+    );
+    expect(out('print("HELLO, World!")', { expect: 'hello world' })).toBe(false);
+    expect(out('print("a    b")', { expect: 'a b', normalize: ['spaces'] })).toBe(true);
+    expect(
+      out('print("GOLD: 7")', { match: 'regex', expect_regex: '^gold: \\d$', normalize: ['case'] }),
+    ).toBe(true);
+    expect(
+      out('print("helo hearthvale")', { match: 'fuzzy', expect: 'Hello, Hearthvale!', threshold: 0.99 }),
+    ).toBe(false);
+    expect(
+      out('print("helo hearthvale")', { match: 'fuzzy', expect: 'Hello, Hearthvale!', threshold: 0.8 }),
+    ).toBe(true);
+  });
+
+  it('state: items, item counts, chests, exact speech, position, facing and visited tiles', () => {
+    const state = (spec: Record<string, unknown>) =>
+      check(loot, [{ type: 'state', ...spec } as ValidatorSpec], [], { stage: treasure }).passed;
+    expect(state({ has_items: ['gem', 'crown'] })).toBe(true);
+    expect(state({ has_items: ['key'] })).toBe(false);
+    expect(state({ items_count: { gem: 1, coin: 1 } })).toBe(true);
+    expect(state({ items_count: { gem: 2 } })).toBe(false);
+    expect(state({ chests_opened: 1 })).toBe(true);
+    expect(state({ chests_opened: ['C'] })).toBe(true);
+    expect(state({ chests_opened: 2 })).toBe(false);
+    expect(state({ said_exact: ['Mine!', 'All mine!'] })).toBe(true);
+    expect(state({ said_exact: ['Mine!'] })).toBe(false);
+    expect(state({ hero_at: [2, 0], facing: 'right', visited: [[1, 0]] })).toBe(true);
+    expect(state({ visited: [[3, 0]] })).toBe(false);
+  });
+
+  it('variable: matches', () => {
+    expect(
+      check('name = "Ada the Bold"', [{ type: 'variable', name: 'name', matches: 'Bold$' }]).passed,
+    ).toBe(true);
+    expect(check('name = 7', [{ type: 'variable', name: 'name', matches: '7' }]).passed).toBe(false);
+  });
+
+  it('ast: forbid, require_calls, and a function with its parameters and return', () => {
+    const fn = 'def heal(hp, bonus):\n    return hp + bonus\nprint(heal(1, 2))';
+    expect(check(fn, [{ type: 'ast', forbid: ['While'], require_calls: ['heal', 'print'] }]).passed).toBe(
+      true,
+    );
+    expect(check('while False:\n    pass', [{ type: 'ast', forbid: ['While'] }]).passed).toBe(false);
+    expect(check('print(1)', [{ type: 'ast', require_calls: ['input'] }]).passed).toBe(false);
+    const shape = { name: 'heal', params: 2, returns: true };
+    expect(check(fn, [{ type: 'ast', function: shape }]).passed).toBe(true);
+    expect(check('def heal(hp):\n    return hp', [{ type: 'ast', function: shape }]).passed).toBe(false);
+    expect(check('def heal(hp, b):\n    print(hp)', [{ type: 'ast', function: shape }]).passed).toBe(false);
+    expect(check('print(1)', [{ type: 'ast', function: shape }]).passed).toBe(false);
+  });
+
+  it('style: max_line_length', () => {
+    expect(check('print("short")', [{ type: 'style', max_line_length: 20 }]).passed).toBe(true);
+    expect(check(`print("${'x'.repeat(30)}")`, [{ type: 'style', max_line_length: 20 }]).passed).toBe(false);
+  });
+
+  it('hidden tests: mode seed, and comparing speech and variables', () => {
+    const roll =
+      'import random\nroll = random.randint(1, 6)\nfrom codeweald import hero\nhero.say(f"Rolled {roll}")';
+    const spec: ValidatorSpec = {
+      type: 'hidden_tests',
+      mode: 'seed',
+      compare: ['said', 'vars:roll'],
+      cases: [{ seed: 1 }, { seed: 2 }, { seed: 3 }],
+    };
+    const stage = { kind: 'npc' as const };
+    const baked = py.bake({ code: roll, validators: [spec], stage }).validators!;
+    const expected = (baked[0] as unknown as { cases: { expect: Record<string, unknown> }[] }).cases;
+    expect(expected.map((c) => c.expect['said'])).toEqual(
+      expected.map((c) => [`Rolled ${c.expect['vars:roll'] as number}`]),
+    );
+    expect(check(roll, baked, [], { stage }).passed).toBe(true);
+    // Always saying the same number fails at least one seed.
+    expect(check(roll.replace('random.randint(1, 6)', '4'), baked, [], { stage }).passed).toBe(false);
+  });
+
+  it('mistakes: a custom detect(ctx) and validator_failed', () => {
+    const mistakes: MistakeSpec[] = [
+      {
+        id: 'shouting',
+        detect: { kind: 'custom', python: 'def detect(ctx):\n    return ctx.output.isupper()' },
+        feedback: 'No need to shout.',
+      },
+      { id: 'no-hi', detect: { kind: 'validator_failed', id: 'hi' }, feedback: 'Say hi first.' },
+    ];
+    const hi: ValidatorSpec = { type: 'output', id: 'hi', match: 'contains', expect: 'hi' };
+    expect(check('print("BYE")', [hi], mistakes).feedback).toMatchObject({ id: 'shouting' });
+    expect(check('print("bye")', [hi], mistakes).feedback).toMatchObject({
+      id: 'no-hi',
+      text: 'Say hi first.',
+    });
+  });
+
+  it('custom checks get .source .tree .output .lines .vars .world .run() and .call()', () => {
+    const python = [
+      'def check(ctx):',
+      '    if "def heal" not in ctx.source or ctx.tree is None:',
+      '        return Fail("source")',
+      '    if ctx.lines != ["ready"] or ctx.vars["base"] != 5:',
+      '        return Fail("output or vars")',
+      '    if ctx.world.get("said") != ["Hi"]:',
+      '        return Fail("world")',
+      '    if ctx.run(vars={"base": 7}).vars["base"] != 7:',
+      '        return Fail("run")',
+      '    got = ctx.call("heal", 3)',
+      '    if got["returns"] != 13 or got["output"] != "healing":',
+      '        return Fail("call")',
+      '    if ctx.call("missing")["error"] != "missing_function":',
+      '        return Fail("missing")',
+      '    return Pass()',
+    ].join('\n');
+    const code =
+      'from codeweald import hero\nbase = 5\ndef heal(hp):\n    print("healing")\n    return hp + base * 2\n' +
+      'hero.say("Hi")\nprint("ready")';
+    const v = check(code, [{ type: 'custom', python }], [], { stage: { kind: 'npc' } });
+    expect(v.feedback).toEqual({ source: 'success' });
+  });
+});
+
+// F-EXE-10: the same code, seed and inputs always give the same action log.
+describe('determinism', () => {
+  const code =
+    'import random, time\nfrom codeweald import hero\nname = input("Name? ")\n' +
+    'for i in range(3):\n    time.sleep(1)\n    hero.move(random.choice(["right", "down"]))\n' +
+    '    hero.say(f"{name} {random.randint(1, 100)} {time.time()}")';
+  const stage = { kind: 'grid' as const, grid: 'H...\n....\n....\n....' };
+  const run = (seed: number, inputs: string[]) => py.run({ code, stage, seed, inputs });
+
+  it('repeats the exact action log for the same seed and inputs', () => {
+    const a = run(7, ['Ada']);
+    const b = run(7, ['Ada']);
+    expect(a.error).toBeNull();
+    expect(b.actions).toEqual(a.actions);
+    expect(b.output).toEqual(a.output);
+  });
+
+  it('changes with the seed or the inputs', () => {
+    const base = JSON.stringify(run(7, ['Ada']).actions);
+    const seeds = [1, 2, 3, 4].map((s) => JSON.stringify(run(s, ['Ada']).actions));
+    expect(seeds.some((s) => s !== base)).toBe(true);
+    expect(JSON.stringify(run(7, ['Bo']).actions)).not.toBe(base);
+  });
+});

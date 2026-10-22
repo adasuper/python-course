@@ -199,3 +199,12 @@ describe('the Quest Board and map NPCs (F-WLD-07)', () => {
     expect(npc?.line).toBe(lineOf(root, q2, 'npc: baker'));
   });
 });
+
+describe('random needs a seed (F-EXE-10)', () => {
+  it('asks a quest whose code uses random for seed:', () => {
+    const q6 = `${R1}/quests/r1-q6-welcome-sign.yaml`;
+    const root = brokenCopy({ [q6]: (t) => t.replace(/^solution: \|\n/m, 'solution: |\n  import random\n') });
+    const problems = crossCheck(loadContent(root), root);
+    expect(problems.find((p) => /the code uses random: add `seed:`/.test(p.message))).toBeDefined();
+  });
+});

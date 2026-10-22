@@ -52,7 +52,8 @@ export interface QuestBody {
   interactiveInput: boolean;
   /** Record line coverage, for branch_coverage. */
   trackCoverage: boolean;
-  seed: number;
+  /** A fixed seed for `random` and the virtual clock, or null for a new one every run (§6.7). */
+  seed: number | null;
   prompts: PredictPrompt[] | null;
   questions: InvestigateQuestion[] | null;
   parsons: ParsonsSpec | null;

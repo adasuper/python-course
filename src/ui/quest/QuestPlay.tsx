@@ -231,7 +231,8 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
       stage: body.stage,
       inputs: asking ? [] : body.inputs,
       interactiveInput: asking,
-      seed: body.seed,
+      // A fixed seed, or a new one every Run; answering input() questions keeps it (§6.7).
+      seed: body.seed ?? Math.floor(Math.random() * 2 ** 31),
       validators: checks ? body.validators : [],
       mistakes: checks ? body.mistakes : [],
       bonus: checks ? body.bonus : [],

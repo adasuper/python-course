@@ -70,6 +70,20 @@ class Ctx:
         )
 
 
+    def call(self, name, *args):
+        """Call one of the student's functions in a fresh run of the program.
+
+        Returns {"returns", "output", "error"}: the return value (as JSON-friendly data), what
+        the call printed, and a friendly-error key (or "missing_function") when it failed.
+        """
+        run = self.run()
+        if run.error:
+            return {"returns": None, "output": "", "error": run.error["key"]}
+        if not callable(run.vars.get(name)):
+            return {"returns": None, "output": "", "error": "missing_function"}
+        return execute_call(run, name, list(args))
+
+
 class MissingVariable(Exception):
     pass
 

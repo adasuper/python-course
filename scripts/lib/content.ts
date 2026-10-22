@@ -410,6 +410,18 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
       add(unit.file, `${where}: a fill quest's starter_code needs at least one ____ gap`, at('starter_code'));
     if (b.locked && b.type !== 'fill')
       add(unit.file, `${where}: locked: true only works in fill quests`, at('locked'));
+    // Without `seed:` every run gets a new random seed (§6.7), so a quest that uses random
+    // must fix one, or check several with hidden_tests mode: seed.
+    const usesRandom = /^\s*(import\s+random\b|from\s+random\s+import)/m.test(
+      `${b.starter_code}\n${b.solution ?? ''}`,
+    );
+    const seedTests = b.validators.some((v) => v.type === 'hidden_tests' && v.mode === 'seed');
+    if (usesRandom && b.seed === undefined && !seedTests)
+      add(
+        unit.file,
+        `${where}: the code uses random: add \`seed:\` so every run gives the same result, or test several seeds with hidden_tests mode: seed`,
+        at('type'),
+      );
     if (b.parsons) {
       const n = b.parsons.lines.length;
       b.parsons.alternatives.forEach((alt, i) => {
@@ -567,7 +579,7 @@ export function compileBody(body: Body, baked?: ValidatorSpec[]): QuestBody {
     inputs: body.inputs,
     interactiveInput: body.interactive_input,
     trackCoverage: body.track_coverage || body.validators.some((v) => v.type === 'branch_coverage'),
-    seed: body.seed ?? 0,
+    seed: body.seed ?? null,
     prompts: body.prompts
       ? body.prompts.map((p) => {
           const twin = p.twin

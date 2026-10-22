@@ -26,12 +26,14 @@ env:
   # repository variable SITE_BASE_PATH to "/" when using a custom domain.
   CODEWEALD_BASE: ${{ vars.SITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}
 
+# Every job runs on Ubuntu 24.04: Playwright 1.56 can't install Chromium on the newer
+# ubuntu-latest image (26.04). Move on together with a Playwright upgrade.
 jobs:
   # ----- Stage 1: Build -------------------------------------------------------------------
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -52,7 +54,7 @@ jobs:
 
   checks:
     name: Lint and format
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - uses: actions/checkout@v7
@@ -67,7 +69,7 @@ jobs:
 
   unit:
     name: Unit, Python and content tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - uses: actions/checkout@v7
@@ -85,7 +87,7 @@ jobs:
 
   e2e:
     name: End-to-end and accessibility tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - uses: actions/checkout@v7
@@ -111,7 +113,7 @@ jobs:
 
   reading-level:
     name: Reading level
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - uses: actions/checkout@v7
@@ -136,7 +138,7 @@ jobs:
 
   pages:
     name: Check GitHub Pages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [checks, unit, e2e, reading-level]
     # Deploy only from main: pushes to it, or a manual run on it. Never from other branches
     # or pull requests.
@@ -162,7 +164,7 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: pages
     if: needs.pages.outputs.enabled == 'true' && github.ref == 'refs/heads/main'
     permissions:

@@ -537,7 +537,7 @@ So list the most specific mistakes first. Ways to detect a mistake:
 |---|---|---|
 | `error` | `key` (like `syntax.missing_colon`), `type` (like `NameError`), `message_regex` | the program crashed with that error |
 | `code_regex` | `pattern`, `ignore_comments` | the code matches |
-| `output_regex` | `pattern`, `expect: present` (default) or `absent` | the output matches, or doesn't |
+| `output_regex` | `pattern`, `expect: present` (default) or `absent` | the output matches, or doesn't (`absent` never fires when the program crashed: the error explains it) |
 | `validator_failed` | `id` | that validator failed |
 | `hidden_case_fails` | `validator`, `case` | that hidden case failed (0-based) |
 | `state` | `min_bonks`, `hero_at` | the hero bumped into walls, or ended there |
@@ -682,7 +682,8 @@ Great Script", which plays the `finale` story.
   answers are proven), and `fragment` (the Script Fragment the boss gives back).
 
 **course.yaml** lists the regions in order (`enabled: false` leaves one out; `lessons` sets
-the pacing), the `opening` and `finale` stories, and `side_quests: true/false`.
+the pacing), the `opening` and `finale` stories, `side_quests: true/false`, and
+`more_regions_coming: true` while later regions are still being written (no finale yet).
 `npm run content` prints the pacing summary.
 
 **items.yaml**: `{ id, name, icon, region, description, example }`. **glossary.yaml**: `{ term,

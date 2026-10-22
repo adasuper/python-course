@@ -64,6 +64,8 @@ export const t = {
     travelTo: (name: string) => `Travel to ${name}`,
     needs: (previous: string) => `Defeat the Bug of ${previous} to open the road.`,
     progress: (done: number, total: number) => `${done} of ${total} quests done.`,
+    moreComing: 'The road goes on: more regions are on the way.',
+    allSoFar: 'You restored every region so far! More regions are on the way.',
     open: 'World map',
   },
   offline: {

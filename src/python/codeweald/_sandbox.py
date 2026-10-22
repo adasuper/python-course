@@ -190,7 +190,9 @@ def make_builtins(env):
         env.flush()
         if env.inputs:
             value = str(env.inputs.pop(0))
-            source = "queue"
+            # In a run where the player types the answers (Mode B), every answer so far was
+            # typed by them and is fed back from the top; nobody on stage "hands it over".
+            source = "player" if env.interactive else "queue"
         elif env.interactive:
             raise NeedInput(prompt)
         else:

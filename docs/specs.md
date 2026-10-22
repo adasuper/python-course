@@ -712,7 +712,7 @@ The solution itself never ships in the app; instructors read it in the generated
 | `detector` (named, AST-based, from a library) | `{ kind: detector, name: printed_not_stored, var: gold }` |
 | `validator_failed` | `{ kind: validator_failed, id: boundary }` |
 | `hidden_case_fails` | `{ kind: hidden_case_fails, validator: cases, case: 0 }` |
-| `output_regex` | `{ kind: output_regex, pattern: '^Gold: \d+$', expect: absent }` |
+| `output_regex` | `{ kind: output_regex, pattern: '^Gold: \d+$', expect: absent }` (`absent` doesn't fire when the program crashed) |
 | `state` | `{ kind: state, min_bonks: 1 }` |
 | `custom` | `{ kind: custom, python: "def detect(ctx): ..." }` |
 
@@ -1144,7 +1144,8 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 ### 11.1a The finale
 
 When every region in `course.yaml` is restored, the last boss's feedback offers **Restore the
-Great Script**. The `finale` lines from `course.yaml` play as a story, then the **Finale**
+Great Script**. While the course is still growing (`more_regions_coming: true` in course.yaml),
+there is no finale yet: the world map and the last boss say that more regions are on the way. The `finale` lines from `course.yaml` play as a story, then the **Finale**
 screen shows:
 
 - the Script Fragments restored, one per region;

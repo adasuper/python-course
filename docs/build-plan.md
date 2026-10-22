@@ -125,10 +125,10 @@ Content plus the mechanics these regions introduce:
 
 **Exit criteria:**
 
-- [ ] Content tests green for Regions 1–6.
-- [ ] Cross-cutting checks pass: a fix quest in every region, retrieval quests in Regions 3–6, knowledge checks with 3–5 items.
-- [ ] E2E smoke per region: open the concept scene, play one quest per type, defeat the boss using solutions.
-- [ ] Reading-level report: no core text above grade 7 without a documented reason.
+- [x] Content tests green for Regions 1–6.
+- [x] Cross-cutting checks pass: a fix quest in every region, retrieval quests in Regions 3–6, knowledge checks with 3–5 items.
+- [x] E2E smoke per region: open the concept scene, play one quest per type, defeat the boss using solutions.
+- [x] Reading-level report: no core text above grade 7 without a documented reason.
 
 ---
 

@@ -356,6 +356,21 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
         `region "${r.id}" has secret corners, so it needs an Explorer badge (trigger pois_visited)`,
       );
   }
+  // Speakers are looked up across every loaded region, so a character id used in two regions
+  // must be the same character (like Byte).
+  const characters = new Map<string, { region: string; name: string; sprite: string }>();
+  for (const region of content.regions) {
+    for (const [id, npc] of Object.entries(region.data.npcs)) {
+      const first = characters.get(id);
+      if (!first) characters.set(id, { region: region.data.id, name: npc.name, sprite: npc.sprite });
+      else if (first.name !== npc.name || first.sprite !== npc.sprite)
+        add(
+          region.file,
+          `npc id "${id}" is already ${first.name} in ${first.region}: give this character another id`,
+          region.locate(['npcs', id]),
+        );
+    }
+  }
 
   if (content.course) {
     const course = content.course;
@@ -802,6 +817,7 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
     title: course.title,
     opening: course.opening.map((l) => ({ speaker: l.speaker, text: rich(l.text) })),
     finale: course.finale.map((l) => ({ speaker: l.speaker, text: rich(l.text) })),
+    moreRegionsComing: course.more_regions_coming,
     regions: course.regions.map((r) => {
       const reg = content.regions.find((x) => x.data.id === r.id)!.data;
       // For the finale's credits: the people met there (Byte is everywhere) and its Bugs.

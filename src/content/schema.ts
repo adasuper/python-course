@@ -502,6 +502,9 @@ export const CourseSchema = z.strictObject({
     .array(z.strictObject({ id: Slug, enabled: z.boolean().default(true), lessons: z.number().int().min(1).default(2) }))
     .min(1),
   side_quests: z.boolean().default(true),
+  // The course grows region by region: while more are on the way, the last region's boss
+  // doesn't play the finale, and the world map says more regions are coming.
+  more_regions_coming: z.boolean().default(false),
 });
 
 export const GlossarySchema = z.array(

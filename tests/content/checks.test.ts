@@ -201,6 +201,15 @@ describe('the Quest Board and map NPCs (F-WLD-07)', () => {
   });
 });
 
+describe('characters across regions', () => {
+  it('needs a character id used in two regions to be the same character', () => {
+    const r2 = 'regions/02-whispering-library/region.yaml';
+    const root = brokenCopy({ [r2]: (t) => t.replace(/^npcs:\n/m, 'npcs:\n  pip:\n    name: Not Pip\n    sprite: npc_reader\n') });
+    const problems = crossCheck(loadContent(root), root).map((p) => p.message);
+    expect(problems).toContain('npc id "pip" is already Pip Puddlefoot in hearthvale-village: give this character another id');
+  });
+});
+
 describe('random needs a seed (F-EXE-10)', () => {
   it('asks a quest whose code uses random for seed:', () => {
     const q6 = `${R1}/quests/r1-q6-welcome-sign.yaml`;

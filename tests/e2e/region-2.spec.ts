@@ -83,6 +83,9 @@ test('the world map opens the road to Region 2 once Region 1 is restored', async
   // Only the boss was played (through the dev route): 1 of Hearthvale's 6 quests and boss.
   await expect(rows.nth(0)).toContainText('1 of 7 quests done.');
   await expect(rows.nth(1)).toContainText('0 of 7 quests done.');
+  // The course is still growing: no finale yet, and the map says so.
+  await expect(page.locator('.more-regions')).toHaveText(/more regions are on the way/);
+  await expect(page.getByRole('button', { name: /The Great Script/ })).toHaveCount(0);
   await scan(page, 'world map');
   await page.getByRole('button', { name: 'Travel to Whispering Library' }).click();
   await expect(page.getByRole('application', { name: /Whispering Library map/ })).toBeVisible();

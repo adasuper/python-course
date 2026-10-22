@@ -44,3 +44,5 @@ regions:
   - id: clocktower-peaks
     lessons: 2
 side_quests: true
+# Regions 7–11 are still being written: no finale yet, and the world map says more are coming.
+more_regions_coming: true

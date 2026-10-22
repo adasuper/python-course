@@ -79,6 +79,10 @@
     "side_quests": {
       "default": true,
       "type": "boolean"
+    },
+    "more_regions_coming": {
+      "default": false,
+      "type": "boolean"
     }
   },
   "required": [

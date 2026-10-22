@@ -77,9 +77,14 @@ export function boardQuests(course: Course, regionId: string): string[] {
 }
 
 /** A region is restored when its boss is defeated. */
-/** Every region in the course is restored: the Great Script is whole (the finale). */
+/** Every region in the course is restored. */
 export function courseComplete(p: Profile, course: Course): boolean {
   return playableRegions(course).every((r) => regionRestored(p, course, r.id));
+}
+
+/** The Great Script is whole: the finale plays (not while more regions are on the way). */
+export function finaleReady(p: Profile, course: Course): boolean {
+  return !course.moreRegionsComing && courseComplete(p, course);
 }
 
 export function regionRestored(p: Profile, course: Course, regionId: string): boolean {

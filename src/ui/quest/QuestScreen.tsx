@@ -3,7 +3,14 @@ import { useEffect, useState } from 'preact/hooks';
 import type { BossQuest, NormalQuest } from '../../content/types';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
-import { completePhase, completeQuest, courseComplete, playableRegions, record } from '../../state/progress';
+import {
+  completePhase,
+  completeQuest,
+  courseComplete,
+  finaleReady,
+  playableRegions,
+  record,
+} from '../../state/progress';
 import { course, getStorage, go, loadRegion, profile, regions, update } from '../../state/store';
 import { playFinale } from '../flow';
 import { Hud } from '../screens/Overworld';
@@ -219,10 +226,13 @@ function BossScreen({ quest, regionName }: { quest: BossQuest; regionName: strin
               ) : (
                 <div class="row">
                   {/* The last region's boss: the Great Script is whole again (the finale). */}
-                  {courseComplete(profile.value!, course.value!) && (
+                  {finaleReady(profile.value!, course.value!) && (
                     <button type="button" class="primary" onClick={() => playFinale()}>
                       🌟 {t.finale.restore}
                     </button>
+                  )}
+                  {course.value!.moreRegionsComing && courseComplete(profile.value!, course.value!) && (
+                    <p>🛤️ {t.worldMap.allSoFar}</p>
                   )}
                   <button type="button" class="primary" onClick={() => go({ name: 'overworld' })}>
                     {t.quest.continue} ▸

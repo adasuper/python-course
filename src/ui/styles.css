@@ -1658,6 +1658,11 @@ button.danger {
 .region-name {
   flex: 1 1 14rem;
 }
+.more-regions {
+  padding: 0.5rem 0.7rem;
+  border: 2px dashed var(--line);
+  border-radius: 8px;
+}
 
 /* ----- the tapestry: printed patterns on a loom (Region 6) ----- */
 .output-tapestry .output-body {

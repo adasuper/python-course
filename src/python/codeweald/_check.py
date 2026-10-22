@@ -630,7 +630,11 @@ def detect(rule, ctx, results):
         return re.search(rule["pattern"], source, re.MULTILINE) is not None
     if kind == "output_regex":
         found = re.search(rule["pattern"], ctx.output, re.MULTILINE) is not None
-        return found if rule.get("expect", "present") == "present" else not found
+        if rule.get("expect", "present") == "present":
+            return found
+        # Output that is missing because the program crashed is the error's story, not this
+        # mistake's: the translated error explains it better.
+        return not found and not error
     if kind == "validator_failed":
         return any(r["id"] == rule["id"] and not r["passed"] for r in results)
     if kind == "hidden_case_fails":

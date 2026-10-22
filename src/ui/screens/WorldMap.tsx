@@ -2,7 +2,13 @@
 // restored, in words and icons. A picture of the road shows the same thing at a glance.
 import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
-import { courseComplete, playableRegions, regionRestored, regionUnlocked } from '../../state/progress';
+import {
+  courseComplete,
+  finaleReady,
+  playableRegions,
+  regionRestored,
+  regionUnlocked,
+} from '../../state/progress';
 import { course, go, profile, regions } from '../../state/store';
 import { enterRegion, playFinale } from '../flow';
 import { Hud } from './Overworld';
@@ -42,7 +48,7 @@ export function WorldMapScreen() {
           </h1>
         </div>
         <p class="muted">{t.worldMap.intro}</p>
-        {courseComplete(p, c) && (
+        {finaleReady(p, c) && (
           <p>
             <button type="button" class="primary" onClick={playFinale}>
               🌟 {t.finale.replay}
@@ -82,6 +88,12 @@ export function WorldMapScreen() {
             </li>
           ))}
         </ol>
+        {c.moreRegionsComing && (
+          <p class="more-regions">
+            <span aria-hidden="true">🛤️ </span>
+            {courseComplete(p, c) ? t.worldMap.allSoFar : t.worldMap.moreComing}
+          </p>
+        )}
       </main>
     </div>
   );

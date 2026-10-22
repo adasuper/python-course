@@ -68,6 +68,18 @@ describe('sandbox', () => {
     expect(py.run({ code: 'input()', inputs: ['x'] }).actions[0]).not.toHaveProperty('by');
   });
 
+  it("credits typed answers to the player, not the stage's character (Mode B)", () => {
+    const npc = { kind: 'npc' as const, cast: [{ sprite: 'npc_merchant', name: 'The merchant' }] };
+    const r = py.run({
+      code: 'n = input("How many pies? ")',
+      inputs: ['5'],
+      stage: npc,
+      interactiveInput: true,
+    });
+    expect(r.actions[0]).toMatchObject({ t: 'input', value: '5', source: 'player' });
+    expect(r.actions[0]).not.toHaveProperty('by');
+  });
+
   it('asks the player when the queue runs out in interactive mode', () => {
     const r = py.run({ code: 'a = input("A? ")\nb = input("B? ")', inputs: ['1'], interactiveInput: true });
     expect(r.status).toBe('needs-input');

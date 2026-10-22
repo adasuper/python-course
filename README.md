@@ -19,9 +19,11 @@ grades 6–8.
 
 ## Status
 
-**Phase 1 — vertical slice.** Region 1 (Hearthvale Village) is playable end to end. Play
-it at <https://adasuper.github.io/python-course/>. See [PROGRESS.md](PROGRESS.md) for
-what's done, what's next and known issues.
+**Phase 3 — Regions 1–6.** Six regions are playable end to end, from Hearthvale Village
+(`print`) to Clocktower Peaks (`for` loops): about 7.5 hours of quests. Regions 7–11 are on the
+way. The live site, <https://adasuper.github.io/python-course/>, shows the latest version
+merged into `main`. See [PROGRESS.md](PROGRESS.md) for what's done, what's next and known
+issues.
 
 ## Try the demo
 

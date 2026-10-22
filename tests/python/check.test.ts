@@ -338,10 +338,21 @@ describe('mistakes and feedback selection', () => {
     const out: ValidatorSpec = { type: 'output', id: 'out', expect: 'Gold: 5', fail_hint: 'Print "Gold: 5"' };
     const quiet: ValidatorSpec = { type: 'ast', id: 'ast', require: ['For'] };
     // 1. A run error: the first mistake (in YAML order) that fires on it, else the error itself.
+    const hello: MistakeSpec = {
+      id: 'hello',
+      detect: { kind: 'code_regex', pattern: 'print\\(hello\\)' },
+      feedback: 'Put hello in quotes',
+    };
+    expect(check('print(hello)', [out], [hello, quotes]).feedback).toMatchObject({
+      source: 'mistake',
+      id: 'hello',
+    });
+    // Output missing because the program crashed is the error's story, not "Print something".
     expect(check('print(hello)', [out], [silent, quotes]).feedback).toMatchObject({
       source: 'mistake',
-      id: 'silent',
+      id: 'quotes',
     });
+    expect(check('x = 1', [out], [silent]).feedback).toMatchObject({ source: 'mistake', id: 'silent' });
     expect(check('print(hello)', [out], [said, quotes]).feedback).toMatchObject({
       source: 'mistake',
       id: 'quotes',

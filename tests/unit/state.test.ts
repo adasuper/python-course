@@ -11,6 +11,8 @@ import {
   playableRegions,
   regionRestored,
   completeQuest,
+  courseComplete,
+  finaleReady,
   hintsShown,
   questState,
   record,
@@ -307,6 +309,18 @@ describe('the Quest Board (F-WLD-07, F-BOS-05)', () => {
     expect(questState(p, withBoard, 'early-side')).toBe('available');
     // A side quest never blocks anything: the boss doesn't need it.
     expect(missingFor(p, withBoard, 'boss')).toEqual([]);
+  });
+});
+
+describe('the finale (M4.6)', () => {
+  it('plays once every region is restored, but not while more regions are on the way', () => {
+    const p = newProfile('Newt', 'avatar-1', 'moss', 'one');
+    const one = { ...course, regions: [course.regions[0]!] } as Course;
+    expect(courseComplete(p, one)).toBe(false);
+    for (const ph of ['p1', 'p2']) completePhase(p, one, 'boss', ph, 'x');
+    expect(courseComplete(p, one)).toBe(true);
+    expect(finaleReady(p, one)).toBe(true);
+    expect(finaleReady(p, { ...one, moreRegionsComing: true })).toBe(false);
   });
 });
 

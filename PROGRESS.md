@@ -1,8 +1,9 @@
 # Progress
 
-## Current phase: 3 — Regions 2–6 (in progress)
+## Current phase: 3 — Regions 2–6 ✅ (ready to deploy)
 
-Phase 2 (core loop polish) is done: see "Phase 2 — Core loop polish ✅" below.
+Regions 1–6 are complete and checked (see "Phase 3 final check" below). Phase 2 (core loop
+polish) is done: see "Phase 2 — Core loop polish ✅" below.
 
 ### Phase 3 milestones
 
@@ -14,12 +15,13 @@ Phase 2 (core loop polish) is done: see "Phase 2 — Core loop polish ✅" below
 | M3.3 Region 4: Forked Road Forest | ✅ Done |
 | M3.4 Region 5: The Endless Mines | ✅ Done |
 | M3.5 Region 6: Clocktower Peaks | ✅ Done |
-| M3.6 World map polish, badges, reading-level pass, final check | Started (world map shows quests done per region) |
+| M3.6 World map polish, badges, reading-level pass, final check | ✅ Done |
 
-**Paused here at the owner's request** (2026-10-22). Regions 7–11 (Phase 4) were being
-written in separate worktrees (`.claude/worktrees/region-7` … `region-11`, branches `region-7`
-… `region-11`, uncommitted drafts); they resume when work resumes, then merge into `dev`.
-Next after that: M3.6 (the Phase 3 final check), the Phase 4 merges and checks, Phase 5.
+**Paused here at the owner's request** (2026-10-22): Phase 3 is finished so Regions 2–6 can be
+deployed. Regions 7–11 (Phase 4) were being written in separate worktrees
+(`.claude/worktrees/region-7` … `region-11`, branches `region-7` … `region-11`, uncommitted
+drafts); they resume when the owner asks, then merge into `dev`. Then: the Phase 4 checks,
+Phase 5.
 
 ### Done in Phase 3
 
@@ -88,6 +90,39 @@ Fixes found while writing them:
   (`scrollable-region-focusable`), read-only code too.
 - Dev routes to a quest or check of a later region move the dev profile there, so "Back to the
   map" works; region tests play typed-input quests with their own answers.
+
+#### M3.6 World map, badges, reading level, final check
+
+- **The course is still growing:** `more_regions_coming: true` in course.yaml. Beating the
+  last region's boss (Region 6 for now) doesn't play the finale; the boss feedback and the
+  world map say that more regions are on the way. Remove the line when Region 11 arrives.
+- **World map:** every open region shows how many of its quests are done.
+- **Badges:** a Region Restorer and an Explorer badge for every region; Side Questor II (8
+  side quests) is new, since Regions 1–6 have 9 side quests.
+- **Fixes:** answers the player types are credited to the player ("You answered"), not to the
+  first character on stage; an `output_regex` mistake with `expect: absent` no longer fires
+  when the program crashed (the translated error explains it better); a character id used in
+  two regions must be the same character (a new content check).
+- **Tests:** every side quest of Regions 1–6 is played through the UI
+  (`tests/e2e/side-quests.spec.ts`), and the world map's "more regions" note is checked.
+
+#### Phase 3 final check
+
+- ✅ Content tests green for Regions 1–6: `validate-content` runs all 51 quests and 65
+  playable units (solutions, wrong solutions, starters, hidden tests, predictions,
+  investigate answers, worked examples, knowledge checks).
+- ✅ Cross-cutting checks (enforced by `validate-content`): a fix quest in every region,
+  retrieval quests in Regions 3–6, knowledge checks with 3–5 items, Restorer and Explorer
+  badges, every map with a Quest Board.
+- ✅ E2E smoke per region (`tests/e2e/region-2.spec.ts` … `region-6.spec.ts`, Region 1 in
+  `golden.spec.ts`): the concept scene, one quest of each type with its reference solution,
+  the boss phase by phase, the knowledge check, and axe on the map and a quest screen; every
+  side quest; the road between regions on the world map.
+- ✅ Reading level: 1,258 texts, none above grade 7. The hardest text per region:
+  Region 1 5.7, Region 2 6.1, Region 3 6.4, Region 4 6.7, Region 5 4.8, Region 6 6.7, shared
+  files 6.7.
+- Course length: 6 regions, 12 lessons, 42 quests and bosses plus 9 side quests, about 7.5
+  hours (`npm run content` prints the pacing summary).
 
 ### Phase 4 groundwork (started early, while Regions 3–6 are written)
 

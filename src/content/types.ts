@@ -221,6 +221,8 @@ export interface Course {
   opening: DialogueLine[];
   /** Shown when every region is restored (the Great Script is whole again). */
   finale: DialogueLine[];
+  /** More regions are on the way: no finale yet. */
+  moreRegionsComing: boolean;
   /**
    * `pois`: the region's secret corners (for the Explorer badge). `fragment`, `cast` and `bugs`
    * are names for the finale's credits.

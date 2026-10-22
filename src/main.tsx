@@ -19,6 +19,7 @@ import {
 } from './state/store';
 import { App } from './ui/App';
 import { applySettings } from './ui/flow';
+import './ui/tokens.css';
 import './ui/styles.css';
 
 async function boot() {

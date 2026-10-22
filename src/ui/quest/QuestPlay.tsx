@@ -164,6 +164,7 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
     if (isPredict && !locked) return;
     const codeToRun = isPredict ? body.starterCode : program();
     pendingCode.current = codeToRun;
+    announce(t.quest.runningAnnounce);
     setRunning(true);
     setRevealed(false);
     setResult(null);
@@ -199,7 +200,7 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
     setRevealed(true);
     if (isInvestigate) {
       setHasRun(true);
-      if (res.error) focusFeedback();
+      if (res.error) announceError(res);
       return;
     }
     if (isPredict) {
@@ -225,11 +226,22 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
     const ok = Boolean(res.validation?.passed);
     update((x) => recordAttempt(x, quest.id, pendingCode.current, ok));
     if (ok) finishPass(pendingCode.current);
-    else {
+    else if (res.error) {
+      setPassed(false);
+      announceError(res);
+    } else {
       setPassed(false);
       announce(`${t.quest.notYet}. ${feedbackSummary(res)}`);
       focusFeedback();
     }
+  };
+
+  // A run error keeps focus where it is (usually the editor, so the student can fix the
+  // marked line) and is announced politely instead (F-EDT-05).
+  const announceError = (res: RunResult) => {
+    const fb = res.validation?.feedback;
+    const title = errorTemplate(res.error!).title;
+    announce(`${t.quest.errorOnLine(res.error!.line, title)}${fb?.text ? ` ${fb.text}` : ''}`);
   };
 
   const finishPass = (finalCode: string) => {
@@ -445,7 +457,13 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
             </div>
           </>
         )}
-        <OutputScroll lines={out} />
+        <OutputScroll
+          lines={out}
+          tall={!hasStage}
+          onShowAll={
+            replayState === 'playing' || replayState === 'paused' ? () => void engine.skipToEnd() : undefined
+          }
+        />
         {body.jarShelf && result && <JarShelf vars={result.vars} />}
       </section>
     </div>

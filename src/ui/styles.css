@@ -1,76 +1,5 @@
-/* Codeweald styles. Colors are tokens on :root so themes and high contrast can swap them.
-   Every text/background pair here is ≥ 4.5:1; UI borders and the focus ring are ≥ 3:1. */
-
-:root {
-  --text-scale: 1;
-  --font-ui: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
-  --font-code: 'Atkinson Hyperlegible Mono', ui-monospace, 'Cascadia Mono', monospace;
-
-  --night: #20192b;
-  --night-2: #2c2240;
-  --ink: #2b1d2e;
-  --ink-muted: #5a4a5e;
-  --parchment: #fff7e6;
-  --parchment-2: #f6e8cc;
-  --line: #8a7356;
-  --accent: #2563b0;
-  --accent-ink: #ffffff;
-  --ok: #1d6b3f;
-  --ok-bg: #dff3e6;
-  --warn: #8a4b00;
-  --warn-bg: #ffefd2;
-  --err: #a1261b;
-  --err-bg: #fde3df;
-  --focus: #ffb300;
-
-  --code-bg: #fffdf7;
-  --code-fg: #1f1a24;
-  --code-gutter: #f1e6cf;
-  --code-gutter-fg: #6b5b45;
-  --code-active: #f7eed9;
-  --code-replay: #fff0b8;
-
-  --radius: 10px;
-  font-size: calc(100% * var(--text-scale));
-}
-
-:root[data-theme='ember'] {
-  --accent: #b8401f;
-}
-:root[data-theme='moss'] {
-  --accent: #3a7a28;
-}
-:root[data-theme='tide'] {
-  --accent: #2563b0;
-}
-:root[data-theme='plum'] {
-  --accent: #7a3fa8;
-}
-:root[data-theme='sun'] {
-  --accent: #9a6a0c;
-}
-:root[data-theme='slate'] {
-  --accent: #4a5f7e;
-}
-
-:root[data-font='opendyslexic'] {
-  --font-ui: 'OpenDyslexic', system-ui, sans-serif;
-}
-:root[data-font='system'] {
-  --font-ui: system-ui, sans-serif;
-}
-
-:root[data-contrast='high'] {
-  --night: #000;
-  --night-2: #000;
-  --parchment: #fff;
-  --parchment-2: #fff;
-  --ink: #000;
-  --ink-muted: #222;
-  --line: #000;
-  --code-bg: #fff;
-  --code-fg: #000;
-}
+/* Codeweald styles. Colors are tokens from tokens.css, so themes and high contrast can
+   swap them. */
 
 * {
   box-sizing: border-box;
@@ -145,10 +74,13 @@ pre {
 }
 
 /* Visible focus everywhere: 3 px, high contrast on light and dark. */
-:focus-visible {
+:focus-visible,
+.choice:has(input:focus-visible),
+.feedback:focus,
+.editor:focus-within {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
-  box-shadow: 0 0 0 5px #000;
+  box-shadow: 0 0 0 5px var(--focus-halo);
 }
 
 .muted {
@@ -424,10 +356,6 @@ main:focus {
 .choice input {
   position: absolute;
   opacity: 0;
-}
-.choice:has(input:focus-visible) {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
 }
 .choice.selected .choice-label::before {
   content: '✓ ';
@@ -836,9 +764,6 @@ button.run {
 .feedback.not-yet h2 {
   color: var(--warn);
 }
-.feedback:focus {
-  outline: 3px solid var(--focus);
-}
 .rewards {
   list-style: none;
   padding: 0;
@@ -1117,4 +1042,19 @@ button.run {
 }
 :root[data-motion='reduce'] button:hover:not(:disabled) {
   transform: none;
+}
+
+.output-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.output-tall .output-body {
+  max-height: 420px;
+  min-height: 220px;
+}
+.replay-controls:focus-visible {
+  border-radius: 6px;
 }

@@ -53,6 +53,11 @@ export const t = {
     back: 'Back to the map',
     run: 'Run',
     running: 'Running…',
+    runningAnnounce: 'Running your code.',
+    errorOnLine: (line: number | null, title: string) =>
+      line ? `Error on line ${line}: ${title}` : `Error: ${title}`,
+    showAllOutput: 'Show all output now',
+    errorOutput: 'Error output:',
     reset: 'Reset code',
     resetConfirm: 'Put back the starting code? Your changes will be replaced.',
     goal: 'Goal',
@@ -98,6 +103,7 @@ export const t = {
     skip: 'Skip to end',
     speed: 'Speed',
     instant: 'Instant',
+    keys: 'Keys: Space plays or pauses, . steps',
   },
   predict: {
     lockIn: 'Lock in my prediction',

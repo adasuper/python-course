@@ -10,7 +10,7 @@ const ART = `${import.meta.env.BASE_URL}assets/art/`;
 export function LiveRegion() {
   const a = announcement.value;
   return (
-    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+    <div id="live-polite" class="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {/* The key forces re-announcement of identical messages. */}
       <span key={a.n}>{a.text}</span>
     </div>
@@ -144,6 +144,10 @@ export function LoadingPanel({ runner }: { runner: PyRunner }) {
   const label = status === 'restarting' ? t.quest.restarting : t.loading;
   return (
     <div class="loading-panel">
+      {/* Stage changes (not every percent) are announced politely (F-ONB-08). */}
+      <p class="sr-only" role="status">
+        {label} {t.loadingStages[p.stage]}
+      </p>
       <Portrait speaker="byte" talking />
       <p>{label}</p>
       <progress

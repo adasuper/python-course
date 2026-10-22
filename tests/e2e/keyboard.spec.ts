@@ -68,3 +68,17 @@ test('the code size buttons make the editor text bigger and smaller (F-EDT-02)',
   await page.getByRole('button', { name: 'A− smaller code' }).click();
   await expect(content).toHaveCSS('font-size', '18px');
 });
+
+test('a run error marks its line and keeps focus in the editor (F-EDT-05)', async ({ page }) => {
+  await page.goto('./?dev#/dev/quest/r1-q6-welcome-sign');
+  await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
+  const editor = page.locator('.cm-content');
+  await editor.focus();
+  await page.keyboard.press('ControlOrMeta+A');
+  await page.keyboard.insertText('print("Welcome")\nprint("Try Bun\'s Bakery)');
+  await page.keyboard.press('Control+Enter');
+  await expect(page.locator('.cm-mark-error')).toHaveText('✖', { timeout: 20_000 });
+  await expect(page.locator('.cm-error-line')).toHaveCount(1);
+  await expect(page.locator('#live-polite')).toContainText('Error on line 2');
+  await expect(editor).toBeFocused();
+});

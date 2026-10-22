@@ -9,16 +9,35 @@ export interface OutLine {
   value?: string;
 }
 
-export function OutputScroll({ lines, empty = t.quest.outputEmpty }: { lines: OutLine[]; empty?: string }) {
+export function OutputScroll({
+  lines,
+  empty = t.quest.outputEmpty,
+  tall = false,
+  onShowAll,
+}: {
+  lines: OutLine[];
+  empty?: string;
+  /** No quest map: the Scroll gets the room instead (F-API-06). */
+  tall?: boolean;
+  /** Set while a replay is still writing output: skips straight to the end (F-EXE-11). */
+  onShowAll?: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
   }, [lines.length]);
   return (
-    <section class="output" aria-labelledby="output-h">
-      <h2 id="output-h" class="panel-title">
-        📜 {t.quest.output}
-      </h2>
+    <section class={`output${tall ? ' output-tall' : ''}`} aria-labelledby="output-h">
+      <div class="output-head">
+        <h2 id="output-h" class="panel-title">
+          📜 {t.quest.output}
+        </h2>
+        {onShowAll && (
+          <button type="button" class="small ghost" onClick={onShowAll}>
+            ⏩ {t.quest.showAllOutput}
+          </button>
+        )}
+      </div>
       <div class="output-body" ref={ref} role="log" aria-live="polite" tabIndex={0}>
         {lines.length === 0 ? (
           <p class="muted">{empty}</p>
@@ -31,10 +50,14 @@ export function OutputScroll({ lines, empty = t.quest.outputEmpty }: { lines: Ou
                   <mark>{l.value}</mark>
                   {'\n'}
                 </span>
-              ) : (
-                <span key={i} class={l.kind === 'stderr' ? 'out-err' : undefined}>
+              ) : l.kind === 'stderr' ? (
+                <span key={i} class="out-err">
+                  <span aria-hidden="true">⚠ </span>
+                  <span class="sr-only">{t.quest.errorOutput} </span>
                   {l.text}
                 </span>
+              ) : (
+                <span key={i}>{l.text}</span>
               ),
             )}
           </pre>

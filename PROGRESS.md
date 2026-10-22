@@ -78,8 +78,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
     - axe scans of all main screens: no serious or critical violations
 - **CI/CD:** `.github/workflows/ci-cd.yml` runs Build → Test → Deploy. It builds the site
   once (types and size budget included), then runs lint and format, content validation, the
-  answer-key check, unit tests, and E2E plus axe against that same build. On the default
-  branch it then publishes the tested build to GitHub Pages (see the README).
+  answer-key check, unit tests, and E2E plus axe against that same build. On `main` only,
+  it then publishes the tested build to GitHub Pages (see the README).
 - **Size:** the app is 0.99 MB gzipped excluding Pyodide (budget 4 MB).
 
 ### Fixed after the demo
@@ -117,11 +117,9 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 
 ### Known issues
 
-- **Deploys need GitHub Pages turned on:** Settings → Pages → Source: "GitHub Actions".
-  Until then the deploy job is skipped with a warning. This repository is private, so Pages needs a paid GitHub plan, and the
-  site it publishes is public. Deploys follow the default branch, which is
-  `claude/new-session-aahe56` until a `main` branch is made the default.
-
+- **Deploys need GitHub Pages and a `main` branch.** Turn Pages on with Settings → Pages →
+  Source: "GitHub Actions". Deploys run only from `main`, which doesn't exist yet (all work
+  is on `claude/new-session-aahe56`). Until both are in place, the deploy job is skipped.
 - **Art direction:** this is the first look. Please react to the mood and palette (Q6).
 - **Narrow screens:** the quest screen stacks its panels vertically below 1100 px wide.
   Tabs are planned for Phase 2.
@@ -132,5 +130,5 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   could speed up the first screen.
 - **CSTA wording:** the descriptions are paraphrased. Verify them verbatim against
   csteachers.org (unreachable from the build environment).
-- **Public answers:** if the repository is public, students can read the solutions in
-  `content/` and `docs/solutions.md`.
+- **Public answers:** the repository is now public, so anyone can read the solutions in
+  `content/` and `docs/solutions.md`. The deployed game itself contains no solution code.

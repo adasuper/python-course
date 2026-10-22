@@ -1730,7 +1730,7 @@ Priority: Must · Phase: 1 · Spec: §19 · Brief: §8
 ### F-DEP-09 — Automatic GitHub Pages deploy
 As a Maintainer using GitHub, I want the pipeline to publish the game to GitHub Pages, so that hosting is easy.
 **Acceptance criteria**
-- The `deploy` stage of `ci-cd.yml` publishes the tested `site` artifact (built with the right base path) from the default branch, on push or by manual run, only after every test job passes.
+- The `deploy` stage of `ci-cd.yml` publishes the tested `site` artifact (built with the right base path) from `main` only, on push or by manual run, and only after every test job passes. Other branches and pull requests never deploy.
 - When GitHub Pages is not turned on, the job is skipped with a warning that says how to turn it on.
 
 Priority: Could · Phase: 1 (delivered early; verified on Pages in Phase 6) · Spec: §19.1 · Brief: §8

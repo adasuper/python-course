@@ -88,15 +88,17 @@ request, in three stages:
 2. **Test:** three jobs run in parallel: lint and format; unit, Python and content tests
    (every reference and wrong solution, and the answer key being up to date); and
    end-to-end plus accessibility tests that play **that same build** in Chromium.
-3. **Deploy:** on the default branch only, after every test passes, the same tested files
+3. **Deploy:** only for the `main` branch, after every test passes, the same tested files
    are published to GitHub Pages. You can also deploy by hand: **Actions → CI/CD → Run
-   workflow** on the default branch.
+   workflow** with `main` selected. Other branches and pull requests never deploy.
 
 **Turning deploys on:** in the repository, go to **Settings → Pages** and set **Source** to
 **GitHub Actions**. Until then, the deploy job is skipped with a warning. Keep in mind:
 
+- To have GitHub enforce this too, open **Settings → Environments → github-pages** and set
+  **Deployment branches and tags** to allow only `main`.
 - GitHub Pages for a **private** repository needs a paid GitHub plan, and the published
-  site is public.
+  site is always public.
 - The site is built for `https://<owner>.github.io/<repo-name>/`. For a custom domain, set
   the repository variable `SITE_BASE_PATH` to `/` (Settings → Secrets and variables →
   Actions → Variables).

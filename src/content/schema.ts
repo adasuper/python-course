@@ -165,6 +165,12 @@ export const DETECTOR_NAMES = [
   'loop_var_not_updated',
   'function_not_called',
   'hardcoded_output',
+  'range_off_by_one',
+  'infinite_while_true_without_break',
+  'function_prints_not_returns',
+  'return_inside_loop_too_early',
+  'unused_variable',
+  'shadowed_builtin',
 ] as const;
 
 const Detect = z.discriminatedUnion('kind', [
@@ -194,6 +200,9 @@ const Detect = z.discriminatedUnion('kind', [
     text: z.string().optional(),
     names: z.array(z.string()).optional(),
     function: z.string().optional(),
+    // range_off_by_one: the first and last values the loop should reach.
+    first: z.number().int().optional(),
+    last: z.number().int().optional(),
   }),
   z.strictObject({ kind: z.literal('custom'), python: z.string() }),
 ]);

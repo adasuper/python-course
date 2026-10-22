@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getPyHost, type PyHost } from '../../scripts/lib/pyHost';
+import { DETECTOR_NAMES } from '../../src/content/schema';
 import type { MistakeSpec, ValidatorSpec } from '../../src/runtime/protocol';
 
 let py: PyHost;
@@ -318,6 +319,57 @@ describe('mistakes and feedback selection', () => {
     expect(r.validation?.bonus).toEqual(['short']);
   });
 
+  it('follows the §9.4 selection order', () => {
+    const quotes: MistakeSpec = {
+      id: 'quotes',
+      detect: { kind: 'error', key: 'name.missing_quotes' },
+      feedback: 'Words need quotes',
+    };
+    const said: MistakeSpec = {
+      id: 'said-gold',
+      detect: { kind: 'output_regex', pattern: 'gold', expect: 'present' },
+      feedback: 'Store it first',
+    };
+    const silent: MistakeSpec = {
+      id: 'silent',
+      detect: { kind: 'output_regex', pattern: '.', expect: 'absent' },
+      feedback: 'Print something',
+    };
+    const out: ValidatorSpec = { type: 'output', id: 'out', expect: 'Gold: 5', fail_hint: 'Print "Gold: 5"' };
+    const quiet: ValidatorSpec = { type: 'ast', id: 'ast', require: ['For'] };
+    // 1. A run error: the first mistake (in YAML order) that fires on it, else the error itself.
+    expect(check('print(hello)', [out], [silent, quotes]).feedback).toMatchObject({
+      source: 'mistake',
+      id: 'silent',
+    });
+    expect(check('print(hello)', [out], [said, quotes]).feedback).toMatchObject({
+      source: 'mistake',
+      id: 'quotes',
+    });
+    expect(check('print(zzz + 1)', [out], [quotes]).feedback).toEqual({ source: 'error' });
+    // 2. Validators failed: the first matching mistake, else the first failing hint, else generic.
+    expect(check('print("gold")', [out], [silent, said]).feedback.id).toBe('said-gold');
+    expect(check('print("x")', [quiet, out], [said]).feedback).toEqual({
+      source: 'validator',
+      id: 'out',
+      text: 'Print "Gold: 5"',
+    });
+    expect(check('print("x")', [quiet], [said]).feedback).toEqual({ source: 'generic' });
+    // 3. Everything passes: success.
+    expect(check('print("Gold: 5")', [out], [said, silent]).feedback).toEqual({ source: 'success' });
+  });
+
+  it('state mistakes look at the world', () => {
+    const stage = { kind: 'grid' as const, grid: 'H#.' };
+    const bonked: MistakeSpec = { id: 'bonk', detect: { kind: 'state', min_bonks: 1 }, feedback: 'Ouch' };
+    const code = 'from codeweald import hero\nhero.move("right")';
+    expect(check(code, [{ type: 'state', hero_at: [2, 0] }], [bonked], { stage }).feedback.id).toBe('bonk');
+    const stay = 'from codeweald import hero\nhero.say("hi")';
+    expect(check(stay, [{ type: 'state', hero_at: [2, 0] }], [bonked], { stage }).feedback.source).toBe(
+      'generic',
+    );
+  });
+
   it('runs custom checks', () => {
     const v = check('print("abc")', [
       {
@@ -329,6 +381,71 @@ describe('mistakes and feedback selection', () => {
   });
 });
 
+/** [detector, rule fields, code where it fires, code where it doesn't] */
+const DETECTOR_CASES: [string, Record<string, unknown>, string, string][] = [
+  ['missing_call_parens', {}, 'print', 'print("hi")'],
+  [
+    'missing_call_parens',
+    {},
+    'from codeweald import hero\nhero.say',
+    'from codeweald import hero\nhero.say("hi")',
+  ],
+  ['printed_not_stored', { var: 'gold' }, 'print(5 * 3)', 'gold = 5 * 3\nprint(gold)'],
+  ['stored_not_printed', { var: 'gold' }, 'gold = 15', 'gold = 15\nprint(gold)'],
+  ['number_as_string', { var: 'gold' }, 'gold = "10"', 'gold = 10'],
+  ['missing_fstring_prefix', {}, 'name = "Ada"\nprint("Hi {name}")', 'name = "Ada"\nprint(f"Hi {name}")'],
+  ['assign_in_condition', {}, 'gold = 5\nif gold = 10:\n    pass', 'gold = 5\nif gold == 10:\n    pass'],
+  ['loop_var_not_updated', {}, 'n = 0\nwhile n < 3:\n    print(n)', 'n = 0\nwhile n < 3:\n    n = n + 1'],
+  [
+    'function_not_called',
+    { function: 'greet' },
+    'def greet():\n    print("hi")',
+    'def greet():\n    print("hi")\ngreet()',
+  ],
+  ['hardcoded_output', { text: '15' }, 'print(15)', 'gold = 5 * 3\nprint(gold)'],
+  // The rest of the §9.4 library (M2.4).
+  [
+    'range_off_by_one',
+    { last: 50 },
+    'for toll in range(5, 50, 5):\n    print(toll)',
+    'for toll in range(5, 55, 5):\n    print(toll)',
+  ],
+  [
+    'range_off_by_one',
+    { first: 1, last: 10 },
+    'for n in range(10):\n    print(n)',
+    'for n in range(1, 11):\n    print(n)',
+  ],
+  [
+    'range_off_by_one',
+    {},
+    'xs = [1, 2]\nfor i in range(len(xs) + 1):\n    print(xs[i])',
+    'xs = [1, 2]\nfor i in range(len(xs)):\n    print(xs[i])',
+  ],
+  [
+    'infinite_while_true_without_break',
+    {},
+    'while True:\n    for i in range(3):\n        break',
+    'while True:\n    answer = input()\n    if answer == "q":\n        break',
+  ],
+  [
+    'function_prints_not_returns',
+    { function: 'heal' },
+    'def heal(hp):\n    print(hp + 10)\nx = heal(5)',
+    'def heal(hp):\n    return hp + 10\nprint(heal(5))',
+  ],
+  [
+    'return_inside_loop_too_early',
+    {},
+    'def has(items, x):\n    for i in items:\n        if i == x:\n            return True\n        else:\n            return False',
+    'def has(items, x):\n    for i in items:\n        if i == x:\n            return True\n    return False',
+  ],
+  ['unused_variable', { var: 'total' }, 'total = 0\nprint(5)', 'total = 0\ntotal += 5\nprint(total)'],
+  ['unused_variable', {}, 'gold = 5\nprint(3)', 'for i in range(3):\n    print("hi")'],
+  ['shadowed_builtin', {}, 'list = [1, 2]\nprint(list)', 'items = [1, 2]\nprint(items)'],
+  ['shadowed_builtin', { names: ['sum'] }, 'def sum(a, b):\n    return a + b', 'list = [1]'],
+];
+
 // Every named detector fires on its mistake and stays quiet otherwise (F-QA-03, §9.4).
 describe('mistake detectors', () => {
   const NEVER: ValidatorSpec[] = [{ type: 'output', expect: '(never matches)' }];
@@ -337,29 +454,13 @@ describe('mistake detectors', () => {
       { id: 'm', detect: { kind: 'detector', ...rule } as MistakeSpec['detect'], feedback: 'x' },
     ]).feedback.id === 'm';
 
-  it.each([
-    ['missing_call_parens', {}, 'print', 'print("hi")'],
-    [
-      'missing_call_parens',
-      {},
-      'from codeweald import hero\nhero.say',
-      'from codeweald import hero\nhero.say("hi")',
-    ],
-    ['printed_not_stored', { var: 'gold' }, 'print(5 * 3)', 'gold = 5 * 3\nprint(gold)'],
-    ['stored_not_printed', { var: 'gold' }, 'gold = 15', 'gold = 15\nprint(gold)'],
-    ['number_as_string', { var: 'gold' }, 'gold = "10"', 'gold = 10'],
-    ['missing_fstring_prefix', {}, 'name = "Ada"\nprint("Hi {name}")', 'name = "Ada"\nprint(f"Hi {name}")'],
-    ['assign_in_condition', {}, 'gold = 5\nif gold = 10:\n    pass', 'gold = 5\nif gold == 10:\n    pass'],
-    ['loop_var_not_updated', {}, 'n = 0\nwhile n < 3:\n    print(n)', 'n = 0\nwhile n < 3:\n    n = n + 1'],
-    [
-      'function_not_called',
-      { function: 'greet' },
-      'def greet():\n    print("hi")',
-      'def greet():\n    print("hi")\ngreet()',
-    ],
-    ['hardcoded_output', { text: '15' }, 'print(15)', 'gold = 5 * 3\nprint(gold)'],
-  ])('%s (%j)', (name, extra, wrong, right) => {
+  it.each(DETECTOR_CASES)('%s (%j)', (name, extra, wrong, right) => {
     expect(fires(wrong, { name, ...extra })).toBe(true);
     expect(fires(right, { name, ...extra })).toBe(false);
+  });
+
+  it('covers every detector the schema allows, the whole §9.4 library (F-FBK-06)', () => {
+    expect(new Set(DETECTOR_CASES.map((c) => c[0]))).toEqual(new Set(DETECTOR_NAMES));
+    expect(DETECTOR_NAMES).toHaveLength(15);
   });
 });

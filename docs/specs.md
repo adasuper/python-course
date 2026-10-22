@@ -716,14 +716,17 @@ The solution itself never ships in the app; instructors read it in the generated
 - `number_as_string(value)`
 - `hardcoded_output`
 - `missing_call_parens` (e.g. `hero.say` without `()`)
-- `range_off_by_one`
+- `range_off_by_one(last, first)` — a `range(...)` with constant arguments that stops one step
+  short of `last` (or goes one past it), or starts one off `first`; without them, only
+  `range(len(x) + 1)`
 - `loop_var_not_updated`
-- `infinite_while_true_without_break`
-- `function_not_called`
-- `function_prints_not_returns`
-- `return_inside_loop_too_early`
-- `unused_variable`
-- `shadowed_builtin` (e.g. `list = [...]`)
+- `infinite_while_true_without_break` — a `break` of a nested loop doesn't count
+- `function_not_called(function)`
+- `function_prints_not_returns(function)`
+- `return_inside_loop_too_early(function)` — a `return` straight in the loop, or in both the
+  `if` and the `else`, so the loop never gets past the first item
+- `unused_variable(var)` — a loop variable left unused is fine
+- `shadowed_builtin(names)` (e.g. `list = [...]`)
 - `missing_fstring_prefix` (`"{name}"` without the `f`)
 
 **Selection order:**

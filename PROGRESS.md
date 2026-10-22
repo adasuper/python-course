@@ -32,8 +32,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | M2.1 All quest types | ✅ Done |
 | M2.2 Accessible Parsons (complete) | ✅ Done (manual screen-reader check pending) |
 | M2.3 Full error translation | ✅ Done |
-| M2.4 Feedback engine | Next |
-| M2.5 Progression | — |
+| M2.4 Feedback engine | ✅ Done |
+| M2.5 Progression | Next |
 | M2.6 Spellbook reference | — |
 | M2.7 Workshop | — |
 | M2.8 Save polish | — |
@@ -104,6 +104,19 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   line of the real error with a note (where, which function, the code, the `^` marks, the error
   type and message). It's ready now; Region 10 will use it.
 - **Editor diagnostics:** Ctrl+Shift+M lists the error under the code, and F8 jumps to it.
+
+#### M2.4 Feedback engine
+
+- **The whole §9.4 detector library** (15 named detectors). New: `range_off_by_one` (a range
+  that stops one step short of the value the loop should reach), `infinite_while_true_without_break`,
+  `function_prints_not_returns`, `return_inside_loop_too_early`, `unused_variable` and
+  `shadowed_builtin`. Each has a test where it fires and one where it doesn't, and a test checks
+  that every detector the schema allows has them.
+- **Feedback selection order** (run error → first matching mistake → translated error; failed
+  checks → first matching mistake → first failing hint → "Not quite yet") has its own test, as
+  do `output_regex` and `state` mistakes.
+- **Hint modes from the deploy config** (all three tiers, only the nudge, or none) are tested end
+  to end.
 
 ## Phase 1 — Vertical slice ✅
 

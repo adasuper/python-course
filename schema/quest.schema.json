@@ -1135,7 +1135,13 @@
                           "assign_in_condition",
                           "loop_var_not_updated",
                           "function_not_called",
-                          "hardcoded_output"
+                          "hardcoded_output",
+                          "range_off_by_one",
+                          "infinite_while_true_without_break",
+                          "function_prints_not_returns",
+                          "return_inside_loop_too_early",
+                          "unused_variable",
+                          "shadowed_builtin"
                         ]
                       },
                       "var": {
@@ -1152,6 +1158,16 @@
                       },
                       "function": {
                         "type": "string"
+                      },
+                      "first": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "last": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
                       }
                     },
                     "required": [
@@ -3737,7 +3753,13 @@
                                 "assign_in_condition",
                                 "loop_var_not_updated",
                                 "function_not_called",
-                                "hardcoded_output"
+                                "hardcoded_output",
+                                "range_off_by_one",
+                                "infinite_while_true_without_break",
+                                "function_prints_not_returns",
+                                "return_inside_loop_too_early",
+                                "unused_variable",
+                                "shadowed_builtin"
                               ]
                             },
                             "var": {
@@ -3754,6 +3776,16 @@
                             },
                             "function": {
                               "type": "string"
+                            },
+                            "first": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "last": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [

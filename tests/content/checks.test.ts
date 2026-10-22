@@ -183,3 +183,19 @@ describe('editor support for authors (F-AUT-07)', () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe('the Quest Board and map NPCs (F-WLD-07)', () => {
+  it('needs a Quest Board on every map, and an npc quest to be offered by that npc', () => {
+    const q2 = `${R1}/quests/r1-q2-hello-hearthvale.yaml`;
+    const root = brokenCopy({
+      [`${R1}/region.yaml`]: (t) => t.replace(/^ {4}- \{ kind: board, at: \[11, 13\] \}\n/m, ''),
+      [q2]: (t) => t.replace('npc: pip', 'npc: baker'),
+    });
+    const problems = crossCheck(loadContent(root), root);
+    const board = problems.find((p) => /needs a Quest Board/.test(p.message));
+    expect(board?.file.endsWith(`${R1}/region.yaml`)).toBe(true);
+    const npc = problems.find((p) => /npc "baker" does not offer this quest on the map/.test(p.message));
+    expect(npc?.file.endsWith(q2)).toBe(true);
+    expect(npc?.line).toBe(lineOf(root, q2, 'npc: baker'));
+  });
+});

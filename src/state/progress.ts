@@ -41,6 +41,34 @@ export function workshopUnlocked(p: Profile, course: Course, enabled = true): bo
   );
 }
 
+/** A region's core quests: everything but its side quests and its boss. */
+export function coreQuests(course: Course, regionId: string): string[] {
+  return course.questOrder.filter((q) => {
+    const info = course.questInfo[q];
+    return info?.region === regionId && !info.sideQuest && info.type !== 'boss';
+  });
+}
+
+/** Quests still to finish before this one opens: its prerequisites and, for a side quest,
+ *  the region's core quests (side quests appear once those are done, §9.9). */
+export function missingFor(p: Profile, course: Course, questId: string): string[] {
+  const info = course.questInfo[questId];
+  if (!info) return [];
+  const needed = info.sideQuest
+    ? [...coreQuests(course, info.region), ...info.prerequisites]
+    : info.prerequisites;
+  return [...new Set(needed)].filter((q) => p.quests[q]?.status !== 'completed');
+}
+
+/** What the region's Quest Board offers: side quests, and quests no map NPC hands out
+ *  (F-WLD-07), so adding a quest never needs a map edit. */
+export function boardQuests(course: Course, regionId: string): string[] {
+  return course.questOrder.filter((q) => {
+    const info = course.questInfo[q];
+    return info?.region === regionId && (info.sideQuest || !info.npc);
+  });
+}
+
 export function questState(p: Profile, course: Course, questId: string, unlockedThrough = 0): Marker {
   const info = course.questInfo[questId];
   if (!info) return 'locked';
@@ -48,7 +76,7 @@ export function questState(p: Profile, course: Course, questId: string, unlocked
   const rec = p.quests[questId];
   if (rec?.status === 'completed') return 'completed';
   if (info.sideQuest && !(course.sideQuests && sideQuestsOn)) return 'locked';
-  if (!info.prerequisites.every((pre) => p.quests[pre]?.status === 'completed')) return 'locked';
+  if (missingFor(p, course, questId).length) return 'locked';
   return rec ? 'in_progress' : 'available';
 }
 

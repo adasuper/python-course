@@ -99,6 +99,7 @@ export const t = {
     title: 'Switch adventurer',
     worldHelp: 'Arrow keys or WASD to walk. Enter, Space or E to talk.',
     describe: 'Describe surroundings',
+    boardEmpty: 'Nothing on the board yet. Side quests appear here once the village quests are done.',
   },
   quest: {
     back: 'Back to the map',

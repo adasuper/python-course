@@ -1,11 +1,19 @@
 // The region map: walk, talk to NPCs, open quests (docs/specs.md §11.1).
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { OverworldObject } from '../../content/types';
+import { describeSurroundings, sceneLabel } from '../../game/describe';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
 import type { Dir, XY } from '../../runtime/protocol';
 import { levelFor, titleFor, xpForLevel } from '../../state/profile';
-import { questState, regionCounts, regionMarkers, workshopUnlocked } from '../../state/progress';
+import {
+  boardQuests,
+  missingFor,
+  questState,
+  regionCounts,
+  regionMarkers,
+  workshopUnlocked,
+} from '../../state/progress';
 import {
   announce,
   config,
@@ -20,7 +28,8 @@ import {
 } from '../../state/store';
 import { Portrait } from '../components/Common';
 import { RichText } from '../components/RichText';
-import { switchProfile } from '../flow';
+import { ReadAloud } from '../components/ReadAloud';
+import { prefersReducedMotion, switchProfile } from '../flow';
 import { online } from '../pwa';
 
 const KEYS: Record<string, Dir> = {
@@ -120,28 +129,34 @@ export function OverworldScreen() {
   }, [logOpen]);
   /** "Finish The Path to the Well first" for a locked quest (F-WLD-04). */
   const needsFirst = (questId: string) => {
-    const missing = (c.questInfo[questId]?.prerequisites ?? []).filter(
-      (pre) => p.quests[pre]?.status !== 'completed',
-    );
+    const missing = missingFor(p, c, questId);
     return missing.length ? t.hud.finishFirst(missing.map((pre) => c.questInfo[pre]?.title ?? pre)) : '';
   };
+  // The map picture's name says where the hero is (F-WLD-06); it follows every step.
+  const [scene, setScene] = useState(region.name);
   const markers = regionMarkers(p, c, region.id);
   const counts = regionCounts(p, c, region.id);
   const bossDone = p.quests[region.boss]?.status === 'completed';
 
   useEffect(() => {
     const world = getWorldView();
+    world.setReducedMotion(prefersReducedMotion());
     world.mount(holder.current!);
-    void world.showOverworld({
-      region,
-      markers,
-      avatar: p.avatarId,
-      theme: p.themeId,
-      start: p.location.at ?? undefined,
-      onInteract: (object) => setTalk({ object }),
-      onStep: (pos: XY) => onStep(pos),
-      onBlocked: (dir) => announce(`Can't go ${dir}.`),
-    });
+    void world
+      .showOverworld({
+        region,
+        markers,
+        avatar: p.avatarId,
+        theme: p.themeId,
+        start: p.location.at ?? undefined,
+        onInteract: (object) => setTalk({ object }),
+        onStep: (pos: XY) => onStep(pos),
+        onBlocked: (dir) => announce(`Can't go ${dir}.`),
+      })
+      .then(() => {
+        const at = world.heroPosition;
+        if (at) setScene(sceneLabel(region, at));
+      });
     worldEl.current?.focus();
   }, [region.id]);
 
@@ -150,6 +165,7 @@ export function OverworldScreen() {
   }, [JSON.stringify(markers)]);
 
   const onStep = (pos: XY) => {
+    setScene(sceneLabel(region, pos));
     const poi = region.overworld.objects.find(
       (o) => o.kind === 'poi' && o.at[0] === pos[0] && o.at[1] === pos[1],
     );
@@ -191,30 +207,7 @@ export function OverworldScreen() {
 
   const describeAround = () => {
     const at = getWorldView().heroPosition;
-    if (!at) return '';
-    const near = region.overworld.objects
-      .filter((o) => o.kind === 'npc' || o.kind === 'board' || o.kind === 'sign')
-      .map((o) => ({ o, d: Math.abs(o.at[0] - at[0]) + Math.abs(o.at[1] - at[1]) }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, 3)
-      .map(({ o, d }) => {
-        const name =
-          o.kind === 'npc'
-            ? region.npcs[o.id ?? '']?.name
-            : o.kind === 'board'
-              ? 'the Quest Board'
-              : 'a sign';
-        const dx = o.at[0] - at[0];
-        const dy = o.at[1] - at[1];
-        const where = [
-          dy < 0 ? `${-dy} up` : dy > 0 ? `${dy} down` : '',
-          dx < 0 ? `${-dx} left` : dx > 0 ? `${dx} right` : '',
-        ]
-          .filter(Boolean)
-          .join(' and ');
-        return `${name} is ${d === 0 ? 'here' : where}`;
-      });
-    return `${region.name}. ${near.join('. ')}. Or press Q for the quest log.`;
+    return at ? describeSurroundings(region, at) : region.name;
   };
 
   const openQuest = (questId: string) => {
@@ -223,7 +216,7 @@ export function OverworldScreen() {
   };
 
   const regionQuests = c.questOrder.filter((q) => c.questInfo[q]?.region === region.id);
-  const sideQuests = regionQuests.filter((q) => c.questInfo[q]?.sideQuest);
+  const onBoard = boardQuests(c, region.id);
 
   return (
     <div class="screen overworld-screen">
@@ -241,7 +234,7 @@ export function OverworldScreen() {
           aria-describedby="world-help"
           onKeyDown={onKeyDown}
         >
-          <div class="world-canvas" ref={holder} />
+          <div class="world-canvas" ref={holder} role="img" aria-label={scene} />
         </div>
         <p id="world-help" class="world-help muted">
           ⌨️ {t.hud.worldHelp} <kbd>L</kbd> describes nearby things. <kbd>Q</kbd> opens the quest log.
@@ -266,6 +259,9 @@ export function OverworldScreen() {
             Talk
           </button>
         </div>
+        <button type="button" class="small describe-button" onClick={() => announce(describeAround())}>
+          👂 {t.hud.describe}
+        </button>
 
         <aside class={`quest-log card ${logOpen ? 'open' : ''}`} aria-label={t.hud.questLog}>
           <button
@@ -342,7 +338,7 @@ export function OverworldScreen() {
         {talk && (
           <TalkPanel
             object={talk.object}
-            sideQuests={sideQuests}
+            boardQuests={onBoard}
             onClose={() => {
               setTalk(null);
               worldEl.current?.focus();
@@ -358,12 +354,12 @@ export function OverworldScreen() {
     object,
     onClose,
     onOpenQuest,
-    sideQuests,
+    boardQuests,
   }: {
     object: OverworldObject;
     onClose: () => void;
     onOpenQuest: (id: string) => void;
-    sideQuests: string[];
+    boardQuests: string[];
   }) {
     const first = useRef<HTMLButtonElement>(null);
     useEffect(() => first.current?.focus(), []);
@@ -391,19 +387,33 @@ export function OverworldScreen() {
         </div>
         {npc?.greeting && <p>{npc.greeting}</p>}
         {object.text && <p>{object.text}</p>}
+        {(npc?.greeting || object.text) && (
+          <ReadAloud
+            rich={[npc?.greeting, object.text]
+              .filter((x): x is string => Boolean(x))
+              .map((v) => ({ t: 'p' as const, c: [{ t: 'text' as const, v }] }))}
+          />
+        )}
         {questId && state && (
           <p>
             <strong>{c.questInfo[questId]!.title}</strong> — {STATUS_TEXT[state]}
             {state === 'locked' && questId && <span class="muted"> ({needsFirst(questId)})</span>}
           </p>
         )}
-        {object.kind === 'board' && (
+        {object.kind === 'board' && boardQuests.length === 0 && <p>{t.hud.boardEmpty}</p>}
+        {object.kind === 'board' && boardQuests.length > 0 && (
           <ul>
-            {sideQuests.map((q) => {
+            {boardQuests.map((q) => {
               const s = questState(p, c, q);
+              const info = c.questInfo[q]!;
               return (
                 <li key={q} class="quest-row">
-                  <span>⭐ {c.questInfo[q]!.title}</span> <span class="muted">{STATUS_TEXT[s]}</span>
+                  <span>
+                    {info.sideQuest ? '⭐ ' : ''}
+                    {info.title}
+                  </span>{' '}
+                  <span class="muted">{STATUS_TEXT[s]}</span>
+                  {s === 'locked' && <span class="needs small-text"> {needsFirst(q)}</span>}
                   <button
                     type="button"
                     class="small"

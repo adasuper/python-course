@@ -146,6 +146,8 @@ export interface QuestInfo {
   phases: string[];
   sideQuest: boolean;
   prerequisites: string[];
+  /** The map NPC who offers it; without one, it is on the Quest Board (F-WLD-07). */
+  npc: string | null;
   /** A badge this quest awards directly (`rewards.badge`). */
   badge: string | null;
   /** Its bonus challenges, as the quest record stores them ("phase/id" in a boss). */

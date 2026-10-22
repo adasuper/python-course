@@ -468,6 +468,17 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     }
     if (content.quests.get(r.boss)?.data.type !== 'boss')
       add(region.file, `boss "${r.boss}" must be a boss quest`, at(['boss']));
+    // A quest that names an npc is handed out on the map; otherwise it goes on the Quest Board.
+    for (const qid of listed) {
+      const q = content.quests.get(qid);
+      if (!q?.data.npc || q.data.side_quest) continue;
+      if (!r.overworld.objects.some((o) => o.kind === 'npc' && o.id === q.data.npc && o.quest === qid))
+        add(
+          q.file,
+          `npc "${q.data.npc}" does not offer this quest on the map: give that npc's map object \`quest: ${qid}\`, or remove \`npc:\` to put the quest on the Quest Board`,
+          q.locate(['npc']),
+        );
+    }
     const regionUnits = units(content).filter((u) => content.quests.get(u.questId)?.data.region === r.id);
     if (!regionUnits.some((u) => u.body.type === 'fix'))
       add(region.file, 'every region needs at least one fix-the-bug quest', at(['quests']));
@@ -493,6 +504,9 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     });
     if (!r.overworld.objects.some((o) => o.kind === 'spawn'))
       add(region.file, 'the overworld needs a spawn object', at(['overworld', 'objects']));
+    // Side quests and quests without an npc are offered on the Quest Board (F-WLD-07).
+    if (!r.overworld.objects.some((o) => o.kind === 'board'))
+      add(region.file, 'the overworld needs a Quest Board (a `board` object)', at(['overworld', 'objects']));
     r.knowledge_check.items.forEach((it, i) => {
       if (it.kind === 'mcq' && it.answer >= it.options.length)
         add(
@@ -748,6 +762,7 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
           phases: q.type === 'boss' ? q.phases.map((p) => p.id) : [],
           sideQuest: q.side_quest,
           prerequisites: q.prerequisites,
+          npc: q.npc ?? null,
           badge: q.rewards.badge ?? null,
           // Bonus challenges, as the quest record stores them (phase/id in a boss).
           bonus:

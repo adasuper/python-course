@@ -3,8 +3,11 @@ import type { Course } from '../../src/content/types';
 import { checkNickname, normalizeForFilter, randomNickname } from '../../src/state/nickname';
 import { levelFor, newProfile, progressHash, titleFor, xpForLevel } from '../../src/state/profile';
 import {
+  boardQuests,
   completeCheck,
   completePhase,
+  coreQuests,
+  missingFor,
   completeQuest,
   hintsShown,
   questState,
@@ -228,6 +231,7 @@ describe('progress rules (Phase 1 audit)', () => {
   it('starts new profiles with the deploy defaults, and can hide side quests (F-DEP-02)', () => {
     const p = newProfile('Newt', 'avatar-1', 'moss', 'one', { textScale: 1.5, replaySpeed: 'instant' });
     expect(p.settings).toMatchObject({ textScale: 1.5, replaySpeed: 'instant', reducedMotion: 'system' });
+    for (const q of ['q1', 'q2']) completeQuest(p, course, q, 'x');
     for (const ph of ['p1', 'p2']) completePhase(p, course, 'boss', ph, 'x');
     expect(questState(p, course, 'side')).toBe('available');
     configureRules({ knowledgeCheckGates: false, sideQuests: false });
@@ -269,5 +273,37 @@ describe('progress files', () => {
       ok: false,
       reason: 'invalid',
     });
+  });
+});
+
+describe('the Quest Board (F-WLD-07, F-BOS-05)', () => {
+  const withBoard = {
+    ...course,
+    questOrder: [...course.questOrder, 'extra', 'early-side'],
+    questInfo: {
+      ...course.questInfo,
+      q1: { ...course.questInfo.q1!, npc: 'byte' },
+      q2: { ...course.questInfo.q2!, npc: 'pip' },
+      boss: { ...course.questInfo.boss!, npc: 'crier' },
+      extra: { ...course.questInfo.q1!, title: 'Extra', npc: null, prerequisites: [] },
+      'early-side': { ...course.questInfo.side!, title: 'Early', prerequisites: [] },
+    },
+  } as Course;
+
+  it('lists side quests and quests no map NPC hands out', () => {
+    expect(boardQuests(withBoard, 'one')).toEqual(['side', 'extra', 'early-side']);
+    expect(coreQuests(withBoard, 'one')).toEqual(['q1', 'q2', 'extra']);
+  });
+
+  it("opens side quests only once the region's core quests are done", () => {
+    const p = newProfile('Newt', 'avatar-1', 'moss', 'one');
+    expect(questState(p, withBoard, 'early-side')).toBe('locked');
+    expect(missingFor(p, withBoard, 'early-side')).toEqual(['q1', 'q2', 'extra']);
+    for (const q of ['q1', 'q2']) completeQuest(p, withBoard, q, 'x');
+    expect(missingFor(p, withBoard, 'early-side')).toEqual(['extra']);
+    completeQuest(p, withBoard, 'extra', 'x');
+    expect(questState(p, withBoard, 'early-side')).toBe('available');
+    // A side quest never blocks anything: the boss doesn't need it.
+    expect(missingFor(p, withBoard, 'boss')).toEqual([]);
   });
 });

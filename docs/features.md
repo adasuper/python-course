@@ -371,7 +371,7 @@ Priority: Must · Phase: 1 · Spec: §6.1, D3, D4 · Brief: §1, §2
 ### F-EXE-02 — Run my code
 As a Student, I want a Run button, so that I can see what my code does.
 **Acceptance criteria**
-- Run (button and `Ctrl+Enter`) sends a `RunRequest` to the worker and shows a "casting…" status.
+- Run (button and `Ctrl+Enter`) sends a `RunRequest` to the worker; the button shows "Running…" and a polite announcement says "Running your code."
 - The worker returns a `RunResult` with status, actions, error info, validation, world snapshot and stats.
 - Running again cancels any replay in progress.
 
@@ -382,7 +382,7 @@ As a Student, I want Byte to stop a loop that never ends and tell me which line 
 **Acceptance criteria**
 - Given `while True: pass` on line 4, the run stops with "Your loop on **line 4** ran 100,000 times! Check that your loop condition eventually becomes `False`." and line 4 is highlighted.
 - The worker is not restarted; the next run starts immediately.
-- Loop iterations are counted with `sys.monitoring` `JUMP` events (fallback `sys.settrace`).
+- Loop iterations are counted with `sys.monitoring` `JUMP` events (Pyodide ships CPython 3.14, so no `sys.settrace` fallback is needed).
 - Budgets come from `codeweald.config.json` (quests 100,000; Workshop 1,000,000) and are calibrated so the stop happens in < 1 s on a 4× CPU throttle.
 
 Priority: Must · Phase: 1 · Spec: §6.3 (layer 1) · Brief: §2.1
@@ -390,7 +390,7 @@ Priority: Must · Phase: 1 · Spec: §6.3 (layer 1) · Brief: §2.1
 ### F-EXE-04 — Stop a hero who never stops
 As a Student, I want a friendly stop when my hero moves or prints far too much, so that runaway programs end gently.
 **Acceptance criteria**
-- More than 2,000 actions ends the run with "Your hero is exhausted after 2,000 moves!".
+- More than 2,000 actions ends the run with "The hero is exhausted: your hero did more than 2,000 actions, so Byte stopped the program."
 - More than 100,000 output characters ends it with "That's a LOT of printing…".
 - Limits are configurable (`maxActions`, `maxOutputChars`).
 
@@ -418,7 +418,7 @@ Priority: Should · Phase: 2 · Spec: §6.3 · Brief: §2.1
 ### F-EXE-07 — Only safe parts of Python
 As a Maintainer, I want student code limited to safe builtins and an import allowlist, so that it can't touch files or other modules.
 **Acceptance criteria**
-- `SAFE_BUILTINS` removes `open`, `eval`, `exec`, `compile`, `breakpoint`, `help`, `memoryview`, `__loader__` and replaces `__import__`, `input`, `exit`, `quit`.
+- `SAFE_BUILTINS` removes `open`, `eval`, `exec`, `compile`, `breakpoint`, `help`, `memoryview`, `__loader__`, `__spec__` and replaces `__import__`, `input`, `exit`, `quit`, `getattr`, `setattr`, `delattr`, `hasattr`.
 - Imports allowed: `random`, `math`, `time` (wrapped) and `codeweald`, and nothing else.
 - Any other import raises "That spellbook isn't in Codeweald's library."
 - Only Pyodide's in-memory file system exists; nothing persists.
@@ -482,8 +482,8 @@ Priority: Must · Phase: 2 · Spec: §6.5 (Mode B), D6 · Brief: §2.1
 ### F-EXE-14 — Checks can't be tricked from student code
 As an Instructor, I want quest checks protected from student code, so that a pass means the code really worked.
 **Acceptance criteria**
-- Validators run from a module copy re-imported from a frozen source string *after* the student run.
-- A test shows monkeypatching `codeweald` during a run cannot fake a pass.
+- Student code can't reach the checking code: Python's own machinery (double-underscore names such as `__globals__`, and frame attributes such as `gi_frame`) is locked both in the program text and in `getattr`/`setattr`, and `codeweald`, `random` and `time` are facades that expose only the public API.
+- A test shows that patching the game during a run, including through `__globals__` or a name built at run time, cannot fake a pass.
 
 Priority: Should · Phase: 1 · Spec: §6.4 (7) · Brief: §2.2
 
@@ -751,7 +751,7 @@ As a Content author, I want declarative checks for output, world state, variable
 - `variable`: `name`, `equals`, `value_type`, `matches`.
 - `ast`: `require`, `forbid`, `require_calls`, `min_count`, `require_else`, `function`, `no_literal`, `uses_names`, `max_lines`.
 - `style`: `min_comments`, `comment_above`, `max_line_length` (uses `tokenize`, because `ast` drops comments; needed by Region 1's comment quests).
-- Each returns `{ id, passed, hint }`; all validators run on every attempt.
+- Each returns `{ id, passed, hint }`; all validators run on every attempt whose program finishes. When the program stops with an error, the error is explained first and the validators are skipped (a check of a half-run program would only confuse).
 
 Priority: Must · Phase: 1 · Spec: §9.3 · Brief: §2.2
 
@@ -881,7 +881,7 @@ Priority: Must · Phase: 2 · Spec: §9.3 · Brief: §2.2, §4 (Region 4 and 11 
 As a Student, I want an item in my inventory when I master an idea, so that I can see my progress.
 **Acceptance criteria**
 - Completing the quest named in `rewards.item` adds the item (e.g. *Quill of Printing*) to the profile.
-- A minimal inventory screen lists items with name, icon (alt text) and description.
+- A minimal inventory screen lists items with name, icon and description (the icon has empty alt text, because the item name is printed right beside it).
 - The item is still there after a reload (covered by F-QA-06).
 
 Priority: Must · Phase: 1 · Spec: §11.3 · Brief: §3.2, §7
@@ -960,7 +960,7 @@ Priority: Must · Phase: 1 · Spec: §9.6 · Brief: §3.2, §4
 ### F-BOS-02 — Keep my code between boss phases
 As a Student, I want the next boss phase to start from my last working code, so that I build up one program.
 **Acceptance criteria**
-- `starter_code: carry` starts a phase from my passing code for the previous phase.
+- `carry_code: true` starts a phase from my passing code for the previous phase, also after a reload (from that phase's saved draft).
 
 Priority: Should · Phase: 1 · Spec: §9.6 · Brief: §3.2
 
@@ -1040,8 +1040,8 @@ Priority: Should · Phase: 2 · Spec: §11.7 · Brief: §3.2
 ### F-SAV-01 — Progress saves itself
 As a Student, I want my progress saved automatically, so that I can close the tab and come back later.
 **Acceptance criteria**
-- Profiles are stored in IndexedDB (`codeweald` database: `profiles` and `drafts` via `idb-keyval`).
-- Saves are debounced 500 ms and flushed on `visibilitychange` and `pagehide`; `navigator.storage.persist()` is requested.
+- Profiles and drafts are stored in IndexedDB (the `codeweald` database, one `idb-keyval` store, with `profile:` and `draft:` keys).
+- Profile saves are debounced 500 ms and drafts 1 s; both are flushed on `visibilitychange` and `pagehide`; `navigator.storage.persist()` is requested.
 - Reloading the page restores everything (F-QA-06).
 
 Priority: Must · Phase: 1 · Spec: §12.2 · Brief: §1, §8
@@ -1075,7 +1075,7 @@ Priority: Must · Phase: 1 · Spec: §12.3 · Brief: §1, §6
 As a Student, I want to load my progress file on another computer, so that I can pick up where I left off.
 **Acceptance criteria**
 - Import accepts only a user-picked file ≤ 5 MB, validated with Zod; values are only ever rendered as text.
-- I choose **Replace this profile** or **Add as new profile** (Phase 1). **Merge** (union of completions, items and badges; max of XP, hints, attempts and time) arrives in Phase 2.
+- When the file's adventurer is already on this computer, I choose **Replace** or **Keep both** (Phase 1); otherwise it is added. **Merge** (union of completions, items and badges; max of XP, hints, attempts and time) arrives in Phase 2.
 - Unknown quest ids from other content versions are kept but ignored.
 
 Priority: Must · Phase: 1 · Spec: §12.3, §15.3 · Brief: §1
@@ -1084,7 +1084,7 @@ Priority: Must · Phase: 1 · Spec: §12.3, §15.3 · Brief: §1
 As a Student, I want a text code for my progress, so that I can move it without a file or paste it into an assignment box.
 **Acceptance criteria**
 - Format `CW1-` + Crockford Base32 in groups of 5 with a final CRC-16 check group; about 250 characters for the full course, including a short random profile id and the export date.
-- It encodes content version, avatar, theme, nickname, XP, per-quest status, hint tier, attempts bucket, time bucket, knowledge-check best scores and special badges.
+- It encodes content version, avatar, theme, nickname, XP, per-quest status, hint tier, attempts bucket, time bucket and knowledge-check best scores. Special badges join with the badges themselves (Phase 2, M2.5), in a `CW2` format that still reads `CW1` codes.
 - A "Copy" button copies it; the code is selectable text with an accessible label.
 
 Priority: Must · Phase: 1 · Spec: §12.4 · Brief: §1, §6
@@ -1147,7 +1147,7 @@ Priority: Must · Phase: 1 · Spec: §14.2 (2.4.7) · Brief: §1
 As a Student using a screen reader, I want every control named, so that I know what each one does.
 **Acceptance criteria**
 - All UI is semantic DOM (Preact); every control has an accessible name that matches its visible label.
-- Item icons, avatars and badges have alt text; decorative art is `aria-hidden`.
+- Item icons, avatars and badges have alt text, or empty alt text when their name is printed right beside them; decorative art is `aria-hidden`.
 - ARIA is used only where needed (tabs, toggletips, live regions, Parsons listbox).
 
 Priority: Must · Phase: 1 · Spec: §14.1, §14.2 (1.1.1, 1.3.1, 2.5.3, 4.1.2) · Brief: §1
@@ -1389,7 +1389,7 @@ Priority: Must · Phase: 1 · Spec: §10.6 · Brief: §6, §7
 ### F-AUT-06 — Content compiled for the browser
 As a Maintainer, I want YAML compiled to small JSON files at build, so that the browser loads fast and needs no YAML parser.
 **Acceptance criteria**
-- `build-content.ts` emits `src/generated/content/{course.json, region-NN.json}`; regions load lazily.
+- `build-content.ts` emits `src/generated/content/{course.json, region-<region-id>.json}`; regions load lazily.
 - Text is compiled to the safe AST (F-DLG-02); reference solutions are dropped from the game bundle (they appear only in the instructor answer key).
 
 Priority: Must · Phase: 1 · Spec: §10.6, D10 · Brief: §2
@@ -1415,7 +1415,7 @@ As a Content author, I want a command that creates a valid quest file, so that I
 **Acceptance criteria**
 - `npm run new-quest -- --region 4 --type make --slug river-ferry` creates a schema-valid file with TODO markers for every required field.
 
-Priority: Should · Phase: 5 · Spec: §10.6 · Brief: §6
+Priority: Should · Phase: 1 (delivered with the content pipeline, M1.4) · Spec: §10.6 · Brief: §6
 
 ### F-AUT-10 — A guide for writing quests
 As a Content author, I want a step-by-step quest-writing guide, so that I can add quests on my own.
@@ -1533,7 +1533,7 @@ Priority: Must · Phase: 1 · Spec: §19.1, D1 · Brief: §2, General rules
 ### F-QA-02 — TypeScript unit tests
 As a Maintainer, I want Vitest unit tests for the core logic, so that changes don't break saves, schemas or scoring.
 **Acceptance criteria**
-- Covers save/load (`fake-indexeddb`, fallbacks, migrations), export/import, save-code round-trip/typo/fuzz, schema fixtures, XP/levels, badge triggers, nickname filter, glossary linker, reading-level calculator, Parsons keyboard reducer and replay scheduling/narration.
+- Covers save/load (`fake-indexeddb`, fallbacks, migrations), export/import, save-code round-trip/typo/fuzz, schema fixtures, XP/levels, badge triggers, nickname filter, glossary linker, reading-level calculator, Parsons keyboard reducer (Phase 2, when M2.2 rebuilds Parsons) and replay scheduling/narration.
 
 Priority: Must · Phase: 1 (grows each phase) · Spec: §18.1 · Brief: §7
 
@@ -1555,7 +1555,7 @@ Priority: Must · Phase: 1 · Spec: §18.3 · Brief: §7
 ### F-QA-05 — CI on every push
 As a Maintainer, I want a GitHub Actions workflow, so that every change is checked automatically.
 **Acceptance criteria**
-- `.github/workflows/ci-cd.yml` runs on every push and pull request in stages: **Build** (`build`: size budget, `site` artifact), then **Test** (`checks`, `unit` with content validation, `e2e` against that same build, and `reading-level` from Phase 2), then **Deploy** (F-DEP-09). It uses the npm cache, which includes Pyodide.
+- `.github/workflows/ci-cd.yml` runs on every push and pull request in stages: **Build** (`build`: size budget, `site` artifact), then **Test** (`checks`, `unit` with content validation, `e2e` against that same build, and `reading-level`), then **Deploy** (F-DEP-09). It uses the npm cache, which includes Pyodide.
 - A phase is done only when CI is green (General rules).
 
 Priority: Must · Phase: 1 · Spec: §19.1 · Brief: §7, §9

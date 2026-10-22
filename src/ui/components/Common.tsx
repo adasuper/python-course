@@ -3,14 +3,14 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
 import type { PyRunner } from '../../runtime/pyRunner';
-import { announcement, dismissToast, toasts } from '../../state/store';
+import { announcement, dismissToast, regions, toasts } from '../../state/store';
 
 const ART = `${import.meta.env.BASE_URL}assets/art/`;
 
 export function LiveRegion() {
   const a = announcement.value;
   return (
-    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+    <div id="live-polite" class="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {/* The key forces re-announcement of identical messages. */}
       <span key={a.n}>{a.text}</span>
     </div>
@@ -76,7 +76,7 @@ export function Modal({
   );
 }
 
-export function Toasts({ onSave }: { onSave: () => void }) {
+export function Toasts({ onCopyCode, onSaveFile }: { onCopyCode: () => void; onSaveFile: () => void }) {
   return (
     <div class="toasts">
       {toasts.value.map((toast) => (
@@ -86,9 +86,14 @@ export function Toasts({ onSave }: { onSave: () => void }) {
           </span>
           <span>{toast.text}</span>
           {toast.kind === 'save-point' && (
-            <button type="button" class="small" onClick={onSave}>
-              {t.hud.save}
-            </button>
+            <>
+              <button type="button" class="small" onClick={onCopyCode}>
+                {t.save.copy}
+              </button>
+              <button type="button" class="small" onClick={onSaveFile}>
+                {t.save.saveFile}
+              </button>
+            </>
           )}
           <button
             type="button"
@@ -115,6 +120,20 @@ export function Portrait({ speaker, talking = false }: { speaker: string; talkin
         height={64}
       />
     );
+  }
+  // Villagers and Bugs: their sprite, drawn big (F-DLG-01).
+  for (const region of Object.values(regions.value)) {
+    const npc = region.npcs[speaker];
+    if (npc)
+      return (
+        <img
+          class="portrait pixel"
+          src={`${ART}portraits/${npc.sprite}.png`}
+          alt={npc.name}
+          width={64}
+          height={64}
+        />
+      );
   }
   return null;
 }
@@ -144,6 +163,10 @@ export function LoadingPanel({ runner }: { runner: PyRunner }) {
   const label = status === 'restarting' ? t.quest.restarting : t.loading;
   return (
     <div class="loading-panel">
+      {/* Stage changes (not every percent) are announced politely (F-ONB-08). */}
+      <p class="sr-only" role="status">
+        {label} {t.loadingStages[p.stage]}
+      </p>
       <Portrait speaker="byte" talking />
       <p>{label}</p>
       <progress

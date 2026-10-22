@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getPyHost, type PyHost } from '../../scripts/lib/pyHost';
+import type { ValidatorSpec } from '../../src/runtime/protocol';
 
 let py: PyHost;
 beforeAll(async () => {
@@ -124,5 +125,72 @@ describe('budgets', () => {
   it('explains runaway recursion', () => {
     const r = py.run({ code: 'def f(n):\n    return f(n + 1)\nf(0)' });
     expect(r.error?.key).toBe('limits.recursion');
+  });
+});
+
+describe('sandbox escapes (specs §6.4)', () => {
+  it.each(['js', 'pyodide', 'pyodide_js', '_pyodide', 'pyodide.ffi'])('blocks import %s', (mod) => {
+    expect(py.run({ code: `import ${mod}` }).error?.key).toBe('import.not_allowed');
+  });
+
+  it('removes the JavaScript bridge modules from sys.modules after boot', () => {
+    const left = py.pyodide.runPython(
+      `import sys
+",".join(m for m in sys.modules if m.split(".")[0] in ("js", "pyodide", "pyodide_js", "_pyodide"))`,
+    ) as string;
+    expect(left).toBe('');
+  });
+
+  it.each([
+    ['__loader__.load_module("sys")', '__loader__'],
+    ['__spec__', '__spec__'],
+    ['print(__builtins__)', '__builtins__'],
+    ['f = lambda: 0\nprint(f.__globals__)', '__globals__'],
+    ['print(().__class__.__base__.__subclasses__())', '__class__'],
+    ['def g():\n    yield 1\nx = g()\nprint(x.gi_frame)', 'gi_frame'],
+    ['try:\n    1 / 0\nexcept Exception as e:\n    print(e.__traceback__)', '__traceback__'],
+  ])('locks Python machinery: %s', (code, name) => {
+    const r = py.run({ code });
+    expect(r.status).toBe('error');
+    expect(r.error?.key).toBe('sandbox.locked');
+    expect(r.error?.params.name).toBe(name);
+    expect(r.error?.line).toBeGreaterThan(0);
+  });
+
+  it('locks names built at run time too', () => {
+    const r = py.run({ code: 'f = lambda: 0\nname = "__glo" + "bals__"\nprint(getattr(f, name))' });
+    expect(r.error?.key).toBe('sandbox.locked');
+    expect(r.error?.line).toBe(3);
+    expect(py.run({ code: 'setattr(print, "__" + "class" + "__", 1)' }).error?.key).toBe('sandbox.locked');
+  });
+
+  it('still allows ordinary names and attributes', () => {
+    const r = py.run({
+      code: 'def hi():\n    """Says hi."""\n    return "hi"\nprint(hi.__name__, hi.__doc__, getattr("abc", "upper")())\nif __name__ == "__main__":\n    print("main")',
+    });
+    expect(r.status).toBe('ok');
+    expect(r.output).toBe('hi Says hi. ABC\nmain\n');
+  });
+
+  it("can't trick a quest check by patching the game", () => {
+    const stage = { kind: 'grid' as const, grid: 'H...' };
+    const validators: ValidatorSpec[] = [{ type: 'state', hero_at: [3, 0] }];
+    const attempts = [
+      // The audit's proof: replace World.snapshot through a function's globals.
+      'from codeweald import hero\ntype(hero).move.__globals__["World"].snapshot = lambda self: {"hero": [3, 0]}',
+      // The same, with the name built at run time.
+      'from codeweald import hero\ng = getattr(type(hero).move, "__glo" + "bals__")\ng["World"].snapshot = lambda self: {}',
+      // Reaching for the internals through the package.
+      'import codeweald\ncodeweald._world.World.snapshot = lambda self: {}',
+      // Patching what students can reach doesn't change the real world state.
+      'from codeweald import hero\ntype(hero).position = lambda self: (3, 0)',
+    ];
+    for (const code of attempts) {
+      const r = py.run({ code, stage, validators });
+      expect(r.validation?.passed ?? false).toBe(false);
+    }
+    // The honest solution still passes.
+    const ok = py.run({ code: 'from codeweald import hero\nhero.move("right", 3)', stage, validators });
+    expect(ok.validation?.passed).toBe(true);
   });
 });

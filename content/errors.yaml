@@ -245,6 +245,12 @@ limits.recursion:
   message: >-
     A function kept calling itself over and over, so Python stopped on line {line}.
   tip: Make sure the function has a way to stop.
+limits.crashed:
+  title: Python needed a fresh start
+  message: >-
+    Your program made Python itself stop working, so Byte started a fresh copy. This can happen
+    when a function calls itself too many times.
+  tip: Check for a function that calls itself with no way to stop, then run again.
 limits.memory:
   title: Out of room
   message: >-
@@ -317,6 +323,16 @@ sandbox.blocked:
   title: Not in the Spellbook
   message: >-
     `{name}()` on line {line} isn't available in the Spellbook. You won't need it for any quest.
+stage.invalid:
+  title: This quest's map is broken
+  message: >-
+    The quest map has a problem ({problem}). That's a bug in the quest, not in your code.
+  tip: Tell your instructor which quest this was.
+sandbox.locked:
+  title: That part of Python is locked
+  message: >-
+    Line {line} uses `{name}`. Names with double underscores (and a few others) are Python's own
+    machinery, so Codeweald keeps them locked. No quest needs them.
 import.not_allowed:
   title: That spellbook isn't in our library
   message: >-

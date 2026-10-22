@@ -76,7 +76,7 @@ print("The chickens are loud.")
 - Run the program. How many lines appear on the Scroll of Output? → **3**. Three `print` instructions make three lines of output.
 - Swap lines 1 and 2 in the Spellbook, then run it again. What changes? → **The first two lines of output swap places too.**. The output follows the order of the code. Change the order, change the output.
 - Now remove the quotes around `Hello, Hearthvale!` and run it. What happens? → **Python shows an error.**. Text needs quotes. Without them, Python tries to read the words as code and gets confused.
-- Finish the sentence with one word: `print` ____ text on the Scroll of Output. → **shows / writes / displays / prints / puts**. `print` shows text on the Scroll of Output.
+- Finish the sentence with one word: `print` … text on the Scroll of Output. → **shows / writes / displays / prints / puts**. `print` shows text on the Scroll of Output.
 
 **Hints (free, in this order):**
 
@@ -98,7 +98,7 @@ ____
 - **Type:** parsons
 - **Learning outcome:** Arrange move and say instructions in order so the hero reaches the well and greets the miller.
 - **CSTA:** 2-AP-10 · **About 7 min**
-- **Goal (as students see it):** Put the lines in order so the hero walks to the miller without bumping into anything, then says good morning.
+- **Goal (as students see it):** Put the lines in order. The hero must walk to the miller without bumping into anything. Then the hero says good morning.
 
 **Reference solution** (other correct answers also pass — the checks test behavior):
 
@@ -277,13 +277,13 @@ print("Mind the chickens.")
 
 `r1-boss-village-crier-bug`
 
-**Boss:** The Village Crier Bug (Clangle). Fix the announcement in three phases to turn Clangle back into a friendly firefly.
+**Boss:** The Village Crier Bug (Clangle). Fix the announcement in three phases. Then Clangle turns back into a friendly firefly.
 
 #### Phase 1: Unjam the bell
 
 - **Type:** fix
 - **Learning outcome:** Use error messages to find and fix errors that stop a program from running.
-- **CSTA:** 2-AP-17 · **About 4 min**
+- **CSTA:** 2-AP-17 · **About 5 min**
 - **Goal (as students see it):** Fix the two bugs so the announcement runs and prints all three lines.
 
 **Starter code:**
@@ -324,7 +324,7 @@ print("The fair starts at noon!")
 
 - **Type:** fix
 - **Learning outcome:** Arrange print statements so the output matches a required order.
-- **CSTA:** 2-AP-17 · **About 4 min**
+- **CSTA:** 2-AP-17 · **About 5 min**
 - **Goal (as students see it):** Reorder the print lines so the output matches the crier's script exactly.
 
 **Starter code:**
@@ -367,8 +367,8 @@ print("Bring a friend and a basket.")
 
 - **Type:** modify
 - **Learning outcome:** Document a program with comments that explain each part.
-- **CSTA:** 2-AP-19 · **About 4 min**
-- **Goal (as students see it):** Walk the hero to the tile in front of the podium, say "Hear ye!", and add a comment above the walking part and above the speaking part.
+- **CSTA:** 2-AP-19 · **About 5 min**
+- **Goal (as students see it):** Walk the hero to the tile in front of the podium. Then say "Hear ye!". Add a comment above the walking part, and one above the talking part.
 
 **Starter code:**
 

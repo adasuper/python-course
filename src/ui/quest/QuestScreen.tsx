@@ -1,9 +1,10 @@
 // Opens a quest (or a boss with phases) and wires completion to progress (§9.6).
 import { useEffect, useState } from 'preact/hooks';
 import type { BossQuest, NormalQuest } from '../../content/types';
+import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
-import { completePhase, completeQuest } from '../../state/progress';
-import { course, go, loadRegion, profile, regions, update } from '../../state/store';
+import { completePhase, completeQuest, record } from '../../state/progress';
+import { course, getStorage, go, loadRegion, profile, regions, update } from '../../state/store';
 import { Hud } from '../screens/Overworld';
 import { QuestPlay } from './QuestPlay';
 
@@ -14,12 +15,48 @@ export function QuestScreen({ questId }: { questId: string }) {
   useEffect(() => {
     if (!region) void loadRegion(info.region);
   }, [info.region]);
+  // Opening a quest makes it "in progress" (F-QST-01) and remembers it as where the
+  // student left off (F-SAV-10) until they go back to the map.
+  useEffect(() => {
+    update((x) => {
+      record(x, questId);
+      x.location.quest = questId;
+    });
+    return () =>
+      update((x) => {
+        if (x.location.quest === questId) x.location.quest = null;
+      });
+  }, [questId]);
   if (!region) return <main id="main" class="screen" />;
   const quest = region.questData[questId]!;
   return quest.type === 'boss' ? (
     <BossScreen quest={quest} regionName={region.name} />
   ) : (
     <SingleQuest quest={quest} regionName={region.name} />
+  );
+}
+
+/** Skip links (F-A11-06). The editor may be a Parsons puzzle instead. */
+function SkipLinks() {
+  const jump = (e: Event, ...selectors: string[]) => {
+    const target = selectors.map((s) => document.querySelector<HTMLElement>(s)).find(Boolean);
+    if (!target) return;
+    e.preventDefault();
+    if (!target.hasAttribute('tabindex') && !target.isContentEditable) target.tabIndex = -1;
+    target.focus();
+  };
+  return (
+    <>
+      <a class="skip-link" href="#main" onClick={(e) => jump(e, '#main')}>
+        {t.skipToMain}
+      </a>
+      <a class="skip-link" href="#code-editor" onClick={(e) => jump(e, '#code-editor', '.parsons button')}>
+        {t.quest.skipToEditor}
+      </a>
+      <a class="skip-link" href="#output-body" onClick={(e) => jump(e, '#output-body')}>
+        {t.quest.skipToOutput}
+      </a>
+    </>
   );
 }
 
@@ -44,9 +81,7 @@ function SingleQuest({ quest, regionName }: { quest: NormalQuest; regionName: st
   useEffect(() => document.getElementById('quest-title')?.focus(), [quest.id]);
   return (
     <div class="screen quest-screen">
-      <a class="skip-link" href="#main">
-        {t.skipToMain}
-      </a>
+      <SkipLinks />
       <Header
         title={quest.title}
         kind={quest.sideQuest ? `⭐ side quest · ${quest.type}` : quest.type}
@@ -88,11 +123,23 @@ function BossScreen({ quest, regionName }: { quest: BossQuest; regionName: strin
   const [starterFromPrevious, setStarterFromPrevious] = useState<string | null>(null);
   const phase = quest.phases[index]!;
   const left = quest.phases.length - done.length;
+  // A carry_code phase starts from the passing code of the phase before. After a reload
+  // that code comes from the previous phase's saved draft (F-BOS-02).
+  const [carry, setCarry] = useState<{ phase: string; code: string | null } | null>(null);
+  useEffect(() => {
+    const prev = quest.phases[index - 1];
+    if (!phase.carryCode || !prev) return setCarry({ phase: phase.id, code: null });
+    if (starterFromPrevious) return setCarry({ phase: phase.id, code: starterFromPrevious });
+    void getStorage()
+      .draft(p.id, `${quest.id}›${prev.id}`)
+      .then((draft) => setCarry({ phase: phase.id, code: draft ?? null }));
+  }, [index]);
   const defeated = p.quests[quest.id]?.status === 'completed';
   useEffect(() => document.getElementById('quest-title')?.focus(), [index]);
 
   return (
     <div class="screen quest-screen boss">
+      <SkipLinks />
       <Header title={quest.title} kind={`boss · ${quest.boss.bug}`} regionName={regionName} />
       <main id="main" tabIndex={-1}>
         <div class="boss-bar card">
@@ -133,36 +180,40 @@ function BossScreen({ quest, regionName }: { quest: BossQuest; regionName: strin
             })}
           </nav>
         </div>
-        <QuestPlay
-          key={phase.id}
-          quest={quest as never}
-          body={phase}
-          unitKey={`${quest.id}›${phase.id}`}
-          outro={phase.storyOutro ?? (index === quest.phases.length - 1 ? quest.storyOutro : null)}
-          starter={phase.carryCode && starterFromPrevious ? starterFromPrevious : phase.starterCode}
-          onPassed={(code) => {
-            let reward = {
-              xp: 0,
-              item: null as string | null,
-              levelUp: null as number | null,
-              bossDefeated: false,
-            };
-            update((x) => (reward = completePhase(x, course.value!, quest.id, phase.id, code)));
-            setStarterFromPrevious(code);
-            return reward;
-          }}
-          afterPass={
-            index < quest.phases.length - 1 ? (
-              <button type="button" class="primary" onClick={() => setIndex(index + 1)}>
-                {t.quest.nextPhase} ▸
-              </button>
-            ) : (
-              <button type="button" class="primary" onClick={() => go({ name: 'overworld' })}>
-                {t.quest.continue} ▸
-              </button>
-            )
-          }
-        />
+        {carry?.phase === phase.id && (
+          <QuestPlay
+            key={phase.id}
+            quest={quest as never}
+            body={phase}
+            unitKey={`${quest.id}›${phase.id}`}
+            phaseId={phase.id}
+            outro={phase.storyOutro ?? (index === quest.phases.length - 1 ? quest.storyOutro : null)}
+            starter={carry.code ?? phase.starterCode}
+            onPassed={(code) => {
+              let reward = {
+                xp: 0,
+                item: null as string | null,
+                levelUp: null as number | null,
+                bossDefeated: false,
+              };
+              update((x) => (reward = completePhase(x, course.value!, quest.id, phase.id, code)));
+              setStarterFromPrevious(code);
+              if (reward.bossDefeated) getWorldView().celebrateBoss(quest.boss.sprite);
+              return reward;
+            }}
+            afterPass={
+              index < quest.phases.length - 1 ? (
+                <button type="button" class="primary" onClick={() => setIndex(index + 1)}>
+                  {t.quest.nextPhase} ▸
+                </button>
+              ) : (
+                <button type="button" class="primary" onClick={() => go({ name: 'overworld' })}>
+                  {t.quest.continue} ▸
+                </button>
+              )
+            }
+          />
+        )}
       </main>
     </div>
   );

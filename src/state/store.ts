@@ -17,7 +17,8 @@ export type Route =
   | { name: 'overworld' }
   | { name: 'quest'; questId: string }
   | { name: 'check'; regionId: string }
-  | { name: 'inventory' };
+  | { name: 'inventory' }
+  | { name: 'credits' };
 
 export interface Toast {
   id: number;

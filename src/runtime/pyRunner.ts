@@ -73,12 +73,28 @@ export class PyRunner {
             done?.(msg.result);
             break;
           }
+          case 'crashed': {
+            const done = this.pending.get(msg.runId);
+            this.pending.delete(msg.runId);
+            done?.(crashResult(msg.message));
+            void this.restart();
+            break;
+          }
         }
       };
       worker.onerror = (event) => {
-        this.status.value = 'failed';
-        this.error.value = event.message || 'The Python worker crashed';
-        reject(new Error(this.error.value));
+        event.preventDefault?.();
+        const message = event.message || 'The Python worker crashed';
+        if (this.status.value === 'loading' || this.status.value === 'restarting') {
+          this.status.value = 'failed';
+          this.error.value = message;
+          reject(new Error(message));
+          return;
+        }
+        // A crash after boot is handled like a timeout: answer the waiting run, start fresh.
+        for (const [, done] of this.pending) done(crashResult(message));
+        this.pending.clear();
+        void this.restart();
       };
     });
     this.ready.catch(() => {});
@@ -88,7 +104,7 @@ export class PyRunner {
   /** Throw the current worker away and boot a new one (after a timeout or crash). */
   restart(): Promise<void> {
     this.worker.terminate();
-    for (const [, done] of this.pending) done(emptyResult('crashed'));
+    for (const [, done] of this.pending) done(crashResult('The Python worker was restarted'));
     this.pending.clear();
     this.status.value = 'restarting';
     this.start();
@@ -141,6 +157,21 @@ function timeoutResult(timeoutMs: number): RunResult {
       col: null,
       endCol: null,
       raw: '',
+    },
+  };
+}
+
+export function crashResult(message: string): RunResult {
+  return {
+    ...emptyResult('crashed'),
+    error: {
+      type: 'Crash',
+      key: 'limits.crashed',
+      params: { line: '' },
+      line: null,
+      col: null,
+      endCol: null,
+      raw: message,
     },
   };
 }

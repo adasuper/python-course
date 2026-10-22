@@ -1,71 +1,85 @@
 # yaml-language-server: $schema=../schema/glossary.schema.json
 # Words students can click (or focus) to see a definition.
 # Link a word in any story text with [[term]] or [[shown words|term]].
+# Each definition is at most 2 sentences, and every entry has an example (rich text: put
+# code in `backticks`, or in a ``` block for several lines).
 - term: program
   definition: A list of instructions for the computer. The computer does them in order, from top to bottom.
   example: |
+    ```python
     print("Hello!")
     print("Goodbye!")
+    ```
   related: [instruction, sequence, code]
 - term: code
   definition: The words and symbols you write to make a program.
+  example: '`hero.move("up")` is one line of code.'
   related: [program]
 - term: instruction
   definition: One step in a program, like "print this" or "move right". Most instructions sit on their own line.
-  example: hero.move("right")
+  example: '`hero.move("right")`'
   related: [program, sequence]
 - term: sequence
   definition: Things done in a set order. Python runs your lines in sequence, one after another.
+  example: 'First `hero.move("up")`, then `hero.say("Hi")`.'
   related: [program, instruction]
 - term: run
   definition: To make the computer follow your program. Press Run to see what your code does.
+  example: Press **Run**, and the hero follows your program step by step.
   related: [program]
 - term: print
   definition: An instruction that shows text on the Scroll of Output.
-  example: print("Hello, Hearthvale!")
+  example: '`print("Hello, Hearthvale!")`'
   related: [output, string]
 - term: string
   definition: A piece of text in Python. A string goes inside quotes.
-  example: '"Hello" and ''Hello'' are both strings.'
+  example: '`"Hello"` and `''Hello''` are both strings.'
   related: [quotes]
 - term: quotes
   definition: The marks around a string, like "this" or 'this'. The quote at the start must match the quote at the end.
-  example: print("Bun's Bakery")
+  example: '`print("Bun''s Bakery")`'
   related: [string]
 - term: output
   definition: What a program shows when it runs. In Codeweald, output appears on the Scroll of Output.
+  example: '`print("Hi")` puts **Hi** on the Scroll of Output.'
   related: [print, scroll of output]
 - term: Scroll of Output
   definition: The panel where your program's output appears. Each print makes a new line on it.
+  example: Two `print` lines make two lines on the Scroll.
   related: [output, print]
 - term: comment
   definition: "A note for humans that starts with #. Python skips it when the program runs."
-  example: '# This line is just a note.'
+  example: '`# This line is just a note.`'
   related: [code]
 - term: error
-  definition: A problem that stops Python from running your code. Errors are normal. Every coder sees them all the time.
+  definition: A problem that stops Python from running your code. Every coder sees errors all the time, so they are nothing to worry about.
+  example: '`Print("Hi")` gives an error, because Python only knows `print` with a small p.'
   related: [error message, bug]
 - term: error message
   definition: Python's note about what went wrong. It tells you the kind of error and the line to check.
-  example: "SyntaxError on line 3"
+  example: '`SyntaxError on line 3`'
   related: [error, line number]
 - term: line number
   definition: The number of a line in your code. Line 1 is at the top.
+  example: An error on **line 3** means you should look at the third line.
   related: [error message]
 - term: bug
   definition: A mistake in a program. Bugs can stop a program or make it do the wrong thing.
+  example: The hero walks left when you meant right.
   related: [debugging, error]
 - term: debugging
   definition: Finding and fixing bugs. You look for clues, make a guess, and test it.
+  example: Run the code, read the Scroll, change one thing, and run it again.
   related: [bug]
 - term: syntax
   definition: The spelling and grammar rules of a programming language. A missing quote or bracket breaks the syntax.
+  example: '`print("Hi"` is missing its `)`, so the syntax is broken.'
   related: [error]
 - term: case-sensitive
   definition: Python treats capital and small letters as different. print works, but Print does not.
-  example: print("yes")
+  example: '`print("yes")` works, but `Print("yes")` does not.'
   related: [syntax]
 - term: hero
   definition: Your character in a quest. You control the hero with instructions like hero.move("up").
-  example: hero.say("Hi!")
+  example: '`hero.say("Hi!")`'
   related: [instruction]

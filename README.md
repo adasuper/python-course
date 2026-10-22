@@ -19,8 +19,9 @@ grades 6–8.
 
 ## Status
 
-**Phase 1 — vertical slice.** Region 1 (Hearthvale Village) is playable end to end. See
-[PROGRESS.md](PROGRESS.md) for what's done, what's next and known issues.
+**Phase 1 — vertical slice.** Region 1 (Hearthvale Village) is playable end to end. Play
+it at <https://adasuper.github.io/python-course/>. See [PROGRESS.md](PROGRESS.md) for
+what's done, what's next and known issues.
 
 ## Try the demo
 
@@ -43,7 +44,8 @@ Open <http://localhost:4173> in Chrome or Edge. The first load downloads Python 
 | `npm run content` | Recompile `content/**/*.yaml` after editing (the dev server reloads) |
 | `npm run validate-content` | Check every content file and run every reference and wrong solution |
 | `npm run solutions` | Regenerate the instructor answer key `docs/solutions.md` |
-| `npm run new-quest` | *(Phase 5)* Scaffold a new quest file |
+| `npm run reading-level` | Flesch–Kincaid grade of all student text; lists texts above grade 7 |
+| `npm run new-quest -- --region 1 --type make --slug my-quest` | Start a new quest file with a TODO in every field (`--side` for a side quest) |
 | `npm test` | Unit, Python-runtime and content tests (Vitest; Python runs in Pyodide on Node) |
 | `npm run test:e2e` | End-to-end, keyboard and accessibility tests (Playwright + axe) — run `npm run build` first (with the same `CODEWEALD_BASE`, if you set one) |
 | `npm run lint` · `npm run typecheck` · `npm run format` | Code quality |
@@ -78,6 +80,20 @@ actions as animation, highlighting the line of code that caused each one. Infini
 stopped by a loop budget inside Python, naming the line, and a hard wall-clock timeout
 restarts the worker as a backstop. Details: [docs/specs.md](docs/specs.md).
 
+## Branches and releases
+
+- **`dev`:** all day-to-day work, including Claude Code's (see [CLAUDE.md](CLAUDE.md)).
+  Every push runs the Build and Test stages below.
+- **`main`:** the live site. To release, open a pull request from `dev` to `main`. The
+  pipeline tests the pull request, and once you merge it, the pipeline runs on `main` and
+  deploys to GitHub Pages automatically.
+
+Recommended GitHub settings:
+
+- **Settings → General → Default branch:** `main`.
+- **Settings → Rules → Rulesets:** a branch ruleset for `main` that requires a pull request
+  and the CI/CD status checks to pass, so nothing reaches `main` without review and tests.
+
 ## CI/CD
 
 [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) runs on every push and pull
@@ -85,9 +101,10 @@ request, in three stages:
 
 1. **Build:** `npm run build` runs once. That includes type-checking and the size budget.
    The result is saved as the `site` artifact.
-2. **Test:** three jobs run in parallel: lint and format; unit, Python and content tests
-   (every reference and wrong solution, and the answer key being up to date); and
-   end-to-end plus accessibility tests that play **that same build** in Chromium.
+2. **Test:** four jobs run in parallel: lint and format; unit, Python and content tests
+   (every reference and wrong solution, and the answer key being up to date); end-to-end
+   plus accessibility tests that play **that same build** in Chromium; and the reading
+   level of all student text (fails above grade 9).
 3. **Deploy:** only for the `main` branch, after every test passes, the same tested files
    are published to GitHub Pages. You can also deploy by hand: **Actions → CI/CD → Run
    workflow** with `main` selected. Other branches and pull requests never deploy.

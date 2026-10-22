@@ -14,7 +14,7 @@ story_intro: |
   Miller Dusty is waiting by the well. "Achoo! Sorry. Flour. Could you come say good morning? A gust of wind blew my directions everywhere."
 
   The scraps of the program are all here, but they're jumbled. Put them back in the right [[sequence]]. One scrap doesn't belong at all.
-goal: Put the lines in order so the hero walks to the miller without bumping into anything, then says good morning.
+goal: Put the lines in order. The hero must walk to the miller without bumping into anything. Then the hero says good morning.
 concept_card: |
   Order matters. The same instructions in a different order can send the hero somewhere else, or straight into a wall. Plan the path one step at a time.
 

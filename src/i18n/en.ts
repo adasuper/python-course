@@ -20,6 +20,7 @@ export const t = {
     deviceNote:
       'This computer might forget your progress when you sign out. Save your progress code at the end of each class!',
   },
+  credits: { link: 'Credits', heading: 'Credits and licenses', back: 'Back' },
   creator: {
     heading: 'Create your Scriptwright',
     avatar: 'Choose your look',
@@ -35,9 +36,22 @@ export const t = {
       blocked: 'Let\'s pick a different nickname. Try "Make one for me"!',
     },
   },
-  dialogue: { next: 'Next', done: 'Done', skip: 'Skip scene' },
+  dialogue: {
+    next: 'Next',
+    back: 'Back',
+    done: 'Done',
+    skip: 'Skip scene',
+    replayOpening: 'Replay the opening story',
+  },
+  glossaryExample: 'For example:',
   hud: {
     questLog: 'Quest log',
+    closeLog: 'Close the quest log',
+    finishFirst: (titles: string[]) => {
+      const named = titles.slice(0, 2).map((x) => `“${x}”`);
+      const more = titles.length - named.length;
+      return `Finish ${named.join(more ? ', ' : ' and ')}${more ? ` and ${more} more` : ''} first.`;
+    },
     inventory: 'Inventory',
     save: 'Save progress',
     unsaved: 'Unsaved progress',
@@ -53,6 +67,13 @@ export const t = {
     back: 'Back to the map',
     run: 'Run',
     running: 'Running…',
+    runningAnnounce: 'Running your code.',
+    errorOnLine: (line: number | null, title: string) =>
+      line ? `Error on line ${line}: ${title}` : `Error: ${title}`,
+    showAllOutput: 'Show all output now',
+    skipToEditor: 'Skip to editor',
+    skipToOutput: 'Skip to output',
+    errorOutput: 'Error output:',
     reset: 'Reset code',
     resetConfirm: 'Put back the starting code? Your changes will be replaced.',
     goal: 'Goal',
@@ -74,6 +95,9 @@ export const t = {
     hideRealError: 'Hide the real Python error',
     editorLabel: 'Spellbook: your Python code',
     editorHelp: 'Ctrl+Enter runs your code. To leave the editor with the keyboard, press Esc, then Tab.',
+    codeSize: 'Code size',
+    codeSmaller: 'smaller code',
+    codeBigger: 'bigger code',
     xpGained: (xp: number) => `+${xp} XP`,
     itemGained: (name: string) => `New item: ${name}`,
     levelUp: (n: number) => `Level up! You are now level ${n}.`,
@@ -95,6 +119,7 @@ export const t = {
     skip: 'Skip to end',
     speed: 'Speed',
     instant: 'Instant',
+    keys: 'Keys: Space plays or pauses, . steps',
   },
   predict: {
     lockIn: 'Lock in my prediction',

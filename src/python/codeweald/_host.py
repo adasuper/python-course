@@ -5,9 +5,21 @@ identical in the browser and in Node.
 """
 
 import json
+import sys
 
 from ._check import Ctx, bake_cases, evaluate
 from ._runner import execute
+
+# Modules that bridge Python to JavaScript. Student code can't import them (the import
+# allowlist), and after boot they are gone from sys.modules too (specs §6.4 (4)).
+BRIDGE_MODULES = ("js", "pyodide", "pyodide_js", "_pyodide")
+
+
+def lockdown():
+    """Called once after boot, before any student code runs."""
+    for name in list(sys.modules):
+        if name.split(".")[0] in BRIDGE_MODULES:
+            del sys.modules[name]
 
 
 def _execute(req, source=None):

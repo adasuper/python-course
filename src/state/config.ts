@@ -8,7 +8,17 @@ export interface AppConfig {
     maxActions: number;
     maxOutputChars: number;
   };
-  defaults: { hints: 'all' | 'nudge' | 'off'; replaySpeed: number };
+  /** New profiles start with these (students can change them later in Settings). */
+  defaults: {
+    /** all: three hints; nudge: only the first; off: no hints (e.g. for a review session). */
+    hints: 'all' | 'nudge' | 'off';
+    textScale: 1 | 1.25 | 1.5 | 2;
+    reducedMotion: 'system' | 'on' | 'off';
+    replaySpeed: 0.5 | 1 | 2 | 4 | 'instant';
+    /** Read in Phase 2 (text-to-speech and sound). */
+    tts: boolean;
+    soundEffects: boolean;
+  };
   features: {
     workshop: boolean;
     sideQuests: boolean;
@@ -21,12 +31,19 @@ export const DEFAULT_CONFIG: AppConfig = {
   courseId: 'codeweald-intro-python',
   execution: {
     timeoutSeconds: 3,
-    loopBudget: 1_000_000,
-    workshopLoopBudget: 10_000_000,
+    loopBudget: 100_000,
+    workshopLoopBudget: 1_000_000,
     maxActions: 2000,
     maxOutputChars: 100_000,
   },
-  defaults: { hints: 'all', replaySpeed: 1 },
+  defaults: {
+    hints: 'all',
+    textScale: 1,
+    reducedMotion: 'system',
+    replaySpeed: 1,
+    tts: false,
+    soundEffects: false,
+  },
   features: { workshop: true, sideQuests: true, knowledgeCheckGates: false, standbyWorker: 'off' },
 };
 

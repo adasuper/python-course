@@ -148,4 +148,5 @@ export type FromWorker =
   | { kind: 'progress'; stage: 'download' | 'compile' | 'stdlib' | 'ready'; loaded?: number; total?: number }
   | { kind: 'ready'; pyodideVersion: string; pythonVersion: string }
   | { kind: 'failed'; message: string }
-  | { kind: 'result'; runId: number; result: RunResult };
+  | { kind: 'result'; runId: number; result: RunResult }
+  | { kind: 'crashed'; runId: number; message: string };

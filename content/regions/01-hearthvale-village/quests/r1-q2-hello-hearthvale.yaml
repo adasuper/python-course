@@ -35,6 +35,7 @@ questions:
     answer: 3
     hint: Count the lines on the Scroll after you press Run. Each print makes one line.
     explain: Three `print` instructions make three lines of output.
+    verify: { kind: output_lines }
   - kind: mcq
     question: Swap lines 1 and 2 in the Spellbook, then run it again. What changes?
     options:
@@ -44,6 +45,17 @@ questions:
     answer: 0
     hint: Python runs lines from top to bottom. What is on the top line now?
     explain: The output follows the order of the code. Change the order, change the output.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        print("The bread is warm.")
+        print("Hello, Hearthvale!")
+        print("The chickens are loud.")
+      output: |
+        The bread is warm.
+        Hello, Hearthvale!
+        The chickens are loud.
   - kind: mcq
     question: Now remove the quotes around `Hello, Hearthvale!` and run it. What happens?
     options:
@@ -52,9 +64,16 @@ questions:
       - It prints nothing at all.
     answer: 0
     hint: Without quotes, Python doesn't know those words are text. Put the quotes back when you're done!
+    verify:
+      kind: try
+      outcome: error
+      code: |
+        print(Hello, Hearthvale!)
+        print("The bread is warm.")
+        print("The chickens are loud.")
     explain: Text needs quotes. Without them, Python tries to read the words as code and gets confused.
   - kind: text
-    question: "Finish the sentence with one word: `print` ____ text on the Scroll of Output."
+    question: "Finish the sentence with one word: `print` … text on the Scroll of Output."
     accept: [shows, writes, displays, prints, puts]
     hint: What did you see happen on the Scroll each time you ran the program?
     explain: "`print` shows text on the Scroll of Output."

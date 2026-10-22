@@ -1,10 +1,12 @@
 import { useEffect } from 'preact/hooks';
 import { t } from '../i18n/en';
-import { route, saveDialogOpen, unsaved } from '../state/store';
+import { copySaveCode, saveProgressFile } from '../state/saving';
+import { announce, route, saveDialogOpen, unsaved } from '../state/store';
 import { LiveRegion, Toasts } from './components/Common';
 import { SaveDialog } from './components/SaveDialogs';
 import { QuestScreen } from './quest/QuestScreen';
 import { CheckScreen } from './screens/Check';
+import { CreditsScreen } from './screens/Credits';
 import { ConceptScreen } from './screens/Concept';
 import { CreatorScreen } from './screens/Creator';
 import { InventoryScreen } from './screens/Inventory';
@@ -62,11 +64,17 @@ export function App() {
     case 'inventory':
       screen = <InventoryScreen />;
       break;
+    case 'credits':
+      screen = <CreditsScreen />;
+      break;
   }
   return (
     <>
       {screen}
-      <Toasts onSave={() => (saveDialogOpen.value = true)} />
+      <Toasts
+        onCopyCode={() => void copySaveCode()}
+        onSaveFile={() => void saveProgressFile().then((r) => r !== 'cancelled' && announce(t.hud.saved))}
+      />
       {saveDialogOpen.value && <SaveDialog onClose={() => (saveDialogOpen.value = false)} />}
       <LiveRegion />
     </>

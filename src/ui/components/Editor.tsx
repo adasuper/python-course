@@ -9,12 +9,14 @@ import {
   indentUnit,
   syntaxHighlighting,
 } from '@codemirror/language';
-import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint';
+import { setDiagnostics, type Diagnostic } from '@codemirror/lint';
 import { Compartment, EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
 import {
   Decoration,
   drawSelection,
   EditorView,
+  gutter,
+  GutterMarker,
   highlightActiveLine,
   highlightActiveLineGutter,
   keymap,
@@ -24,22 +26,74 @@ import {
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
 
+// The line the replay is on, and the line of a run error. Each gets a background and a
+// gutter symbol (▶ / ✖), so neither relies on color alone (F-API-10, F-EDT-05).
 const setReplayLine = StateEffect.define<number | null>();
+const setErrorLine = StateEffect.define<number | null>();
 
-const replayLineField = StateField.define<DecorationSet>({
-  create: () => Decoration.none,
-  update(deco, tr) {
+interface Marks {
+  replay: number | null;
+  error: number | null;
+}
+
+const marksField = StateField.define<Marks>({
+  create: () => ({ replay: null, error: null }),
+  update(marks, tr) {
+    let next = marks;
     for (const effect of tr.effects) {
-      if (effect.is(setReplayLine)) {
-        const line = effect.value;
-        if (line === null || line < 1 || line > tr.state.doc.lines) return Decoration.none;
-        const from = tr.state.doc.line(line).from;
-        return Decoration.set([Decoration.line({ class: 'cm-replay-line' }).range(from)]);
-      }
+      if (effect.is(setReplayLine)) next = { ...next, replay: effect.value };
+      if (effect.is(setErrorLine)) next = { ...next, error: effect.value };
     }
-    return deco.map(tr.changes);
+    // Typing moves lines around; an old error mark would point at the wrong line.
+    if (tr.docChanged && next.error !== null) next = { ...next, error: null };
+    return next;
   },
-  provide: (f) => EditorView.decorations.from(f),
+  provide: (f) =>
+    EditorView.decorations.compute([f], (state) => {
+      const { replay, error } = state.field(f);
+      const ranges = [];
+      for (const [line, cls] of [
+        [replay, 'cm-replay-line'],
+        [error, 'cm-error-line'],
+      ] as const) {
+        if (line !== null && line >= 1 && line <= state.doc.lines)
+          ranges.push(Decoration.line({ class: cls }).range(state.doc.line(line).from));
+      }
+      return Decoration.set(ranges, true) as DecorationSet;
+    }),
+});
+
+class SymbolMarker extends GutterMarker {
+  constructor(
+    readonly symbol: string,
+    readonly cls: string,
+  ) {
+    super();
+  }
+  override eq(other: GutterMarker) {
+    return other instanceof SymbolMarker && other.symbol === this.symbol;
+  }
+  override toDOM() {
+    const span = document.createElement('span');
+    span.className = this.cls;
+    span.textContent = this.symbol;
+    return span;
+  }
+}
+const REPLAY_MARK = new SymbolMarker('▶', 'cm-mark-replay');
+const ERROR_MARK = new SymbolMarker('✖', 'cm-mark-error');
+
+const marksGutter = gutter({
+  class: 'cm-marks-gutter',
+  lineMarker(view, block) {
+    const { replay, error } = view.state.field(marksField);
+    const n = view.state.doc.lineAt(block.from).number;
+    if (n === error) return ERROR_MARK;
+    if (n === replay) return REPLAY_MARK;
+    return null;
+  },
+  lineMarkerChange: (u) => u.startState.field(marksField) !== u.state.field(marksField),
+  initialSpacer: () => REPLAY_MARK,
 });
 
 export interface EditorError {
@@ -67,8 +121,13 @@ const theme = EditorView.theme({
   '.cm-gutters': { backgroundColor: 'var(--code-gutter)', color: 'var(--code-gutter-fg)', border: 'none' },
   '.cm-activeLine': { backgroundColor: 'var(--code-active)' },
   '.cm-activeLineGutter': { backgroundColor: 'var(--code-active)' },
+  // The focus ring is drawn around the whole editor (.editor:focus-within in styles.css).
   '&.cm-focused': { outline: 'none' },
   '.cm-replay-line': { backgroundColor: 'var(--code-replay)', boxShadow: 'inset 4px 0 0 var(--accent)' },
+  '.cm-error-line': { backgroundColor: 'var(--code-error)' },
+  '.cm-marks-gutter .cm-gutterElement': { padding: '0 2px', textAlign: 'center' },
+  '.cm-mark-replay': { color: 'var(--accent)' },
+  '.cm-mark-error': { color: 'var(--err)', fontWeight: 'bold' },
 });
 
 export function Editor({
@@ -107,8 +166,8 @@ export function Editor({
         ...defaultKeymap,
         ...historyKeymap,
       ]),
-      replayLineField,
-      lintGutter(),
+      marksField,
+      marksGutter,
       theme,
       readOnlyConf.current.of([EditorState.readOnly.of(readOnly), EditorView.editable.of(!readOnly)]),
       sizeConf.current.of(EditorView.theme({ '.cm-content, .cm-gutters': { fontSize: `${fontSize}px` } })),
@@ -182,7 +241,38 @@ export function Editor({
       });
     }
     v.dispatch(setDiagnostics(v.state, diagnostics));
+    v.dispatch({ effects: setErrorLine.of(error?.line ?? null) });
   }, [error]);
 
   return <div class="editor" ref={host} />;
+}
+
+export const CODE_SIZE_MIN = 12;
+export const CODE_SIZE_MAX = 28;
+
+/** A− / A+ buttons for the editor's font size (12–28 px), saved per profile. */
+export function CodeSize({ size, onChange }: { size: number; onChange(size: number): void }) {
+  const clamp = (n: number) => Math.min(CODE_SIZE_MAX, Math.max(CODE_SIZE_MIN, n));
+  return (
+    <div class="code-size" role="group" aria-label={t.quest.codeSize}>
+      <span aria-hidden="true">{t.quest.codeSize}</span>
+      <button
+        type="button"
+        class="small"
+        disabled={size <= CODE_SIZE_MIN}
+        onClick={() => onChange(clamp(size - 2))}
+      >
+        A−<span class="sr-only"> {t.quest.codeSmaller}</span>
+      </button>
+      <output aria-live="polite">{size} px</output>
+      <button
+        type="button"
+        class="small"
+        disabled={size >= CODE_SIZE_MAX}
+        onClick={() => onChange(clamp(size + 2))}
+      >
+        A+<span class="sr-only"> {t.quest.codeBigger}</span>
+      </button>
+    </div>
+  );
 }

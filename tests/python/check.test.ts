@@ -204,3 +204,38 @@ describe('mistakes and feedback selection', () => {
     expect(v.feedback).toMatchObject({ source: 'validator', text: 'too short' });
   });
 });
+
+// Every named detector fires on its mistake and stays quiet otherwise (F-QA-03, §9.4).
+describe('mistake detectors', () => {
+  const NEVER: ValidatorSpec[] = [{ type: 'output', expect: '(never matches)' }];
+  const fires = (code: string, rule: Record<string, unknown>) =>
+    check(code, NEVER, [
+      { id: 'm', detect: { kind: 'detector', ...rule } as MistakeSpec['detect'], feedback: 'x' },
+    ]).feedback.id === 'm';
+
+  it.each([
+    ['missing_call_parens', {}, 'print', 'print("hi")'],
+    [
+      'missing_call_parens',
+      {},
+      'from codeweald import hero\nhero.say',
+      'from codeweald import hero\nhero.say("hi")',
+    ],
+    ['printed_not_stored', { var: 'gold' }, 'print(5 * 3)', 'gold = 5 * 3\nprint(gold)'],
+    ['stored_not_printed', { var: 'gold' }, 'gold = 15', 'gold = 15\nprint(gold)'],
+    ['number_as_string', { var: 'gold' }, 'gold = "10"', 'gold = 10'],
+    ['missing_fstring_prefix', {}, 'name = "Ada"\nprint("Hi {name}")', 'name = "Ada"\nprint(f"Hi {name}")'],
+    ['assign_in_condition', {}, 'gold = 5\nif gold = 10:\n    pass', 'gold = 5\nif gold == 10:\n    pass'],
+    ['loop_var_not_updated', {}, 'n = 0\nwhile n < 3:\n    print(n)', 'n = 0\nwhile n < 3:\n    n = n + 1'],
+    [
+      'function_not_called',
+      { function: 'greet' },
+      'def greet():\n    print("hi")',
+      'def greet():\n    print("hi")\ngreet()',
+    ],
+    ['hardcoded_output', { text: '15' }, 'print(15)', 'gold = 5 * 3\nprint(gold)'],
+  ])('%s (%j)', (name, extra, wrong, right) => {
+    expect(fires(wrong, { name, ...extra })).toBe(true);
+    expect(fires(right, { name, ...extra })).toBe(false);
+  });
+});

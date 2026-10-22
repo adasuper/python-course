@@ -1,6 +1,8 @@
 // Where the game goes next: opening story → region intro → concept scene → overworld.
+import { questState } from '../state/progress';
 import { newProfile, type Profile } from '../state/profile';
 import {
+  config,
   course,
   flushSave,
   getStorage,
@@ -21,7 +23,8 @@ export async function selectProfile(p: Profile) {
 
 export async function createProfile(nickname: string, avatarId: string, themeId: string) {
   const c = course.value!;
-  const p = newProfile(nickname.trim(), avatarId, themeId, c.regions[0]!.id);
+  // Deploy-time defaults from codeweald.config.json (F-DEP-02).
+  const p = newProfile(nickname.trim(), avatarId, themeId, c.regions[0]!.id, config.value.defaults);
   await getStorage().saveProfile(p);
   profiles.value = [...profiles.value, p];
   await selectProfile(p);
@@ -35,6 +38,12 @@ export async function continueAdventure() {
   if (!p.seen.opening) {
     update((x) => void (x.seen.opening = true));
     go({ name: 'story', title: c.title, lines: c.opening, next: regionStart });
+    return;
+  }
+  // Back into the quest that was open, e.g. after restoring a progress file (F-SAV-10).
+  const open = p.location.quest;
+  if (open && c.questInfo[open] && questState(p, c, open) !== 'locked') {
+    go({ name: 'quest', questId: open });
     return;
   }
   go(regionStart);

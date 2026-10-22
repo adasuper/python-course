@@ -6,7 +6,7 @@ type: boss
 npc: clangle
 learning_outcome: Use print statements, comments and error messages together to repair and finish a program.
 csta: [2-AP-17, 2-AP-19]
-estimated_minutes: 12
+estimated_minutes: 15
 prerequisites:
   - r1-q1-first-steps
   - r1-q2-hello-hearthvale
@@ -25,7 +25,7 @@ story_intro: |
   A tiny, bell-shaped [[bug]] named Clangle has crawled into the crier's bell. "Clang-clang! Your announcements are MINE now!"
 
   The big announcement is due today. Clangle broke it in three ways. Fix them one at a time. That's called [[debugging]].
-goal: Fix the announcement in three phases to turn Clangle back into a friendly firefly.
+goal: Fix the announcement in three phases. Then Clangle turns back into a friendly firefly.
 concept_card: |
   Debugging is detective work. Run the code, read the clues, fix one thing, and run it again.
 
@@ -35,7 +35,7 @@ phases:
     type: fix
     learning_outcome: Use error messages to find and fix errors that stop a program from running.
     csta: [2-AP-17]
-    estimated_minutes: 4
+    estimated_minutes: 5
     story_intro: |
       Clangle jammed the bell! The announcement won't even run. Python will tell you where to look. There are **2 bugs**.
     goal: Fix the two bugs so the announcement runs and prints all three lines.
@@ -104,9 +104,9 @@ phases:
     type: fix
     learning_outcome: Arrange print statements so the output matches a required order.
     csta: [2-AP-17]
-    estimated_minutes: 4
+    estimated_minutes: 5
     story_intro: |
-      Clangle scrambled the order! The crier's script must go like this:
+      Clangle scrambled the order! There's **1 bug** this time: the lines are in the wrong order. The crier's script must go like this:
       ```text
       Hear ye, hear ye!
       The market moves to the square.
@@ -180,10 +180,10 @@ phases:
     type: modify
     learning_outcome: Document a program with comments that explain each part.
     csta: [2-AP-19]
-    estimated_minutes: 4
+    estimated_minutes: 5
     story_intro: |
       Last step! Walk the hero to the crier's podium and ring out the news. Leave [[comments|comment]] so the next crier knows what your code does.
-    goal: Walk the hero to the tile in front of the podium, say "Hear ye!", and add a comment above the walking part and above the speaking part.
+    goal: Walk the hero to the tile in front of the podium. Then say "Hear ye!". Add a comment above the walking part, and one above the talking part.
     stage:
       kind: grid
       grid: |

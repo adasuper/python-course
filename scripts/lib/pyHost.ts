@@ -53,7 +53,10 @@ async function createPyHost(): Promise<PyHost> {
   const host = pyodide.pyimport('codeweald._host') as {
     run(json: string): string;
     bake(json: string): string;
+    lockdown(): void;
   };
+  // Same as the browser worker: no JavaScript bridge modules once booted.
+  host.lockdown();
   return {
     pyodide,
     run: (request) => JSON.parse(host.run(JSON.stringify({ ...DEFAULT_REQUEST, ...request }))) as RunResult,

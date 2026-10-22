@@ -23,7 +23,8 @@
     },
     "required": [
       "term",
-      "definition"
+      "definition",
+      "example"
     ],
     "additionalProperties": false
   }

@@ -22,7 +22,7 @@ import {
   type QuestFile,
   type RegionFile,
 } from '../../src/content/schema';
-import { parseRich, termsIn, type Rich } from '../../src/content/richtext';
+import { parseRich, plainText, termsIn, type Rich } from '../../src/content/richtext';
 import {
   BOSS_PHASE_XP,
   DEFAULT_XP,
@@ -33,7 +33,10 @@ import {
   type QuestBody,
   type Region,
 } from '../../src/content/types';
+import { STAGE_LEGEND, stageRows } from '../../src/game/legend';
 import type { StageSpec, ValidatorSpec } from '../../src/runtime/protocol';
+import { proseStrings } from './prose';
+import { sentenceCount } from './readingLevel';
 
 export const CONTENT_DIR = join(import.meta.dirname, '..', '..', 'content');
 
@@ -43,9 +46,13 @@ export interface Problem {
   message: string;
 }
 
+export type Locate = (path: (string | number)[]) => number | undefined;
+
 interface Located<T> {
   file: string;
   data: T;
+  /** The line of a YAML path in this file (for author-friendly problems). */
+  locate: Locate;
 }
 
 export interface LoadedContent {
@@ -103,10 +110,14 @@ function rel(file: string) {
   return relative(join(CONTENT_DIR, '..'), file);
 }
 
-function parseWith<T>(file: string, schema: z.ZodType<T>, problems: Problem[]): T | null {
+function parseWith<T>(
+  file: string,
+  schema: z.ZodType<T>,
+  problems: Problem[],
+): { data: T; locate: Locate } | null {
   const { data, locate } = readYaml(file, problems);
   const result = schema.safeParse(data);
-  if (result.success) return result.data;
+  if (result.success) return { data: result.data, locate };
   for (const issue of result.error.issues) {
     const path = issue.path.filter((p): p is string | number => typeof p !== 'symbol');
     problems.push({
@@ -133,17 +144,17 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
   };
   const courseFile = join(root, 'course.yaml');
   const course = parseWith(courseFile, CourseSchema, problems);
-  if (course) out.course = { file: rel(courseFile), data: course };
-  out.glossary = parseWith(join(root, 'glossary.yaml'), GlossarySchema, problems) ?? [];
-  out.items = parseWith(join(root, 'items.yaml'), ItemsSchema, problems) ?? [];
-  out.errors = parseWith(join(root, 'errors.yaml'), ErrorsSchema, problems) ?? {};
+  if (course) out.course = { file: rel(courseFile), ...course };
+  out.glossary = parseWith(join(root, 'glossary.yaml'), GlossarySchema, problems)?.data ?? [];
+  out.items = parseWith(join(root, 'items.yaml'), ItemsSchema, problems)?.data ?? [];
+  out.errors = parseWith(join(root, 'errors.yaml'), ErrorsSchema, problems)?.data ?? {};
 
   const regionsDir = join(root, 'regions');
   for (const dir of readdirSync(regionsDir).sort()) {
     const regionFile = join(regionsDir, dir, 'region.yaml');
     if (!existsSync(regionFile)) continue;
     const region = parseWith(regionFile, RegionSchema, problems);
-    if (region) out.regions.push({ file: rel(regionFile), dir, data: region });
+    if (region) out.regions.push({ file: rel(regionFile), dir, ...region });
     const questsDir = join(regionsDir, dir, 'quests');
     if (!existsSync(questsDir)) continue;
     for (const name of readdirSync(questsDir).sort()) {
@@ -173,7 +184,7 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
       if (out.quests.has(quest.id)) {
         problems.push({ file: rel(file), message: `duplicate quest id "${quest.id}"` });
       }
-      out.quests.set(quest.id, { file: rel(file), data: quest, regionDir: dir });
+      out.quests.set(quest.id, { file: rel(file), data: quest, regionDir: dir, locate });
     }
   }
   return out;
@@ -190,23 +201,33 @@ export interface Unit {
   label: string;
   file: string;
   body: Body;
+  /** The line of a path inside this body (a boss phase's paths start at its phase). */
+  locate: Locate;
 }
 
 export function units(content: LoadedContent): Unit[] {
   const list: Unit[] = [];
   for (const [id, q] of content.quests) {
     if (q.data.type === 'boss') {
-      for (const phase of (q.data as BossQuestFile).phases) {
+      (q.data as BossQuestFile).phases.forEach((phase, i) => {
         list.push({
           key: `${id}›${phase.id}`,
           questId: id,
           label: `${id} › ${phase.id}`,
           file: q.file,
           body: phase,
+          locate: (path) => q.locate(['phases', i, ...path]),
         });
-      }
+      });
     } else {
-      list.push({ key: id, questId: id, label: id, file: q.file, body: q.data as NormalQuestFile });
+      list.push({
+        key: id,
+        questId: id,
+        label: id,
+        file: q.file,
+        body: q.data as NormalQuestFile,
+        locate: q.locate,
+      });
     }
   }
   return list;
@@ -235,122 +256,178 @@ export function parsonsProgram(body: Body, order: number[]): string {
 
 // ----- cross-reference checks ---------------------------------------------------
 
-export function crossCheck(content: LoadedContent): Problem[] {
+/** The problems with a quest grid: unknown symbols, ragged rows, not exactly one hero. */
+export function gridProblems(stage: StageSpec): string[] {
+  if (stage.kind !== 'grid') return [];
+  const rows = stageRows(stage);
+  const problems: string[] = [];
+  if (!rows.length) return ['the grid is empty'];
+  const width = rows[0]!.length;
+  let heroes = 0;
+  rows.forEach((row, y) => {
+    if (row.length !== width)
+      problems.push(
+        `grid row ${y + 1} has ${row.length} characters; row 1 has ${width} (make every row the same width)`,
+      );
+    [...row].forEach((ch, x) => {
+      const entry = stage.legend?.[ch] ?? STAGE_LEGEND[ch];
+      if (!entry) problems.push(`grid symbol "${ch}" at column ${x + 1}, row ${y + 1} is not in the legend`);
+      else if (entry.hero) heroes++;
+    });
+  });
+  if (heroes !== 1) problems.push(`the grid needs exactly one hero (H); it has ${heroes}`);
+  return problems;
+}
+
+/** Fix quests tell the student how many bugs to find (F-QST-07). */
+const BUG_COUNT =
+  /\b(\d+|one|two|three|four|five|a single|an?)\s+(?:\*\*)?(?:little |tiny |sneaky )?(bugs?|glitch(?:es)?|mistakes?|errors?|problems?)\b/i;
+
+export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[] {
   const problems: Problem[] = [];
   const glossary = new Set(content.glossary.map((g) => g.term.toLowerCase()));
   const items = new Set(content.items.map((i) => i.id));
-  const add = (file: string, message: string) => problems.push({ file, message });
+  const add = (file: string, message: string, line?: number) => problems.push({ file, line, message });
 
-  const checkText = (file: string, label: string, text: string | undefined) => {
-    if (!text) return;
-    for (const term of termsIn(parseRich(text))) {
-      if (!glossary.has(term)) add(file, `${label}: glossary link [[${term}]] has no entry in glossary.yaml`);
+  // Glossary links and ____ gaps, in every student-facing text of every file.
+  for (const prose of proseStrings(root)) {
+    for (const term of termsIn(parseRich(prose.value))) {
+      if (!glossary.has(term))
+        add(prose.file, `glossary link [[${term}]] has no entry in glossary.yaml`, prose.line);
     }
-  };
-
-  if (content.course) {
-    for (const r of content.course.data.regions) {
-      if (!content.regions.some((reg) => reg.data.id === r.id))
-        add(content.course.file, `region "${r.id}" has no region.yaml`);
-    }
-    content.course.data.opening.forEach((l, i) => checkText(content.course!.file, `opening[${i}]`, l.text));
+    const tier3 = prose.path.at(-2) === 'hints' && prose.path.at(-1) === 2;
+    if (prose.value.includes('____') && !tier3)
+      add(prose.file, `____ gaps belong only in fill starters and the third hint`, prose.line);
   }
 
-  for (const [id, q] of content.quests) {
+  content.glossary.forEach((g) => {
+    const sentences = sentenceCount(plainText(parseRich(g.definition)));
+    if (sentences > 2)
+      add('content/glossary.yaml', `"${g.term}": keep the definition to 2 sentences (it has ${sentences})`);
+  });
+
+  if (content.course) {
+    const course = content.course;
+    course.data.regions.forEach((r, i) => {
+      if (!content.regions.some((reg) => reg.data.id === r.id))
+        add(course.file, `region "${r.id}" has no region.yaml`, course.locate(['regions', i]));
+    });
+  }
+
+  for (const [, q] of content.quests) {
     const quest = q.data;
     const region = content.regions.find((r) => r.dir === q.regionDir);
-    if (region && quest.region !== region.data.id) add(q.file, `region should be "${region.data.id}"`);
-    for (const pre of quest.prerequisites) {
-      if (!content.quests.has(pre)) add(q.file, `prerequisite "${pre}" does not exist`);
-    }
-    for (const term of quest.vocabulary) {
+    if (region && quest.region !== region.data.id)
+      add(q.file, `region should be "${region.data.id}"`, q.locate(['region']));
+    quest.prerequisites.forEach((pre, i) => {
+      if (!content.quests.has(pre))
+        add(q.file, `prerequisite "${pre}" does not exist`, q.locate(['prerequisites', i]));
+    });
+    quest.vocabulary.forEach((term, i) => {
       if (!glossary.has(term.toLowerCase()))
-        add(q.file, `vocabulary "${term}" has no entry in glossary.yaml`);
-    }
+        add(q.file, `vocabulary "${term}" has no entry in glossary.yaml`, q.locate(['vocabulary', i]));
+    });
     if (quest.rewards.item && !items.has(quest.rewards.item))
-      add(q.file, `reward item "${quest.rewards.item}" is not in items.yaml`);
-    checkText(q.file, 'story_intro', quest.story_intro);
-    checkText(q.file, 'goal', quest.goal);
-    checkText(q.file, 'story_outro', quest.story_outro);
-    checkText(q.file, 'concept_card', quest.concept_card);
+      add(q.file, `reward item "${quest.rewards.item}" is not in items.yaml`, q.locate(['rewards', 'item']));
     if (quest.type !== 'boss' && !quest.concept_card)
-      add(q.file, 'concept_card is required (it is shown in the Spellbook)');
-    void id;
+      add(q.file, 'concept_card is required (it is shown in the Spellbook)', q.locate(['type']));
   }
 
   for (const unit of units(content)) {
     const b = unit.body;
     const where = unit.label;
-    b.hints.forEach((h, i) => checkText(unit.file, `${where} hint ${i + 1}`, h));
-    checkText(unit.file, `${where} story_intro`, b.story_intro);
+    const at = (...path: (string | number)[]) => unit.locate(path);
     if (isCodeChecked(b)) {
-      if (b.type !== 'parsons' && !b.solution) add(unit.file, `${where}: a solution is required`);
-      if (b.validators.length === 0) add(unit.file, `${where}: add at least one validator`);
-      if (b.wrong_solutions.length < 2) add(unit.file, `${where}: add at least 2 wrong_solutions`);
+      if (b.type !== 'parsons' && !b.solution) add(unit.file, `${where}: a solution is required`, at('type'));
+      if (b.validators.length === 0) add(unit.file, `${where}: add at least one validator`, at('type'));
+      if (b.wrong_solutions.length < 2)
+        add(unit.file, `${where}: add at least 2 wrong_solutions`, at('wrong_solutions'));
     }
-    if (b.type === 'predict' && !b.prompts?.length) add(unit.file, `${where}: predict quests need prompts`);
+    if (b.type === 'predict' && !b.prompts?.length)
+      add(unit.file, `${where}: predict quests need prompts`, at('type'));
     if (b.type === 'investigate' && !b.questions?.length)
-      add(unit.file, `${where}: investigate quests need questions`);
-    if (b.type === 'parsons' && !b.parsons) add(unit.file, `${where}: parsons quests need a parsons block`);
-    for (const p of b.prompts ?? [])
+      add(unit.file, `${where}: investigate quests need questions`, at('type'));
+    if (b.type === 'parsons' && !b.parsons)
+      add(unit.file, `${where}: parsons quests need a parsons block`, at('type'));
+    if (b.type === 'fix' && !BUG_COUNT.test(`${b.story_intro} ${b.goal}`))
+      add(
+        unit.file,
+        `${where}: say how many bugs there are, e.g. "This spell has 2 bugs"`,
+        at('story_intro'),
+      );
+    b.prompts?.forEach((p, i) => {
       if (p.kind === 'mcq' && p.answer >= p.options.length)
-        add(unit.file, `${where}: prompt answer index out of range`);
-    for (const p of b.questions ?? [])
+        add(unit.file, `${where}: prompt answer index out of range`, at('prompts', i, 'answer'));
+    });
+    b.questions?.forEach((p, i) => {
       if (p.kind === 'mcq' && p.answer >= p.options.length)
-        add(unit.file, `${where}: question answer index out of range`);
+        add(unit.file, `${where}: question answer index out of range`, at('questions', i, 'answer'));
+    });
     if (b.type !== 'fill' && b.starter_code.includes('____'))
-      add(unit.file, `${where}: ____ gaps belong only in fill quests`);
+      add(unit.file, `${where}: ____ gaps belong only in fill quests`, at('starter_code'));
+    for (const message of gridProblems(b.stage as StageSpec))
+      add(unit.file, `${where}: ${message}`, at('stage', 'grid'));
     const mistakeIds = new Set(b.common_mistakes.map((m) => m.id));
-    for (const w of b.wrong_solutions) {
+    b.wrong_solutions.forEach((w, i) => {
       if (w.expect_mistake && !mistakeIds.has(w.expect_mistake)) {
         add(
           unit.file,
           `${where}: wrong solution expects mistake "${w.expect_mistake}", which is not in common_mistakes`,
+          at('wrong_solutions', i, 'expect_mistake'),
         );
       }
-    }
+    });
   }
 
   for (const region of content.regions) {
     const r = region.data;
+    const at = region.locate;
     const listed = [...r.quests, r.boss, ...r.side_quests];
     for (const qid of listed) {
       const q = content.quests.get(qid);
-      if (!q) add(region.file, `quest "${qid}" has no file`);
+      if (!q) add(region.file, `quest "${qid}" has no file`, at(['quests']));
       else if (q.data.region !== r.id)
-        add(region.file, `quest "${qid}" belongs to region "${q.data.region}"`);
+        add(region.file, `quest "${qid}" belongs to region "${q.data.region}"`, at(['quests']));
     }
     for (const [qid, q] of content.quests) {
       if (q.regionDir === region.dir && !listed.includes(qid))
-        add(q.file, `quest is not listed in ${region.file}`);
+        add(q.file, `quest is not listed in ${region.file}`, q.locate(['id']));
     }
     if (content.quests.get(r.boss)?.data.type !== 'boss')
-      add(region.file, `boss "${r.boss}" must be a boss quest`);
+      add(region.file, `boss "${r.boss}" must be a boss quest`, at(['boss']));
     const regionUnits = units(content).filter((u) => content.quests.get(u.questId)?.data.region === r.id);
     if (!regionUnits.some((u) => u.body.type === 'fix'))
-      add(region.file, 'every region needs at least one fix-the-bug quest');
+      add(region.file, 'every region needs at least one fix-the-bug quest', at(['quests']));
     if (r.number >= 3) {
       const hasRetrieval = listed.some((qid) => (content.quests.get(qid)?.data.retrieval.length ?? 0) > 0);
       if (!hasRetrieval)
-        add(region.file, 'regions from 3 on need a quest with `retrieval:` (spaced retrieval)');
+        add(
+          region.file,
+          'regions from 3 on need a quest with `retrieval:` (spaced retrieval)',
+          at(['quests']),
+        );
     }
     const rows = r.overworld.grid.replace(/\n+$/, '').split('\n');
-    for (const obj of r.overworld.objects) {
+    r.overworld.objects.forEach((obj, i) => {
       const [x, y] = obj.at;
+      const line = at(['overworld', 'objects', i]);
       if (y >= rows.length || x >= (rows[y]?.length ?? 0))
-        add(region.file, `object at [${x}, ${y}] is off the map`);
+        add(region.file, `object at [${x}, ${y}] is off the map`, line);
       if (obj.kind === 'npc' && (!obj.id || !r.npcs[obj.id]))
-        add(region.file, `npc object "${obj.id}" is not in npcs`);
+        add(region.file, `npc object "${obj.id}" is not in npcs`, line);
       if (obj.quest && !content.quests.has(obj.quest))
-        add(region.file, `object quest "${obj.quest}" does not exist`);
-    }
+        add(region.file, `object quest "${obj.quest}" does not exist`, line);
+    });
     if (!r.overworld.objects.some((o) => o.kind === 'spawn'))
-      add(region.file, 'the overworld needs a spawn object');
+      add(region.file, 'the overworld needs a spawn object', at(['overworld', 'objects']));
     r.knowledge_check.items.forEach((it, i) => {
       if (it.kind === 'mcq' && it.answer >= it.options.length)
-        add(region.file, `knowledge_check item ${i + 1}: answer index out of range`);
+        add(
+          region.file,
+          `knowledge_check item ${i + 1}: answer index out of range`,
+          at(['knowledge_check', 'items', i, 'answer']),
+        );
     });
-    r.concept_scene.lines.forEach((l, i) => checkText(region.file, `concept_scene line ${i + 1}`, l.text));
   }
 
   // Prerequisite cycles.
@@ -359,7 +436,8 @@ export function crossCheck(content: LoadedContent): Problem[] {
   const visit = (id: string, chain: string[]) => {
     if (done.has(id)) return;
     if (visiting.has(id)) {
-      add(content.quests.get(id)?.file ?? id, `prerequisite cycle: ${[...chain, id].join(' → ')}`);
+      const q = content.quests.get(id);
+      add(q?.file ?? id, `prerequisite cycle: ${[...chain, id].join(' → ')}`, q?.locate(['prerequisites']));
       return;
     }
     visiting.add(id);
@@ -590,7 +668,7 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
     glossary: Object.fromEntries(
       content.glossary.map((g) => [
         g.term.toLowerCase(),
-        { term: g.term, definition: rich(g.definition), example: g.example ?? null, related: g.related },
+        { term: g.term, definition: rich(g.definition), example: rich(g.example), related: g.related },
       ]),
     ),
     items: Object.fromEntries(

@@ -140,6 +140,10 @@ const ALLOWED = [
   'birdie',
   'skill',
   'killer whale',
+  'spicy',
+  'spice',
+  'shiitake',
+  'sexton',
   'kilt',
   'button',
   'butter',
@@ -189,41 +193,64 @@ export type NicknameProblem = 'length' | 'characters' | 'personal' | 'blocked' |
 
 const SHORT = 5;
 
-/** Words of a nickname, normalized; runs of single letters ("F u c k") are joined back up. */
-function words(raw: string): string[] {
-  const tokens = raw.split(/[\s-]+/).filter(Boolean);
-  const out: string[] = [];
-  let run = '';
-  for (const token of tokens) {
-    if (token.length === 1) {
-      run += token;
-      continue;
-    }
-    if (run) out.push(run);
-    run = '';
-    out.push(token);
-  }
-  if (run) out.push(run);
-  return out.map(normalizeForFilter).filter(Boolean);
+/** Letters only, with leetspeak undone. Repeated letters are kept: see stemPattern. */
+function letters(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[0134578@$!]/g, (c) => LEET[c] ?? c)
+    .replace(/[^a-z]/g, '');
 }
+
+/** Each letter may repeat ("fuuuck"), without collapsing innocent names ("Bob" is not a stem). */
+const stemPattern = (stem: string) =>
+  stem
+    .split('')
+    .map((c) => `${c}+`)
+    .join('');
+
+const STEMS = BLOCKED.map(letters)
+  .filter((stem) => stem.length >= 3)
+  .map((stem) => ({
+    // Long stems are blocked anywhere; short ones only as a word or with a short ending.
+    short: stem.length < SHORT,
+    anywhere: new RegExp(stemPattern(stem)),
+    word: new RegExp(`^${stemPattern(stem)}[a-z]{0,3}$`),
+  }));
+const ALLOWED_WORDS = ALLOWED.filter((a) => !a.includes(' ')).map(letters);
+const ALLOWED_PHRASES = ALLOWED.filter((a) => a.includes(' '));
+
+/** An allowed word, also with a short ending ("Buttons", "Sextons"). */
+const allowed = (word: string) =>
+  ALLOWED_WORDS.some((a) => word.startsWith(a) && word.length - a.length <= 3);
 
 function isBlocked(raw: string): boolean {
   if (/k{3}/i.test(raw.replace(/[^a-z]/gi, ''))) return true;
-  const ws = words(raw);
-  const allowed = new Set(ALLOWED.map(normalizeForFilter));
-  const joined = ws.filter((w) => !allowed.has(w)).join('');
-  for (const stem of BLOCKED) {
-    const s = normalizeForFilter(stem);
-    if (s.length < 3) continue;
-    if (s.length >= SHORT) {
-      if (joined.includes(s)) return true;
-    } else if (
-      ws.some((w) => !allowed.has(w) && (w === s || (w.startsWith(s) && w.length - s.length <= 3)))
-    ) {
-      return true;
+  let text = raw.toLowerCase();
+  for (const phrase of ALLOWED_PHRASES) text = text.split(phrase).join(' ');
+  const pieces = text
+    .split(/[\s-]+/)
+    .map(letters)
+    .filter(Boolean);
+  const words = pieces.filter((w) => !allowed(w));
+  // Short pieces next to each other are read together: "F u c k", "Sh-it", "Ma Sh It".
+  const runs: string[] = [];
+  let run: string[] = [];
+  for (const piece of [...pieces, '']) {
+    if (piece && piece.length <= 3) run.push(piece);
+    else {
+      if (run.length > 1) runs.push(run.join(''));
+      run = [];
     }
   }
-  return false;
+  const everything = words.join('');
+  return STEMS.some(
+    (stem) =>
+      (!stem.short && stem.anywhere.test(everything)) ||
+      words.some((w) => stem.word.test(w)) ||
+      runs.some((r) => stem.anywhere.test(r)),
+  );
 }
 
 export function checkNickname(raw: string): NicknameProblem {

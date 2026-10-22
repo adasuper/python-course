@@ -95,3 +95,20 @@ describe('design tokens', () => {
     expect(contrast('#777777', '#ffffff')).toBeCloseTo(4.48, 2);
   });
 });
+
+describe('Spellbook code colours', () => {
+  it('every syntax colour reads at 4.5:1 on every code background, in every contrast mode', async () => {
+    const { HIGHLIGHT_COLORS } = await import('../../src/ui/components/highlight');
+    const backgrounds = new Set<string>();
+    for (const vars of blocks().values())
+      for (const key of ['code-bg', 'code-active', 'code-replay', 'code-error'])
+        if (vars[key]) backgrounds.add(vars[key]);
+    expect(backgrounds.size).toBeGreaterThanOrEqual(4);
+    const low = Object.entries(HIGHLIGHT_COLORS).flatMap(([name, color]) =>
+      [...backgrounds]
+        .filter((bg) => contrast(color, bg) < 4.5)
+        .map((bg) => `${name} ${color} on ${bg}: ${contrast(color, bg).toFixed(2)}`),
+    );
+    expect(low).toEqual([]);
+  });
+});

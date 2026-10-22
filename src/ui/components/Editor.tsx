@@ -2,13 +2,7 @@
 // Esc, then Tab, leaves the editor (no keyboard trap); Ctrl+Enter runs the code.
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { python } from '@codemirror/lang-python';
-import {
-  bracketMatching,
-  defaultHighlightStyle,
-  indentOnInput,
-  indentUnit,
-  syntaxHighlighting,
-} from '@codemirror/language';
+import { bracketMatching, indentOnInput, indentUnit, syntaxHighlighting } from '@codemirror/language';
 import { lintKeymap, setDiagnostics, type Diagnostic } from '@codemirror/lint';
 import { Compartment, EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
 import {
@@ -27,6 +21,7 @@ import type { MutableRef } from 'preact/hooks';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
 import { externalChange, gapHighlight, lockedLines } from './gapEditor';
+import { spellbookHighlight } from './highlight';
 
 // The line the replay is on, and the line of a run error. Each gets a background and a
 // gutter symbol (▶ / ✖), so neither relies on color alone (F-API-10, F-EDT-05).
@@ -145,6 +140,18 @@ const theme = EditorView.theme({
   '.cm-gap-line': { boxShadow: 'inset 3px 0 0 var(--accent)' },
 });
 
+/** Read-only code (predict quests) can't be typed in, but it stays focusable, so a long line
+ *  that scrolls sideways can still be reached and read by keyboard. */
+function readOnlyExtensions(readOnly: boolean): Extension[] {
+  return readOnly
+    ? [
+        EditorState.readOnly.of(true),
+        EditorView.editable.of(false),
+        EditorView.contentAttributes.of({ tabindex: '0', 'aria-readonly': 'true' }),
+      ]
+    : [EditorState.readOnly.of(false), EditorView.editable.of(true)];
+}
+
 export function Editor({
   value,
   onChange,
@@ -177,7 +184,7 @@ export function Editor({
       indentUnit.of('    '),
       bracketMatching(),
       python(),
-      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+      syntaxHighlighting(spellbookHighlight),
       keymap.of([
         { key: 'Mod-Enter', run: () => (callbacks.current.onRun?.(), true) },
         indentWithTab,
@@ -189,7 +196,7 @@ export function Editor({
       marksField,
       marksGutter,
       theme,
-      readOnlyConf.current.of([EditorState.readOnly.of(readOnly), EditorView.editable.of(!readOnly)]),
+      readOnlyConf.current.of(readOnlyExtensions(readOnly)),
       sizeConf.current.of(EditorView.theme({ '.cm-content, .cm-gutters': { fontSize: `${fontSize}px` } })),
       EditorView.contentAttributes.of({
         'aria-label': label ?? t.quest.editorLabel,
@@ -228,10 +235,7 @@ export function Editor({
 
   useEffect(() => {
     view.current?.dispatch({
-      effects: readOnlyConf.current.reconfigure([
-        EditorState.readOnly.of(readOnly),
-        EditorView.editable.of(!readOnly),
-      ]),
+      effects: readOnlyConf.current.reconfigure(readOnlyExtensions(readOnly)),
     });
   }, [readOnly]);
 

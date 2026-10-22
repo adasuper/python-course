@@ -80,7 +80,8 @@ async function openDevQuest() {
   if (!regionId || !course.regions.some((r) => r.id === regionId)) return;
   useDevProfile();
   await loadRegion(regionId);
-  if (kind === 'concept' || kind === 'region') {
+  // Stand in that region, so "Back to the map" after a quest or check opens its map.
+  if (profile.value!.location.region !== regionId || kind === 'concept' || kind === 'region') {
     update((x) => {
       x.location.region = regionId;
       x.location.at = null;

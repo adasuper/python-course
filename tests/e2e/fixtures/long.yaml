@@ -1,0 +1,23 @@
+# A predict quest with a long line: the read-only editor scrolls sideways (axe:
+# scrollable-region-focusable).
+id: r1-q99-long-lines
+region: hearthvale-village
+title: The Long Scroll
+type: predict
+learning_outcome: Predict the output of a program with a long print() line.
+csta: [2-AP-13]
+estimated_minutes: 5
+story_intro: The crier's longest announcement.
+goal: Predict the output.
+concept_card: A long line still prints one line.
+starter_code: |
+  print("Hear ye, hear ye! The market opens at nine, and the bakery has fresh buns for everyone!")
+prompts:
+  - kind: mcq
+    question: How many lines does it print?
+    options: ["1", "2", "3"]
+    answer: 0
+    explain: One print() shows one line.
+    verify: { kind: none }
+hints: [Count the print() calls., Each print() shows one line., 'It prints ____ line.']
+story_outro: The whole square heard it.

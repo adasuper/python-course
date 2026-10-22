@@ -1,7 +1,7 @@
 // Brief §7: axe-core checks on the main screens (WCAG 2.1 AA rules).
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { defeatTheFirstBoss, newPlayer, openFixture, quest, solveBody } from './helpers';
+import { defeatTheFirstBoss, newPlayer, openFixture, quest, setCode, solveBody } from './helpers';
 
 async function scan(page: Page, label: string) {
   const results = await new AxeBuilder({ page: page as never })
@@ -277,4 +277,15 @@ test('the update banner', async ({ page }) => {
   } finally {
     await page.request.delete('./__codeweald-next-version');
   }
+});
+
+test('long code lines: the editor scrolls sideways and stays reachable by keyboard', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  // Read only (predict): the code can still be focused, so the sideways scroll is reachable.
+  await openFixture(page, 'long');
+  await expect(page.locator('.cm-content')).toHaveAttribute('tabindex', '0');
+  await scan(page, 'read-only editor with a long line');
+  await openFixture(page, 'fill');
+  await setCode(page, `print("${'A very long line of text for the crier to shout. '.repeat(2)}")`);
+  await scan(page, 'editor with a long line');
 });

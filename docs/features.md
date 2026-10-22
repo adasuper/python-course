@@ -700,8 +700,9 @@ Priority: Must · Phase: 2 · Spec: §9.2, §14.3 · Brief: §3.3
 ### F-QST-10 — Parsons puzzles with only a keyboard
 As a Student who can't drag with a mouse, I want keys and buttons to move and indent lines, so that I can solve Parsons puzzles too.
 **Acceptance criteria**
-- ↑/↓ moves focus; Space picks up ("Picked up `print(x)`, position 2 of 5, indent 0"); ↑/↓ moves the held line; ←/→ (or Shift+Tab/Tab) changes indent; Space drops; Esc cancels; M moves between lists.
-- Each line also has visible ▲ ▼ ◀ ▶ ⇄ buttons.
+- ↑/↓ moves focus; Space picks up ("Picked up `print(x)`. Position 2 of 5, indent 0"); ↑/↓ moves the held line; ←/→ (or, while holding, Shift+Tab/Tab) changes indent; Space drops; Esc puts the line back; M moves between lists.
+- Each line also has visible ▲ ▼ ◀ ▶ ⇄ buttons, and the same buttons act on the selected line below the lists (for switch and voice-control users).
+- Lines can also be dragged with a mouse or a finger, including the indent.
 - Covered by an E2E test (F-QA-09).
 
 Priority: Must · Phase: 2 · Spec: §14.3 · Brief: §3.3, §1

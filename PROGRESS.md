@@ -30,8 +30,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | Milestone | Status |
 |---|---|
 | M2.1 All quest types | ✅ Done |
-| M2.2 Accessible Parsons (complete) | Next |
-| M2.3 Full error translation | — |
+| M2.2 Accessible Parsons (complete) | ✅ Done (manual screen-reader check pending) |
+| M2.3 Full error translation | Next |
 | M2.4 Feedback engine | — |
 | M2.5 Progression | — |
 | M2.6 Spellbook reference | — |
@@ -67,10 +67,28 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 - **Content checks:** fill starters need a gap; `locked` only in fill; Parsons alternatives use
   every line once; `runs_ok` with different answers needs typed input; every twin answer and
   bonus check is run against the real program.
-- **Tests:** 328 Vitest tests in 22 files and 30 Playwright tests. New end-to-end tests play
+- **Tests:** 328 Vitest tests in 22 files and 30 Playwright tests at the end of M2.1. New end-to-end tests play
   fill, typed input with lamps, order-checked Parsons, twins and bonus challenges by keyboard,
   using fixture quests (`tests/e2e/fixtures/`) that open through the `?dev` test hook, plus axe
   on each new screen.
+
+#### M2.2 Accessible Parsons
+
+- **Listbox semantics:** "Spell scraps" and "Your spell" are listboxes of options, each one Tab
+  stop. Screen readers hear the line, its indent and "picked up".
+- **Keyboard:** the whole §14.3 model is one pure function with unit tests. Esc now really puts
+  a held line back. Focus follows a moved line right away, so quick key presses aren't lost.
+- **Dragging** with a mouse or a finger (pointer events): a bar shows where the line lands, and
+  in "Your spell" how far right you drop it sets the indent.
+- **Buttons:** ▲ ▼ ◀ ▶ ⇄ on every line for the mouse, and the same buttons for the selected
+  line below the lists, so switch and voice-control users can solve puzzles too.
+- **Tray:** the scraps list is styled as a tray and says that lines left there aren't used,
+  and when some scraps don't belong at all.
+- **Tests:** a keyboard-only end-to-end solve with indentation, Esc and moves (F-QA-09), a
+  pointer-drag test, and axe on the puzzle with a line picked up. Now 338 Vitest tests in 23
+  files and 33 Playwright tests.
+- **Still to do by hand:** the screen-reader check with NVDA and ChromeVox (it can't run in
+  this build environment). Please try a Parsons quest with each and tell me what you hear.
 
 ## Phase 1 — Vertical slice ✅
 

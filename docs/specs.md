@@ -1386,15 +1386,26 @@ or in-app teacher guide. Instructors still need the solutions to be ready for qu
 
 ### 14.3 Accessible Parsons puzzle
 
-- Two `listbox`-style lists: "Spell scraps" and "Your spell".
+- Two listboxes (`role="listbox"`, each line a `role="option"`): "Spell scraps" and "Your
+  spell". Each list is one Tab stop; the focused line is the selected one.
 - **Keyboard:**
-  - ↑/↓ moves focus between lines.
-  - **Space** picks up a line (announced: "Picked up `print(x)`, position 2 of 5, indent 0").
+  - ↑/↓ moves focus between lines (Home/End: first/last).
+  - **Space** (or Enter) picks up a line (announced: "Picked up `print(x)`. Position 2 of 5,
+    indent 0").
   - ↑/↓ moves the held line.
-  - ←/→ (or Shift+Tab/Tab) changes the indent.
-  - **Space** drops it; **Esc** cancels.
-  - **M** moves a line between the two lists.
-- Each line also has visible buttons ▲ ▼ ◀ ▶ ⇄ for mouse users who cannot drag.
+  - ←/→ changes the indent of a line in "Your spell" (0–4). While a line is held, Tab and
+    Shift+Tab do too; otherwise Tab moves on, so the puzzle never traps the keyboard.
+  - **Space** drops it; **Esc** puts it back where it was picked up.
+  - **M** moves a line to the end of the other list, and focus follows it.
+  - The keyboard model is one pure function (`pressKey` in `parsonsModel.ts`), unit-tested.
+- **Pointer:** lines can be dragged with a mouse or a finger (pointer events, so touch screens
+  work). A bar shows where the line will land, and in "Your spell" the line's left edge sets its
+  indent (one step per 2rem). A click without moving selects the line.
+- Each line also has visible buttons ▲ ▼ ◀ ▶ ⇄ for mouse users who cannot drag. An option
+  can't contain buttons, so these are hidden from assistive technology; the same buttons for the
+  selected line sit below the lists ("Selected line: …"), for switch and voice-control users.
+- The scraps list is the tray for unused lines ("Lines you leave here are not used"; with
+  distractors: "Some scraps don't belong in the spell at all").
 - Indentation shows as guide bars **and** a text label ("indent 1").
 
 ### 14.4 Settings

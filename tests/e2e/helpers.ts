@@ -113,10 +113,11 @@ export async function solveBody(page: Page, body: Body) {
           has: page.locator('code', { hasText: new RegExp(`^${escape(line.trim())}$`) }),
         })
         .first();
-      await item.getByRole('button', { name: 'Move to the other list' }).click();
+      // The per-line mouse buttons (hidden from assistive technology; their tooltip names them).
+      await item.locator('button[title="Move to the other list"]').click();
       const indent = (line.length - line.trimStart().length) / 4;
       const placed = page.locator('.parsons-spell .parsons-item').last();
-      for (let k = 0; k < indent; k++) await placed.getByRole('button', { name: 'Indent more' }).click();
+      for (let k = 0; k < indent; k++) await placed.locator('button[title="Indent more"]').click();
     }
     await page.getByRole('button', { name: /^▶ Run$/ }).click();
   } else {

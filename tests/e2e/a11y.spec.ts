@@ -95,6 +95,16 @@ test('knowledge check', async ({ page }) => {
   await scan(page, 'knowledge check results');
 });
 
+test('Parsons listboxes with lines in both lists and one picked up', async ({ page }) => {
+  await openFixture(page, 'gate');
+  const first = page.locator('.parsons-scraps [role="option"]').first();
+  await first.focus();
+  await page.keyboard.press('m');
+  await page.keyboard.press('Space');
+  await expect(page.locator('.parsons-item.held')).toHaveCount(1);
+  await scan(page, 'parsons');
+});
+
 test('Phase 2 quest types: fill, typed input, lamps, twin, bonus', async ({ page }) => {
   await openFixture(page, 'fill');
   await page.getByRole('button', { name: /^▶ Run$/ }).click();

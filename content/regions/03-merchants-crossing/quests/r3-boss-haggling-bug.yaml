@@ -1,0 +1,462 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-boss-haggling-bug
+region: merchants-crossing
+title: The Haggling Bug
+type: boss
+npc: hagglebug
+learning_outcome: Build and test a price calculator that reads numbers with input() and makes change with // and %.
+csta: [2-AP-11, 2-AP-17]
+estimated_minutes: 20
+prerequisites:
+  - r3-q1-coins-or-tags
+  - r3-q2-sharing-apples
+  - r3-q3-the-merchants-formula
+  - r3-q4-asking-the-customer
+  - r3-q5-price-tag-trouble
+  - r3-q6-receipt-writer
+vocabulary: [bug, debugging, edge case]
+
+boss:
+  name: The Haggling Bug
+  bug: Hagglebug
+  sprite: bug_hagglebug
+
+story_intro: |
+  A [[bug]] in a tiny top hat sits on the big market scale. It's **Hagglebug**! "Prices? I *improve* them! Seven silver? Make it seventy! Hee hee!"
+
+  Marta Crust sells pies for 7 silver each, and 1 gold coin is worth 10 silver. Build her a price calculator that every merchant can trust. Beat Hagglebug in four phases.
+goal: Fix the price list. Ask the customer. Make change in gold and silver. Then test it with every kind of customer.
+concept_card: |
+  Test your code with lots of inputs, not just one. Try the odd ones too, like a customer who pays the exact amount.
+
+phases:
+  - id: fix-the-price-list
+    title: Fix the price list
+    type: fix
+    learning_outcome: Identify and fix errors in a calculation.
+    csta: [2-AP-17]
+    estimated_minutes: 5
+    story_intro: |
+      Hagglebug scribbled on Marta's price list! A pie is 7 silver and a cider is 3 silver. "Lunch for 2" is a pie and a cider for each person.
+
+      This spell has **2 bugs**: one wrong [[operator]], and one place that needs parentheses. The list should say:
+      ```text
+      3 pies: 21 silver
+      Lunch for 2: 20 silver
+      ```
+    goal: Fix the two bugs so the price list prints the right prices.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_hagglebug, name: Hagglebug }
+        - { sprite: npc_pie_merchant, name: Marta Crust }
+    starter_code: |
+      pie = 7
+      cider = 3
+      three_pies = pie + 3
+      lunch_for_two = pie + cider * 2
+      print(f"3 pies: {three_pies} silver")
+      print(f"Lunch for 2: {lunch_for_two} silver")
+    solution: |
+      pie = 7
+      cider = 3
+      three_pies = pie * 3
+      lunch_for_two = (pie + cider) * 2
+      print(f"3 pies: {three_pies} silver")
+      print(f"Lunch for 2: {lunch_for_two} silver")
+    validators:
+      - id: price-list
+        type: output
+        expect: |
+          3 pies: 21 silver
+          Lunch for 2: 20 silver
+        fail_hint: Compare the Scroll with the price list. 3 pies should cost 21 silver, and lunch for 2 should cost 20.
+    common_mistakes:
+      - id: wrong-operator
+        detect: { kind: output_regex, pattern: "^3 pies: 10 silver" }
+        feedback: >-
+          3 pies for 10 silver? `+` adds 3 to the price. For 3 pies, you need to *multiply*
+          the price by 3. Use `*`.
+      - id: no-parens
+        detect: { kind: output_regex, pattern: "^Lunch for 2: 13 silver" }
+        feedback: >-
+          Lunch for 2 costs 13? Python multiplied `cider * 2` first and added just one pie. Put
+          parentheses around `pie + cider`, so both people get a pie and a cider.
+      - id: wrong-prices
+        detect: { kind: validator_failed, id: price-list }
+        feedback: The list runs, but some prices are still wrong. Work out each price by hand and compare.
+    wrong_solutions:
+      - expect_mistake: no-parens
+        note: Only the operator is fixed.
+        code: |
+          pie = 7
+          cider = 3
+          three_pies = pie * 3
+          lunch_for_two = pie + cider * 2
+          print(f"3 pies: {three_pies} silver")
+          print(f"Lunch for 2: {lunch_for_two} silver")
+      - expect_mistake: wrong-operator
+        note: Only the parentheses are fixed.
+        code: |
+          pie = 7
+          cider = 3
+          three_pies = pie + 3
+          lunch_for_two = (pie + cider) * 2
+          print(f"3 pies: {three_pies} silver")
+          print(f"Lunch for 2: {lunch_for_two} silver")
+    hints:
+      - Work out each price by hand first. What should 3 pies cost? What about a pie and a cider for 2 people?
+      - "`pie + 3` adds 3 silver, but 3 pies means 3 times the price. And Python multiplies before it adds, so `pie + cider * 2` needs parentheses."
+      - |
+        ```python
+        three_pies = pie * 3
+        lunch_for_two = (____) * 2
+        ```
+    story_outro: |
+      The price list is right again. Hagglebug's hat wobbles. "Fine, fine. But you'll never get the *customers* right!"
+
+  - id: ask-and-convert
+    title: Ask and convert
+    type: modify
+    learning_outcome: Use input() and int() to read numbers from a customer.
+    csta: [2-AP-11]
+    estimated_minutes: 5
+    inputs: ["2", "50"]
+    interactive_input: true
+    story_intro: |
+      Hagglebug keeps *guessing* what customers want. Wren just wants 2 pies, and she pays with 50 silver.
+
+      Replace both guesses with questions. Ask with `input()`, and turn each answer into a number with `int()`.
+    goal: Make `pies` and `paid` come from `int(input(...))` instead of Hagglebug's guesses.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: npc_customer, name: Wren }
+        - { sprite: bug_hagglebug, name: Hagglebug }
+    starter_code: |
+      price = 7
+      pies = 3     # Hagglebug's guess. Ask the customer!
+      paid = 50    # Hagglebug's guess. Ask the customer!
+      cost = pies * price
+      print(f"{pies} pies cost {cost} silver.")
+      print(f"You paid {paid} silver.")
+    solution: |
+      price = 7
+      pies = int(input("How many pies? "))
+      paid = int(input("How much silver do you pay? "))
+      cost = pies * price
+      print(f"{pies} pies cost {cost} silver.")
+      print(f"You paid {paid} silver.")
+    validators:
+      - id: asks
+        type: ast
+        min_count: { input: 2 }
+        fail_hint: Ask two questions with `input()`, one for the pies and one for the silver.
+      - id: customers
+        type: hidden_tests
+        mode: inputs
+        compare: ["vars:pies", "vars:paid", "vars:cost"]
+        fail_hint: "`pies` and `paid` should hold the customer's answers, as numbers."
+        cases:
+          - { inputs: ["2", "50"] }
+          - { inputs: ["5", "40"] }
+          - { inputs: ["1", "7"] }
+    common_mistakes:
+      - id: text-not-number
+        detect:
+          kind: custom
+          python: |
+            def detect(ctx):
+                return isinstance(ctx.vars.get("pies"), str) or isinstance(ctx.vars.get("paid"), str)
+        feedback: >-
+          The answers are still text! `input()` always hands back text. Wrap each one in `int(...)`,
+          like `pies = int(input("How many pies? "))`.
+      - id: still-guessing
+        detect: { kind: validator_failed, id: asks }
+        feedback: >-
+          One of Hagglebug's guesses is still there. Ask the customer two questions: how many pies,
+          and how much silver they pay.
+      - id: wrong-answers
+        detect: { kind: validator_failed, id: customers }
+        feedback: >-
+          Ask for the pies first and the silver second, and store the answers in `pies` and `paid`.
+    wrong_solutions:
+      - expect_mistake: text-not-number
+        code: |
+          price = 7
+          pies = input("How many pies? ")
+          paid = input("How much silver do you pay? ")
+          cost = pies * price
+          print(f"{pies} pies cost {cost} silver.")
+          print(f"You paid {paid} silver.")
+      - expect_mistake: still-guessing
+        code: |
+          price = 7
+          pies = int(input("How many pies? "))
+          paid = 50
+          cost = pies * price
+          print(f"{pies} pies cost {cost} silver.")
+          print(f"You paid {paid} silver.")
+      - expect_mistake: wrong-answers
+        note: The questions are asked in the wrong order.
+        code: |
+          price = 7
+          paid = int(input("How much silver do you pay? "))
+          pies = int(input("How many pies? "))
+          cost = pies * price
+          print(f"{pies} pies cost {cost} silver.")
+          print(f"You paid {paid} silver.")
+    hints:
+      - Which two numbers is Hagglebug guessing? Those are the ones to ask about.
+      - Replace `3` with `int(input("How many pies? "))`. Do the same for `50`, with a question about the silver.
+      - |
+        ```python
+        pies = int(input("How many pies? "))
+        paid = ____
+        ```
+    story_outro: |
+      "2 pies cost 14 silver. You paid 50 silver." Hagglebug grumbles. "Asking people. How boring. How... correct."
+
+  - id: make-change
+    title: Make change
+    type: make
+    learning_outcome: Use // and % to split an amount into gold and silver coins.
+    csta: [2-AP-11]
+    estimated_minutes: 5
+    carry_code: true
+    inputs: ["2", "50"]
+    interactive_input: true
+    story_intro: |
+      Now the customer needs change! 1 gold coin is worth 10 silver. Wren's change is 36 silver, so she gets 3 gold and 6 silver.
+
+      Work out `change` (what she paid, minus the cost). Then split it with `//` and `%`. `change // 10` is the whole gold coins, and `change % 10` is the silver left over.
+    goal: "Store the change in `change`, the gold in `gold` and the silver in `silver`. Then print a line like `Your change: 3 gold and 6 silver.`"
+    stage:
+      kind: npc
+      cast:
+        - { sprite: npc_customer, name: Wren }
+        - { sprite: bug_hagglebug, name: Hagglebug }
+    starter_code: |
+      price = 7
+      pies = int(input("How many pies? "))
+      paid = int(input("How much silver do you pay? "))
+      cost = pies * price
+      print(f"{pies} pies cost {cost} silver.")
+      print(f"You paid {paid} silver.")
+    solution: |
+      price = 7
+      pies = int(input("How many pies? "))
+      paid = int(input("How much silver do you pay? "))
+      cost = pies * price
+      print(f"{pies} pies cost {cost} silver.")
+      print(f"You paid {paid} silver.")
+      change = paid - cost
+      gold = change // 10
+      silver = change % 10
+      print(f"Your change: {gold} gold and {silver} silver.")
+    validators:
+      - id: split
+        type: ast
+        require: [FloorDiv, Mod]
+        fail_hint: Use `//` to find the gold and `%` to find the silver.
+      - id: customers
+        type: hidden_tests
+        mode: inputs
+        compare: ["vars:change", "vars:gold", "vars:silver"]
+        fail_hint: Check the change for other customers. 3 pies paid with 50 silver should give 2 gold and 9 silver.
+        cases:
+          - { inputs: ["2", "50"] }
+          - { inputs: ["3", "50"] }
+          - { inputs: ["1", "100"] }
+          - { inputs: ["4", "40"] }
+      - id: says-change
+        type: custom
+        fail_hint: "Print the change like this: `Your change: 3 gold and 6 silver.`"
+        python: |
+          def check(ctx):
+              gold = ctx.vars.get("gold")
+              silver = ctx.vars.get("silver")
+              line = f"Your change: {gold} gold and {silver} silver."
+              if line in [text.strip() for text in ctx.lines]:
+                  return Pass()
+              return Fail("Print the change like this: `Your change: 3 gold and 6 silver.`")
+    common_mistakes:
+      - id: used-slash
+        detect: { kind: code_regex, pattern: "(?<!/)/(?!/)\\s*10\\b" }
+        feedback: >-
+          `/` gives a number with a dot, like 3.6 gold. Nobody has 0.6 of a coin! Use `//` to get
+          whole gold coins.
+      - id: backwards
+        detect: { kind: code_regex, pattern: "cost\\s*-\\s*paid" }
+        feedback: >-
+          Uh-oh, negative change! The change is what the customer paid, minus the cost:
+          `paid - cost`.
+      - id: not-split
+        detect: { kind: validator_failed, id: split }
+        feedback: Split the change with `//` for the gold coins and `%` for the silver left over.
+      - id: wrong-change
+        detect: { kind: validator_failed, id: customers }
+        feedback: >-
+          Some customers get the wrong change. Check each step: `change = paid - cost`, then
+          `gold = change // 10`, then `silver = change % 10`.
+      - id: say-it
+        detect: { kind: validator_failed, id: says-change }
+        feedback: >-
+          The math is right! Now print it exactly like this, with your own numbers:
+          `Your change: 3 gold and 6 silver.`
+    wrong_solutions:
+      - expect_mistake: used-slash
+        code: |
+          price = 7
+          pies = int(input("How many pies? "))
+          paid = int(input("How much silver do you pay? "))
+          cost = pies * price
+          change = paid - cost
+          gold = change / 10
+          silver = change % 10
+          print(f"Your change: {gold} gold and {silver} silver.")
+      - expect_mistake: backwards
+        code: |
+          price = 7
+          pies = int(input("How many pies? "))
+          paid = int(input("How much silver do you pay? "))
+          cost = pies * price
+          change = cost - paid
+          gold = change // 10
+          silver = change % 10
+          print(f"Your change: {gold} gold and {silver} silver.")
+      - expect_mistake: say-it
+        code: |
+          price = 7
+          pies = int(input("How many pies? "))
+          paid = int(input("How much silver do you pay? "))
+          cost = pies * price
+          change = paid - cost
+          gold = change // 10
+          silver = change % 10
+          print(f"Change: {gold} gold, {silver} silver")
+    hints:
+      - "First find the change in silver: what the customer paid, minus the cost. Then ask: how many whole tens fit into it?"
+      - "`change // 10` gives the whole gold coins. `change % 10` gives the silver left over."
+      - |
+        ```python
+        change = paid - cost
+        gold = change // 10
+        silver = ____
+        print(f"Your change: {gold} gold and {silver} silver.")
+        ```
+    story_outro: |
+      Gold and silver clink into Wren's hand. Hagglebug clutches its hat. "No! Not *correct change*! Anything but that!"
+
+  - id: every-customer
+    title: Every customer
+    type: fix
+    learning_outcome: Test a program with several inputs, including an edge case.
+    csta: [2-AP-17]
+    estimated_minutes: 5
+    inputs: ["1", "20"]
+    interactive_input: true
+    story_intro: |
+      Hagglebug's last trick: it changed one line of the calculator. Sneaky! It still gives Ada the right change, so nobody noticed.
+
+      Before you run it, predict each customer's change in your head or on paper:
+      - **Ada** buys 1 pie and pays 20 silver.
+      - **Bram** buys 2 pies and pays 50 silver.
+      - **Cleo** buys 3 pies and pays exactly 21 silver. That's an [[edge case]]!
+
+      Then run the calculator once for each customer, and type their numbers when it asks. This spell has **1 bug**. Find the customer who gets the wrong change, and fix it.
+    goal: Fix the bug. Then run the code once for each customer, and type in their numbers.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: npc_villager_b, name: Ada }
+        - { sprite: bug_hagglebug, name: Hagglebug }
+    starter_code: |
+      price = 7
+      pies = int(input("How many pies? "))
+      paid = int(input("How much silver do you pay? "))
+      cost = pies * price
+      change = paid - cost
+      gold = change // 10
+      silver = change - 10
+      print(f"Your change: {gold} gold and {silver} silver.")
+    solution: |
+      price = 7
+      pies = int(input("How many pies? "))
+      paid = int(input("How much silver do you pay? "))
+      cost = pies * price
+      change = paid - cost
+      gold = change // 10
+      silver = change % 10
+      print(f"Your change: {gold} gold and {silver} silver.")
+    validators:
+      - id: hidden-customers
+        type: hidden_tests
+        mode: inputs
+        compare: [output]
+        fail_hint: Some customers still get the wrong change. Check how `silver` is worked out.
+        cases:
+          - { inputs: ["3", "21"] }
+          - { inputs: ["2", "50"] }
+          - { inputs: ["1", "20"] }
+          - { inputs: ["5", "100"] }
+          - { inputs: ["2", "24"] }
+      - id: three-customers
+        type: runs_ok
+        min_runs: 3
+        distinct_inputs: true
+        fail_hint: Run the calculator 3 times, once for each customer, and type their numbers when it asks.
+    common_mistakes:
+      - id: exact-amount
+        detect: { kind: hidden_case_fails, validator: hidden-customers, case: 0 }
+        feedback: >-
+          Cleo paid the exact amount, so her change should be 0 gold and 0 silver. What does your
+          calculator say for her? Look closely at the line that works out `silver`.
+      - id: still-wrong
+        detect: { kind: validator_failed, id: hidden-customers }
+        feedback: >-
+          Some customers still get the wrong change. Try Bram: 2 pies, paid with 50 silver. His
+          change is 36 silver, so he should get 3 gold and 6 silver.
+      - id: test-them-all
+        detect: { kind: validator_failed, id: three-customers }
+        feedback: >-
+          Now prove it works! Run the calculator again and type the next customer's numbers. Test
+          Ada, Bram and Cleo, one run each. (Keep **Let me type the answers** ticked.)
+    wrong_solutions:
+      - expect_mistake: still-wrong
+        note: Right for Cleo, but every customer gets the same gold and silver.
+        code: |
+          price = 7
+          pies = int(input("How many pies? "))
+          paid = int(input("How much silver do you pay? "))
+          cost = pies * price
+          change = paid - cost
+          gold = change // 10
+          silver = change // 10
+          print(f"Your change: {gold} gold and {silver} silver.")
+      - expect_mistake: exact-amount
+        note: "`/` prints 0.0 silver for Cleo."
+        code: |
+          price = 7
+          pies = int(input("How many pies? "))
+          paid = int(input("How much silver do you pay? "))
+          cost = pies * price
+          change = paid - cost
+          gold = change // 10
+          silver = change / 10
+          print(f"Your change: {gold} gold and {silver} silver.")
+    hints:
+      - Work out each customer's change by hand first. Cleo's is easy, because she paid exactly the cost. Which customer does the calculator get wrong?
+      - "`change - 10` only takes away one gold coin's worth. The silver should be what's left after *all* the gold: use `%`."
+      - |
+        ```python
+        gold = change // 10
+        silver = change ____ 10
+        ```
+    story_outro: |
+      Ada, Bram and Cleo all get the right change. Hagglebug's hat falls off. "You... you *tested* it? With an edge case? That's not fair!"
+
+story_outro: |
+  Hagglebug shivers, glows, and turns into a friendly little firefly. "Ooh. Honest prices feel nice," it hums, and floats off to light Marta's pie shop.
+
+  You found **Script Fragment: Numbers**, the piece of the Great Script that counts and measures! Byte puffs up proudly. "Not bad, apprentice. You can count AND haggle. Mostly count."

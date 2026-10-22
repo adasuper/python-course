@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-q4-asking-the-customer
+region: merchants-crossing
+title: Asking the Customer
+type: parsons
+npc: hattie
+learning_outcome: Arrange the input, convert, calculate, and print lines into a working program.
+csta: [2-AP-13]
+estimated_minutes: 7
+prerequisites: [r3-q3-the-merchants-formula]
+vocabulary: [input, convert, string]
+rewards: { item: ear-trumpet-of-asking }
+inputs: ["4"]
+interactive_input: true
+
+story_intro: |
+  Hattie Honeycomb sells honey for 5 silver a jar. "I never remember how many jars people want. Could your code ask them for me?"
+
+  The spell `input()` asks a question and waits for an answer. Here, Wren the shopper answers. But watch out! `input()` always hands back text, even when the answer is a number. Use `int()` to [[convert]] the text into a real number.
+
+  Put the lines in order: ask, convert, work out the cost, print. One scrap doesn't belong.
+goal: Arrange the lines so the program asks how many jars, works out the cost, and prints it. Wren wants 4 jars.
+concept_card: |
+  `input()` asks a question and always hands back a **string**. Use `int()` to turn it into a number before you do math with it.
+  ```python
+  answer = input("How many jars? ")
+  jars = int(answer)
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_customer, name: Wren }
+    - { sprite: npc_honey_seller, name: Hattie Honeycomb }
+
+parsons:
+  fixed_top:
+    - price = 5
+  lines:
+    - answer = input("How many jars of honey? ")
+    - jars = int(answer)
+    - total = jars * price
+    - print(f"That will be {total} silver, please!")
+  distractors:
+    - jars = answer
+  indent: false
+
+validators:
+  - id: customers
+    type: hidden_tests
+    mode: inputs
+    compare: [output]
+    fail_hint: Ask first, then turn the answer into a number, then work out the cost, then print it.
+    cases:
+      - { inputs: ["4"] }
+      - { inputs: ["1"] }
+      - { inputs: ["12"] }
+
+common_mistakes:
+  - id: still-text
+    detect: { kind: code_regex, pattern: "^jars = answer$" }
+    feedback: >-
+      Wren's answer is still text! `"4" * 5` repeats the text: `44444`. Use the line with `int()`
+      to turn the answer into a real number.
+  - id: too-soon
+    detect: { kind: error, type: NameError }
+    feedback: >-
+      One line uses a name before it exists. Python runs from the top down, so ask first, then
+      convert, then work out the total, and print last.
+
+wrong_solutions:
+  - order: [0, 4, 2, 3]
+    expect_mistake: still-text
+    note: The distractor keeps the answer as text.
+  - order: [1, 0, 2, 3]
+    expect_mistake: too-soon
+    note: Converting before asking.
+  - order: [0, 1, 3, 2]
+    expect_mistake: too-soon
+    note: Printing the total before working it out.
+
+hints:
+  - What has to happen first, asking the question or doing math with the answer?
+  - Ask with `input()`, then turn the answer into a number with `int()`, then multiply, then print. The line without `int()` doesn't belong.
+  - |
+    ```python
+    price = 5
+    answer = input("How many jars of honey? ")
+    ____
+    total = jars * price
+    print(f"That will be {total} silver, please!")
+    ```
+
+story_outro: |
+  Wren says "4!" and your program says "That will be 20 silver, please!" Hattie claps. She gives you a shiny brass horn: the **Ear Trumpet of Asking**. "Now you'll always hear the answer. As text, mind you!"

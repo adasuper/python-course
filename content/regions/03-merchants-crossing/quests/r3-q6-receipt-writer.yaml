@@ -1,0 +1,186 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-q6-receipt-writer
+region: merchants-crossing
+title: The Receipt Writer
+type: make
+npc: tuppence
+learning_outcome: Write a program that reads a quantity with input(), works out the cost, and prints a receipt.
+csta: [2-AP-11, 2-AP-13]
+estimated_minutes: 10
+prerequisites: [r3-q5-price-tag-trouble]
+retrieval: [r2]
+vocabulary: [input, convert]
+inputs: ["3"]
+interactive_input: true
+
+story_intro: |
+  Clerk Tuppence peers over a stack of papers. "Our receipt parrot quit. It said it was tired of numbers. Can you write a receipt program instead?"
+
+  Moon melons cost 6 silver each. Ask the customer how many they want. Then print a receipt like this one, for 3 melons:
+  ```text
+  Melons: 3
+  Total: 18 silver
+  ```
+  Remember f-strings from the Whispering Library? `f"Melons: {melons}"` puts a value right inside the text.
+goal: Ask how many melons with `input()`. Store the cost in `total`. Then print both receipt lines with f-strings.
+concept_card: |
+  Many programs follow the same plan: **ask, convert, calculate, print**. An f-string puts the answers right into the text.
+  ```python
+  melons = int(input("How many melons? "))
+  total = melons * 6
+  print(f"Total: {total} silver")
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_customer, name: Wren }
+    - { sprite: npc_clerk, name: Clerk Tuppence }
+
+starter_code: |
+  # Moon melons cost 6 silver each.
+  price = 6
+  # 1. Ask how many melons.
+  # 2. Work out the total.
+  # 3. Print the receipt.
+
+solution: |
+  # Moon melons cost 6 silver each.
+  price = 6
+  # 1. Ask how many melons.
+  melons = int(input("How many melons? "))
+  # 2. Work out the total.
+  total = melons * price
+  # 3. Print the receipt.
+  print(f"Melons: {melons}")
+  print(f"Total: {total} silver")
+
+validators:
+  - id: asks
+    type: ast
+    require_calls: [input]
+    fail_hint: Ask the customer how many melons with `input()`.
+  - id: receipt
+    type: custom
+    fail_hint: "Print the receipt lines like this: `Melons: 3` and `Total: 18 silver`."
+    python: |
+      def check(ctx):
+          total = ctx.vars.get("total")
+          lines = [line.strip() for line in ctx.lines]
+          if not any(re.fullmatch(r"Melons: \d+", line) for line in lines):
+              return Fail("Print how many melons, like this: `Melons: 3`.")
+          if f"Total: {total} silver" not in lines:
+              return Fail("Print the total like this: `Total: 18 silver`.")
+          return Pass()
+  - id: other-customers
+    type: hidden_tests
+    mode: inputs
+    compare: ["vars:total"]
+    fail_hint: Work out `total` from the customer's answer, so it's right for every customer.
+    cases:
+      - { inputs: ["3"] }
+      - { inputs: ["1"] }
+      - { inputs: ["10"] }
+  - id: fstrings
+    type: ast
+    require: [JoinedStr]
+    fail_hint: 'Use f-strings for the receipt, like `f"Total: {total} silver"`.'
+
+common_mistakes:
+  - id: no-convert
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            return isinstance(ctx.vars.get("total"), str)
+    feedback: >-
+      Your total is text, not a number! `input()` hands back text, and `"3" * 6` just repeats it.
+      Wrap `input(...)` in `int(...)` first.
+  - id: glue-number
+    detect: { kind: error, key: type.str_plus_number }
+    feedback: >-
+      `+` can't glue a number onto words. Use an f-string instead, like `f"Total: {total} silver"`.
+  - id: missing-f
+    detect: { kind: detector, name: missing_fstring_prefix }
+    feedback: >-
+      Your braces printed as they are! Put an `f` right before the opening quote, like `f"Melons: {melons}"`.
+  - id: no-total
+    detect: { kind: detector, name: printed_not_stored, var: total }
+    feedback: >-
+      Store the cost in a variable called `total` first, like `total = melons * price`. Then print it.
+  - id: not-asking
+    detect: { kind: validator_failed, id: asks }
+    feedback: >-
+      Wren is waiting to tell you! Ask with `input("How many melons? ")`, and turn the answer into
+      a number with `int()`.
+  - id: wrong-receipt
+    detect: { kind: validator_failed, id: receipt }
+    feedback: >-
+      Almost! The receipt must look exactly like this, with your own numbers: `Melons: 3` on one
+      line and `Total: 18 silver` on the next.
+  - id: typed-total
+    detect: { kind: validator_failed, id: other-customers }
+    feedback: >-
+      The receipt is right for Wren, but other customers get the wrong total. Did you type 18 in?
+      Use `melons * price`, so it works for any answer.
+  - id: no-fstring
+    detect: { kind: validator_failed, id: fstrings }
+    feedback: It works! Now write the receipt lines as f-strings, just like in the Whispering Library.
+
+wrong_solutions:
+  - expect_mistake: no-convert
+    code: |
+      price = 6
+      melons = input("How many melons? ")
+      total = melons * price
+      print(f"Melons: {melons}")
+      print(f"Total: {total} silver")
+  - expect_mistake: glue-number
+    code: |
+      price = 6
+      melons = int(input("How many melons? "))
+      total = melons * price
+      print("Melons: " + str(melons))
+      print("Total: " + total + " silver")
+  - expect_mistake: missing-f
+    code: |
+      price = 6
+      melons = int(input("How many melons? "))
+      total = melons * price
+      print("Melons: {melons}")
+      print("Total: {total} silver")
+  - expect_mistake: no-total
+    code: |
+      price = 6
+      melons = int(input("How many melons? "))
+      print(f"Melons: {melons}")
+      print(f"Total: {melons * price} silver")
+  - expect_mistake: typed-total
+    code: |
+      price = 6
+      melons = int(input("How many melons? "))
+      total = 18
+      print(f"Melons: {melons}")
+      print(f"Total: {total} silver")
+  - expect_mistake: no-fstring
+    code: |
+      price = 6
+      melons = int(input("How many melons? "))
+      total = melons * price
+      print("Melons: " + str(melons))
+      print("Total: " + str(total) + " silver")
+
+hints:
+  - "Three steps: ask, work out the total, print. Which spell asks a question?"
+  - "`int(input(\"How many melons? \"))` asks and converts in one line. Then `total = melons * price`. Print each line with an f-string."
+  - |
+    ```python
+    price = 6
+    melons = int(input("How many melons? "))
+    total = ____
+    print(f"Melons: {melons}")
+    print(f"Total: {total} silver")
+    ```
+
+story_outro: |
+  Your program prints a perfect receipt. Clerk Tuppence stamps it twice, just for fun. "Neat, quick, and it never asks for crackers. Better than the parrot!"

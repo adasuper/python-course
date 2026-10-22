@@ -976,6 +976,627 @@ Ada reads Maps.
 
 4. What is the difference between `print(name)` and `print("name")`? → **The first shows what is inside the jar `name`. The second shows the word name.**. Without quotes, Python looks inside the jar. With quotes, it's just text.
 
+## Region 3 — Merchant's Crossing
+
+**Concepts:** int and float; + - * / // %; order of operations; input(); int() and str()
+
+**Byte's analogy:** `"5"` in quotes is a price tag: just a picture of a number. `5` without quotes is real coins you can count. `int()` turns a tag into coins, and `str()` turns coins back into a tag. `//` and `%` are like sharing apples: `//` is how many each friend gets, and `%` is what's left over.
+
+### Coins or Price Tags?
+
+`r3-q1-coins-or-tags`
+
+- **Type:** predict
+- **Learning outcome:** Predict the result of + and * when the values are ints, floats, or strings.
+- **CSTA:** 2-AP-11, 2-DA-07 · **About 6 min**
+- **Goal (as students see it):** Read the program and predict what it prints. Then run it to check.
+
+**Code students read:**
+
+```python
+print(2 + 3)
+print("2" + "3")
+print(7 / 2)
+print(6 / 2)
+print("ha" * 3)
+```
+
+**Answers:**
+
+- What will the Scroll of Output show? → **5 23 3.5 3.0 hahaha**. `2 + 3` adds two coins: 5. `"2" + "3"` glues two price tags: `23`. `/` always gives a float, so `7 / 2` is `3.5` and `6 / 2` is `3.0`. And `"ha" * 3` repeats the text three times.
+- Which lines work with text instead of numbers? → **Lines 2 and 5**. Lines 2 and 5 use strings in quotes, like `"2"` and `"ha"`. Text in quotes is never counted like coins.
+
+**Hints (free, in this order):**
+
+1. Look for quotes. A value in quotes is text, even when it looks like a number.
+2. `+` adds two numbers, but it glues two strings together. `/` always gives an answer with a dot, even when it divides evenly.
+3. (code example)
+
+Work out one line at a time:
+```text
+2 + 3      -> 5
+"2" + "3"  -> ____
+7 / 2      -> 3.5
+6 / 2      -> 3.0
+"ha" * 3   -> hahaha
+```
+
+### Sharing the Apple Cart
+
+`r3-q2-sharing-apples`
+
+- **Type:** investigate
+- **Learning outcome:** Explain what // and % calculate by running examples and changing the numbers.
+- **CSTA:** 2-AP-11 · **About 8 min**
+- **Goal (as students see it):** Run the program and answer Granny Pippin's questions. Try each change the questions ask for.
+
+**Code students run:**
+
+```python
+apples = 23
+baskets = 5
+each = apples // baskets
+left = apples % baskets
+print(f"Each basket gets {each} apples.")
+print(f"{left} apples are left over.")
+```
+
+**Answers:**
+
+- Run the program. How many apples does each basket get? → **4**. 5 baskets with 4 apples each is 20 apples. A fifth apple each would need 25.
+- And how many apples are left over? → **3**. 23 apples minus the 20 in the baskets leaves 3.
+- Change `apples` to `25` and run it again. How many apples are left over now? → **0**. 5 baskets with 5 apples each uses all 25. Nothing is left over, so `25 % 5` is 0.
+- Now try `apples = 4`. That's fewer apples than baskets! How many apples does each basket get? → **0 apples**. There aren't enough apples to go around. So `4 // 5` is 0, and all 4 apples are left over.
+- So what does `%` really give you? → **What's left over after sharing equally**. `%` gives the remainder: what's left after sharing. It is not percent!
+
+**Hints (free, in this order):**
+
+1. Press Run first. Then read the Scroll of Output, one line at a time.
+2. `23 // 5` asks: how many whole 5s fit into 23? `23 % 5` asks: what's left after that?
+3. (code example)
+
+```text
+23 // 5  ->  4    (5 + 5 + 5 + 5 = 20)
+23 % 5   ->  ____ (23 - 20)
+```
+
+### The Merchant's Formula
+
+`r3-q3-the-merchants-formula`
+
+- **Type:** modify
+- **Learning outcome:** Use parentheses to control the order of operations in a price calculation.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Add parentheses so the wrapping fee is paid on each pie. Four wrapped pies should cost 28 silver.
+
+**Starter code:**
+
+```python
+price = 6    # silver for one pie
+fee = 1      # silver to wrap one pie
+pies = 4
+total = price + fee * pies
+print(f"{pies} wrapped pies cost {total} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 6    # silver for one pie
+fee = 1      # silver to wrap one pie
+pies = 4
+total = (price + fee) * pies
+print(f"{pies} wrapped pies cost {total} silver.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *no-parens* — Python did `fee * pies` first, then added just one price. Put parentheses around `price + fee`, so Python adds those first and then multiplies.
+- *fee-once* — Now every pie is paid for, but the wrapping fee only once. Each pie needs wrapping too: add the fee to the price first, then multiply.
+- *typed-answer* — 28 is right for Marta's pies, but other customers get the wrong price. Did you type the answer in? Work it out from `price`, `fee` and `pies`, so it works for every order.
+
+**Hints (free, in this order):**
+
+1. Which should happen first, adding the price and the fee, or multiplying by the number of pies?
+2. Python multiplies before it adds. Parentheses always go first, so put `( )` around the part you want worked out first.
+3. (code example)
+
+```python
+total = (____) * pies
+```
+
+### Asking the Customer
+
+`r3-q4-asking-the-customer`
+
+- **Type:** parsons
+- **Learning outcome:** Arrange the input, convert, calculate, and print lines into a working program.
+- **CSTA:** 2-AP-13 · **About 7 min**
+- **Goal (as students see it):** Arrange the lines so the program asks how many jars, works out the cost, and prints it. Wren wants 4 jars.
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 5
+answer = input("How many jars of honey? ")
+jars = int(answer)
+total = jars * price
+print(f"That will be {total} silver, please!")
+```
+
+**Distractor lines (not used):** `jars = answer`
+
+**Input values the quest provides:** `4`
+
+**Common mistakes and the feedback students get:**
+
+- *still-text* — Wren's answer is still text! `"4" * 5` repeats the text: `44444`. Use the line with `int()` to turn the answer into a real number.
+- *too-soon* — One line uses a name before it exists. Python runs from the top down, so ask first, then convert, then work out the total, and print last.
+
+**Hints (free, in this order):**
+
+1. What has to happen first, asking the question or doing math with the answer?
+2. Ask with `input()`, then turn the answer into a number with `int()`, then multiply, then print. The line without `int()` doesn't belong.
+3. (code example)
+
+```python
+price = 5
+answer = input("How many jars of honey? ")
+____
+total = jars * price
+print(f"That will be {total} silver, please!")
+```
+
+### Price Tag Trouble
+
+`r3-q5-price-tag-trouble`
+
+- **Type:** fix
+- **Learning outcome:** Fix a TypeError by converting between text and numbers with int() and str().
+- **CSTA:** 2-AP-11, 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix both bugs, so 4 turnips cost 8 silver and the till prints `Total: 8 silver`.
+
+**Starter code:**
+
+```python
+price = 2
+turnips = input("How many turnips? ")
+total = turnips * price
+print("Total: " + total + " silver")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 2
+turnips = int(input("How many turnips? "))
+total = turnips * price
+print("Total: " + str(total) + " silver")
+```
+
+**Input values the quest provides:** `4`
+
+**Common mistakes and the feedback students get:**
+
+- *glue-number* — Bug found! `total` is a number now, and `+` can't glue a number onto words. Turn it back into text with `str(total)`. (An f-string works too!)
+- *text-times-number* — The total is still text! `input()` hands back text, so `"4" * 2` repeats it: `44`. Wrap `input(...)` in `int(...)` so `turnips` is a real number.
+- *wrong-words* — No more errors, nice! But the Scroll doesn't match. It should say `Total: 8 silver` for 4 turnips. Keep the question `How many turnips? ` the same, too.
+
+**Hints (free, in this order):**
+
+1. Run it and read the Scroll. Is 44 silver right for 4 turnips at 2 silver each?
+2. `input()` hands back text. Wrap it in `int(...)` so `turnips` is a number. Then Python complains about line 4: turn `total` back into text with `str(total)`.
+3. (code example)
+
+```python
+price = 2
+turnips = int(input("How many turnips? "))
+total = turnips * price
+print("Total: " + ____ + " silver")
+```
+
+### The Receipt Writer
+
+`r3-q6-receipt-writer`
+
+- **Type:** make
+- **Learning outcome:** Write a program that reads a quantity with input(), works out the cost, and prints a receipt.
+- **CSTA:** 2-AP-11, 2-AP-13 · **About 10 min**
+- **Goal (as students see it):** Ask how many melons with `input()`. Store the cost in `total`. Then print both receipt lines with f-strings.
+
+**Starter code:**
+
+```python
+# Moon melons cost 6 silver each.
+price = 6
+# 1. Ask how many melons.
+# 2. Work out the total.
+# 3. Print the receipt.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Moon melons cost 6 silver each.
+price = 6
+# 1. Ask how many melons.
+melons = int(input("How many melons? "))
+# 2. Work out the total.
+total = melons * price
+# 3. Print the receipt.
+print(f"Melons: {melons}")
+print(f"Total: {total} silver")
+```
+
+**Input values the quest provides:** `3`
+
+**Common mistakes and the feedback students get:**
+
+- *no-convert* — Your total is text, not a number! `input()` hands back text, and `"3" * 6` just repeats it. Wrap `input(...)` in `int(...)` first.
+- *glue-number* — `+` can't glue a number onto words. Use an f-string instead, like `f"Total: {total} silver"`.
+- *missing-f* — Your braces printed as they are! Put an `f` right before the opening quote, like `f"Melons: {melons}"`.
+- *no-total* — Store the cost in a variable called `total` first, like `total = melons * price`. Then print it.
+- *not-asking* — Wren is waiting to tell you! Ask with `input("How many melons? ")`, and turn the answer into a number with `int()`.
+- *wrong-receipt* — Almost! The receipt must look exactly like this, with your own numbers: `Melons: 3` on one line and `Total: 18 silver` on the next.
+- *typed-total* — The receipt is right for Wren, but other customers get the wrong total. Did you type 18 in? Use `melons * price`, so it works for any answer.
+- *no-fstring* — It works! Now write the receipt lines as f-strings, just like in the Whispering Library.
+
+**Hints (free, in this order):**
+
+1. Three steps: ask, work out the total, print. Which spell asks a question?
+2. `int(input("How many melons? "))` asks and converts in one line. Then `total = melons * price`. Print each line with an f-string.
+3. (code example)
+
+```python
+price = 6
+melons = int(input("How many melons? "))
+total = ____
+print(f"Melons: {melons}")
+print(f"Total: {total} silver")
+```
+
+### The Haggling Bug 🐛 boss
+
+`r3-boss-haggling-bug`
+
+**Boss:** The Haggling Bug (Hagglebug). Fix the price list. Ask the customer. Make change in gold and silver. Then test it with every kind of customer.
+
+#### Phase 1: Fix the price list
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix errors in a calculation.
+- **CSTA:** 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Fix the two bugs so the price list prints the right prices.
+
+**Starter code:**
+
+```python
+pie = 7
+cider = 3
+three_pies = pie + 3
+lunch_for_two = pie + cider * 2
+print(f"3 pies: {three_pies} silver")
+print(f"Lunch for 2: {lunch_for_two} silver")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+pie = 7
+cider = 3
+three_pies = pie * 3
+lunch_for_two = (pie + cider) * 2
+print(f"3 pies: {three_pies} silver")
+print(f"Lunch for 2: {lunch_for_two} silver")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *wrong-operator* — 3 pies for 10 silver? `+` adds 3 to the price. For 3 pies, you need to *multiply* the price by 3. Use `*`.
+- *no-parens* — Lunch for 2 costs 13? Python multiplied `cider * 2` first and added just one pie. Put parentheses around `pie + cider`, so both people get a pie and a cider.
+- *wrong-prices* — The list runs, but some prices are still wrong. Work out each price by hand and compare.
+
+**Hints (free, in this order):**
+
+1. Work out each price by hand first. What should 3 pies cost? What about a pie and a cider for 2 people?
+2. `pie + 3` adds 3 silver, but 3 pies means 3 times the price. And Python multiplies before it adds, so `pie + cider * 2` needs parentheses.
+3. (code example)
+
+```python
+three_pies = pie * 3
+lunch_for_two = (____) * 2
+```
+
+#### Phase 2: Ask and convert
+
+- **Type:** modify
+- **Learning outcome:** Use input() and int() to read numbers from a customer.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Make `pies` and `paid` come from `int(input(...))` instead of Hagglebug's guesses.
+
+**Starter code:**
+
+```python
+price = 7
+pies = 3     # Hagglebug's guess. Ask the customer!
+paid = 50    # Hagglebug's guess. Ask the customer!
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+```
+
+**Input values the quest provides:** `2`, `50`
+
+**Common mistakes and the feedback students get:**
+
+- *text-not-number* — The answers are still text! `input()` always hands back text. Wrap each one in `int(...)`, like `pies = int(input("How many pies? "))`.
+- *still-guessing* — One of Hagglebug's guesses is still there. Ask the customer two questions: how many pies, and how much silver they pay.
+- *wrong-answers* — Ask for the pies first and the silver second, and store the answers in `pies` and `paid`.
+
+**Hints (free, in this order):**
+
+1. Which two numbers is Hagglebug guessing? Those are the ones to ask about.
+2. Replace `3` with `int(input("How many pies? "))`. Do the same for `50`, with a question about the silver.
+3. (code example)
+
+```python
+pies = int(input("How many pies? "))
+paid = ____
+```
+
+#### Phase 3: Make change
+
+- **Type:** make
+- **Learning outcome:** Use // and % to split an amount into gold and silver coins.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Store the change in `change`, the gold in `gold` and the silver in `silver`. Then print a line like `Your change: 3 gold and 6 silver.`
+
+**Starter code:**
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+change = paid - cost
+gold = change // 10
+silver = change % 10
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+**Input values the quest provides:** `2`, `50`
+
+**Common mistakes and the feedback students get:**
+
+- *used-slash* — `/` gives a number with a dot, like 3.6 gold. Nobody has 0.6 of a coin! Use `//` to get whole gold coins.
+- *backwards* — Uh-oh, negative change! The change is what the customer paid, minus the cost: `paid - cost`.
+- *not-split* — Split the change with `//` for the gold coins and `%` for the silver left over.
+- *wrong-change* — Some customers get the wrong change. Check each step: `change = paid - cost`, then `gold = change // 10`, then `silver = change % 10`.
+- *say-it* — The math is right! Now print it exactly like this, with your own numbers: `Your change: 3 gold and 6 silver.`
+
+**Hints (free, in this order):**
+
+1. First find the change in silver: what the customer paid, minus the cost. Then ask: how many whole tens fit into it?
+2. `change // 10` gives the whole gold coins. `change % 10` gives the silver left over.
+3. (code example)
+
+```python
+change = paid - cost
+gold = change // 10
+silver = ____
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+#### Phase 4: Every customer
+
+- **Type:** fix
+- **Learning outcome:** Test a program with several inputs, including an edge case.
+- **CSTA:** 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Fix the bug. Then run the code once for each customer, and type in their numbers.
+
+**Starter code:**
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+change = paid - cost
+gold = change // 10
+silver = change - 10
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+change = paid - cost
+gold = change // 10
+silver = change % 10
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+**Input values the quest provides:** `1`, `20`
+
+**Common mistakes and the feedback students get:**
+
+- *exact-amount* — Cleo paid the exact amount, so her change should be 0 gold and 0 silver. What does your calculator say for her? Look closely at the line that works out `silver`.
+- *still-wrong* — Some customers still get the wrong change. Try Bram: 2 pies, paid with 50 silver. His change is 36 silver, so he should get 3 gold and 6 silver.
+- *test-them-all* — Now prove it works! Run the calculator again and type the next customer's numbers. Test Ada, Bram and Cleo, one run each. (Keep **Let me type the answers** ticked.)
+
+**Hints (free, in this order):**
+
+1. Work out each customer's change by hand first. Cleo's is easy, because she paid exactly the cost. Which customer does the calculator get wrong?
+2. `change - 10` only takes away one gold coin's worth. The silver should be what's left after *all* the gold: use `%`.
+3. (code example)
+
+```python
+gold = change // 10
+silver = change ____ 10
+```
+
+### The Penny Puzzle ⭐ side quest
+
+`r3-side1-penny-puzzle`
+
+- **Type:** investigate
+- **Learning outcome:** Explain why 0.1 + 0.2 shows 0.30000000000000004, and use round() to show money neatly.
+- **CSTA:** 2-DA-07 · **About 8 min**
+- **Goal (as students see it):** Run the program and answer Tally's questions. Try each change the questions ask for.
+
+**Code students run:**
+
+```python
+apple = 0.1
+pear = 0.2
+total = apple + pear
+print(total)
+print(round(total, 2))
+```
+
+**Answers:**
+
+- Run it. What does line 4 print? → **0.30000000000000004**. That's not a haunting. It's how floats work!
+- Why isn't the answer exactly 0.3? → **The computer stores 0.1 and 0.2 as very close guesses, not exact numbers.**. Computers store floats in a special way. Most decimal numbers become very, very close guesses, and the tiny errors can add up.
+- What does `round(total, 2)` print on line 5? → **0.3**. `round(total, 2)` rounds to 2 places after the dot. Python drops the extra 0, so it shows `0.3`.
+- Change line 5 to `print(round(4.567, 2))` and run it. What does it print now? → **4.57**. `4.567` rounded to 2 places is `4.57`, because the 7 rounds the 6 up.
+
+**Hints (free, in this order):**
+
+1. Run it first, then compare lines 4 and 5 on the Scroll.
+2. Computers store most decimal numbers as very close guesses. `round(x, 2)` rounds `x` to 2 places after the dot.
+3. (code example)
+
+```text
+0.1 + 0.2             ->  0.30000000000000004
+round(0.1 + 0.2, 2)   ->  ____
+```
+
+### The Caravan Clock ⭐ side quest
+
+`r3-side2-caravan-clock`
+
+- **Type:** make
+- **Learning outcome:** Use // and % to turn a number of minutes into hours and minutes.
+- **CSTA:** 2-AP-11 · **About 8 min**
+- **Goal (as students see it):** Ask for the trip length with `input()`. Store the whole hours in `hours` and the leftover minutes in `mins`. Then print them like `2 hours 15 minutes`.
+
+**Starter code:**
+
+```python
+# There are 60 minutes in one hour.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# There are 60 minutes in one hour.
+trip = int(input("How many minutes is the trip? "))
+hours = trip // 60
+mins = trip % 60
+print(f"{hours} hours {mins} minutes")
+```
+
+**Input values the quest provides:** `135`
+
+**Common mistakes and the feedback students get:**
+
+- *no-convert* — The trip length is still text, so Python can't do math with it. Wrap `input(...)` in `int(...)` to turn it into a number.
+- *used-slash* — `/` gives a number with a dot, like 2.25 hours. Use `//` to get whole hours.
+- *missing-names* — Store the whole hours in `hours`. Store the minutes left over in `mins`.
+- *not-split* — Split the trip with `//` for the hours and `%` for the minutes left over.
+- *wrong-time* — Some trips come out wrong. `trip // 60` is the whole hours, and `trip % 60` is the minutes left over.
+- *wrong-line* — The math is right! Now print it exactly like this, with your own numbers: `2 hours 15 minutes`.
+
+**Hints (free, in this order):**
+
+1. How many whole hours fit into 135 minutes? How many minutes are left over?
+2. `trip // 60` gives the whole hours, and `trip % 60` gives the minutes left over. Don't forget `int()` around `input()`.
+3. (code example)
+
+```python
+trip = int(input("How many minutes is the trip? "))
+hours = trip // 60
+mins = ____
+print(f"{hours} hours {mins} minutes")
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+print(17 // 5)
+print(17 % 5)
+```
+
+   Answer:
+
+```text
+3
+2
+```
+
+   `17 // 5` is how many whole 5s fit into 17: 3. `17 % 5` is what's left over: 2.
+
+2. What kind of value does `input()` hand back? → **Text (a string), even when you type a number**. `input()` always hands back text. Use `int()` to turn it into a number.
+3. What will this print?
+
+```python
+print(2 + 3 * 4)
+```
+
+   Answer:
+
+```text
+14
+```
+
+   Python multiplies before it adds. `3 * 4` is 12, and 2 + 12 is 14.
+
+4. This line gives a TypeError. Which line fixes it? → **print("Total: " + str(5))**. `+` can't glue a number onto text. `str(5)` turns the number into text first.
+5. What will this print?
+
+```python
+print("3" + "4")
+```
+
+   Answer:
+
+```text
+34
+```
+
+   These are strings in quotes, so `+` glues them together. It doesn't add them.
+
 ## Region 4 — Forked Road Forest
 
 **Concepts:** booleans; comparisons; if/elif/else; and/or/not; indentation

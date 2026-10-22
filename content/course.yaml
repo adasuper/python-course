@@ -35,6 +35,8 @@ regions:
     lessons: 2
   - id: whispering-library
     lessons: 2
+  - id: forked-road-forest
+    lessons: 2
   - id: the-endless-mines
     lessons: 2
   - id: clocktower-peaks

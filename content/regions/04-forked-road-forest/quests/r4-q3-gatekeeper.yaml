@@ -1,0 +1,201 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-q3-gatekeeper
+region: forked-road-forest
+title: Gold for the Gatekeeper
+type: make
+npc: moss
+learning_outcome: Use if/else to choose between two actions based on a comparison.
+csta: [2-AP-12]
+estimated_minutes: 8
+prerequisites: [r4-q2-true-or-false]
+vocabulary: [if statement, condition, else, comparison]
+rewards: { item: compass-of-conditions }
+
+story_intro: |
+  Gatekeeper Moss blocks the toll gate. "Halt! The toll is **10 gold**. No gold, no gate."
+
+  Your purse holds 7 gold today. But tomorrow it might hold more! Write an [[if statement]] so the hero does the right thing either way.
+goal: If gold is 10 or more, walk 6 steps right, through the gate. Else, say "I'll come back later."
+concept_card: |
+  An `if` runs its indented lines only when its [[condition]] is `True`. `else` runs when it is `False`. Every `if` and `else` line ends with a colon `:`.
+  ```python
+  if gold >= 10:
+      hero.move("right", 6)
+  else:
+      hero.say("I'll come back later.")
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    #########
+    #...M...#
+    #H..G..E#
+    #########
+  facing: right
+  legend:
+    "#": { tile: hedge, solid: true }
+    ".": { tile: forest_floor }
+    H: { tile: forest_floor, hero: true }
+    G: { tile: forest_floor, object: toll_gate, solid: false, name: toll gate, look: gate }
+    M: { tile: forest_floor, object: npc }
+  npcs:
+    M: { name: Gatekeeper Moss, sprite: npc_gatekeeper_moss }
+
+starter_code: |
+  from codeweald import hero
+  gold = 7
+  # 10 gold or more: walk right 6 steps.
+  # Else: say "I'll come back later."
+
+solution: |
+  from codeweald import hero
+  gold = 7
+  if gold >= 10:
+      hero.move("right", 6)
+  else:
+      hero.say("I'll come back later.")
+
+validators:
+  - id: uses-if-else
+    type: ast
+    require: [If]
+    require_else: true
+    fail_hint: Use `if` and `else`, so the hero knows what to do either way.
+  - id: uses-gold
+    type: ast
+    uses_names: [gold]
+    fail_hint: Your `if` should look at the `gold` variable.
+  - id: cases
+    type: hidden_tests
+    mode: vars
+    compare: [state]
+    cases:
+      - { vars: { gold: 10 } }
+      - { vars: { gold: 3 } }
+      - { vars: { gold: 25 } }
+  - id: says-something
+    type: custom
+    fail_hint: With too little gold, the hero should say something polite.
+    python: |
+      def check(ctx):
+          try:
+              run = ctx.run(vars={"gold": 3})
+          except Exception:
+              return Fail("Keep the line `gold = 7` near the top, so the gatekeeper can count your gold.")
+          if run.error or not run.world.get("said"):
+              return Fail('With too little gold, the hero should say "I\'ll come back later."')
+          return Pass()
+
+common_mistakes:
+  - id: assign-not-compare
+    detect: { kind: error, key: syntax.assign_in_condition }
+    feedback: In Python, `=` stores a value. To *compare* two values, use `==` or `>=`.
+  - id: not-indented
+    detect: { kind: error, key: indent.expected }
+    feedback: >-
+      The lines under `if` and `else` must be pushed in by 4 spaces. That's how Python knows they
+      belong to the `if` or the `else`.
+  - id: no-else
+    detect: { kind: validator_failed, id: uses-if-else }
+    feedback: Use `if` and `else`, so the hero knows what to do either way.
+  - id: not-through
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            try:
+                run = ctx.run(vars={"gold": 12})
+            except Exception:
+                return False
+            return not run.error and run.world.get("heroOn") != "exit"
+    feedback: >-
+      Try `gold = 12`. The hero should walk 6 steps right, through the gate, all the way to the exit.
+      Does your `if` check for 10 *or more*? And does it walk the full 6 steps?
+  - id: boundary
+    detect: { kind: hidden_case_fails, validator: cases, case: 0 }
+    feedback: >-
+      What happens when gold is exactly 10? "10 or more" includes 10! Try `>=`, which means "at least".
+  - id: walks-anyway
+    detect: { kind: hidden_case_fails, validator: cases, case: 1 }
+    feedback: >-
+      With only 3 gold, the hero walked through anyway! Put the walking line inside the `if`, indented,
+      so it only runs when there is enough gold.
+  - id: silent
+    detect: { kind: validator_failed, id: says-something }
+    feedback: >-
+      Nice choice! But with too little gold, the hero just stands there. Under `else:`, make the hero say
+      "I'll come back later."
+
+wrong_solutions:
+  - expect_mistake: no-else
+    note: No else, so the hero does nothing when gold is short.
+    code: |
+      from codeweald import hero
+      gold = 7
+      if gold >= 10:
+          hero.move("right", 6)
+  - expect_mistake: boundary
+    note: More than 10 is not the same as 10 or more.
+    code: |
+      from codeweald import hero
+      gold = 7
+      if gold > 10:
+          hero.move("right", 6)
+      else:
+          hero.say("I'll come back later.")
+  - expect_mistake: assign-not-compare
+    code: |
+      from codeweald import hero
+      gold = 7
+      if gold = 10:
+          hero.move("right", 6)
+      else:
+          hero.say("I'll come back later.")
+  - expect_mistake: not-through
+    note: Exactly 10 works, but 12 doesn't.
+    code: |
+      from codeweald import hero
+      gold = 7
+      if gold == 10:
+          hero.move("right", 6)
+      else:
+          hero.say("I'll come back later.")
+  - expect_mistake: silent
+    code: |
+      from codeweald import hero
+      gold = 7
+      if gold >= 10:
+          hero.move("right", 6)
+      else:
+          hero.face("left")
+
+hints:
+  - What should happen when gold is 10 or more? And what should happen when it isn't?
+  - '`if gold >= 10:` checks the purse. Put an indented `hero.move("right", 6)` under it. Then write `else:` with an indented `hero.say(...)` under it.'
+  - |
+    ```python
+    if gold >= 10:
+        hero.move("right", 6)
+    else:
+        ____
+    ```
+    When it works, change `gold = 7` to `gold = 12` and run it again!
+
+bonus:
+  - id: almost-there
+    description: Add an `elif` so that with exactly 9 gold, the hero says "Almost there!"
+    xp: 15
+    check:
+      type: custom
+      python: |
+        def check(ctx):
+            try:
+                run = ctx.run(vars={"gold": 9})
+            except Exception:
+                return Fail()
+            said = " ".join(run.world.get("said", [])).lower()
+            return Pass() if "almost" in said else Fail()
+
+story_outro: |
+  Gatekeeper Moss nods slowly. "Clever. Your code knows what to do either way." You earned the **Compass of Conditions**. Its needle always points down the path whose condition is True.

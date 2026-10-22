@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-q2-true-or-false
+region: forked-road-forest
+title: True or False, Traveler?
+type: predict
+npc: hazel
+learning_outcome: Predict whether comparisons with ==, !=, <, >, <= and >= are True or False.
+csta: [2-AP-11]
+estimated_minutes: 6
+prerequisites: [r4-q1-talking-signpost]
+vocabulary: [boolean, comparison]
+rewards: { item: tuning-fork-of-truth }
+
+story_intro: |
+  Ranger Hazel taps her hat. "Out here, every question has just two answers: `True` or `False`. Python calls them [[booleans|boolean]]."
+
+  A [[comparison]] like `gold >= 10` asks a question about two values. Python answers it with `True` or `False`. Can you predict every answer?
+goal: Read the program and predict what each line prints. Then run it to check.
+concept_card: |
+  A **comparison** gives back `True` or `False`.
+
+  - `==` is equal to, and `!=` is not equal to
+  - `<` is less than, and `>` is greater than
+  - `<=` is at most, and `>=` is at least
+
+  Text in quotes is never equal to a number: `"10" == 10` is `False`.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_ranger_hazel, name: Ranger Hazel }
+
+starter_code: |
+  gold = 10
+  print(gold >= 10)
+  print(gold < 10)
+  print(gold != 10)
+  print("10" == 10)
+
+prompts:
+  - kind: text
+    question: What will the program print? Write one line for each `print`.
+    answer: |
+      True
+      False
+      False
+      False
+    explain: >-
+      `gold >= 10` asks "is gold at least 10?" Yes, so True. 10 is not less than 10, so `gold < 10` is False.
+      `!=` means "is not equal to", and gold is 10, so that's False too. The last line is a trick! See the
+      next question.
+    twin:
+      kind: text
+      code: |
+        coins = 3
+        print(coins > 2)
+        print(coins == 2)
+      question: Try a twin. What does this one print?
+      answer: |
+        True
+        False
+      explain: 3 is greater than 2, so the first line is True. 3 is not equal to 2, so the second is False.
+  - kind: mcq
+    question: Why is `"10" == 10` False?
+    options:
+      - '"10" is text and 10 is a number. Text is never equal to a number.'
+      - Python can't compare things, so it always says False.
+      - Because 10 is smaller than 10.
+    answer: 0
+    verify: { kind: none }
+    explain: >-
+      `"10"` has quotes, so it is text, like a price tag. `10` is a real number. They are different kinds
+      of values, so they are never equal. Watch out for this with `input()`, which always gives text.
+    twin:
+      kind: mcq
+      code: print(int("10") == 10)
+      question: And this one? Remember, `int()` turns text into a number.
+      options: ["True", "False", "10"]
+      answer: 0
+      explain: '`int("10")` turns the text into the number 10. Now both sides are numbers, and they are equal.'
+  - kind: mcq
+    question: Which sign means "is not equal to"?
+    options: ["!=", "==", "=!"]
+    answer: 0
+    verify: { kind: none }
+    explain: "`!=` means is not equal to. `==` means is equal to. And `=!` isn't a Python sign at all."
+    twin:
+      kind: mcq
+      code: print(5 != 3)
+      question: What does this print?
+      options: ["True", "False", "5 != 3"]
+      answer: 0
+      explain: 5 is not equal to 3, so `5 != 3` is True.
+
+hints:
+  - Each `print` shows the answer to one question. It can only be `True` or `False`. Read one line at a time.
+  - "`>=` means at least. `<` means less than. `!=` means is not equal to. And text in quotes is never equal to a number."
+  - |
+    ```text
+    gold >= 10  ->  True
+    gold < 10   ->  ____
+    gold != 10  ->  False
+    "10" == 10  ->  False
+    ```
+
+story_outro: |
+  Ranger Hazel nods. "Sharp eyes!" She hands you the **Tuning Fork of Truth**. Tap it on any comparison, and it rings out True or False.

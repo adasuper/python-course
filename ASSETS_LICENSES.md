@@ -38,7 +38,7 @@ from a font CDN at runtime.
 |---|---|
 | Phaser 4.2.1 | MIT |
 | Pyodide 314.0.7 (CPython 3.14 and its standard library) | MPL 2.0 (Pyodide); PSF License (CPython) |
-| CodeMirror 6 | MIT |
+| CodeMirror 6 (with its @lezer/highlight tags) | MIT |
 | Preact, @preact/signals | MIT |
 | idb-keyval | Apache 2.0 |
 | Zod (checks imported progress files) | MIT |

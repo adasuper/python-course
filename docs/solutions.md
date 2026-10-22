@@ -976,6 +976,678 @@ Ada reads Maps.
 
 4. What is the difference between `print(name)` and `print("name")`? → **The first shows what is inside the jar `name`. The second shows the word name.**. Without quotes, Python looks inside the jar. With quotes, it's just text.
 
+## Region 4 — Forked Road Forest
+
+**Concepts:** booleans; comparisons; if/elif/else; and/or/not; indentation
+
+**Byte's analogy:** An if statement is a signpost at a fork in the road. It asks a yes-or-no question. If the answer is True, you take one path. If it's False, you take the other. Only one path gets walked.
+
+### The Talking Signpost
+
+`r4-q1-talking-signpost`
+
+- **Type:** investigate
+- **Learning outcome:** Explain which lines of an if/else run for different values.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Run the spell with different weather answers. Find out which lines run each time.
+
+**Code students run:**
+
+```python
+weather = input("How is the weather? ")
+if weather == "rain":
+    print("Go left, under the big oak.")
+else:
+    print("Go right. The view is lovely!")
+print("Have a nice walk!")
+```
+
+**Answers:**
+
+- Run the spell and type `rain`. Which path does Forky pick? → **The left path**. The condition `weather == "rain"` is True, so Python runs line 3 and skips the `else` path.
+- Run it again and type `sun`. What does Forky say now? → **Go right. The view is lovely!**. The condition is False, so Python skips line 3 and runs the `else` path on line 5.
+- Now type `Rain` with a capital R. Which path does Forky pick? → **The right path**. "Rain" and "rain" are different strings, so the condition is False. Python takes the `else` path.
+- Line 6 prints `Have a nice walk!`. When does it run? → **Every time, whatever the weather**. Line 6 isn't indented, so it isn't inside the `if` or the `else`. It runs after them, every time.
+- Finish the sentence with one word: each time the spell runs, Python walks ___ path of the if/else. → **one / 1 / only one / just one**. Only one branch runs each time. Python picks the `if` path or the `else` path, never both.
+
+**Input values the quest provides:** `rain`
+
+**Hints (free, in this order):**
+
+1. Run the spell and type an answer. Then read the Scroll. Which `print` lines showed up?
+2. When the condition on line 2 is `True`, line 3 runs. When it is `False`, line 5 runs. Line 6 runs every time, because it isn't indented.
+3. (code example)
+
+Here is how Python reads it when you type `sun`:
+```text
+line 2: is "sun" equal to "rain"? ____
+so Python skips line 3 and runs line 5
+line 6 runs, because it isn't indented
+```
+
+### True or False, Traveler?
+
+`r4-q2-true-or-false`
+
+- **Type:** predict
+- **Learning outcome:** Predict whether comparisons with ==, !=, <, >, <= and >= are True or False.
+- **CSTA:** 2-AP-11 · **About 6 min**
+- **Goal (as students see it):** Read the program and predict what each line prints. Then run it to check.
+
+**Code students read:**
+
+```python
+gold = 10
+print(gold >= 10)
+print(gold < 10)
+print(gold != 10)
+print("10" == 10)
+```
+
+**Answers:**
+
+- What will the program print? Write one line for each `print`. → **True False False False**. `gold >= 10` asks "is gold at least 10?" Yes, so True. 10 is not less than 10, so `gold < 10` is False. `!=` means "is not equal to", and gold is 10, so that's False too. The last line is a trick! See the next question.
+- Why is `"10" == 10` False? → **"10" is text and 10 is a number. Text is never equal to a number.**. `"10"` has quotes, so it is text, like a price tag. `10` is a real number. They are different kinds of values, so they are never equal. Watch out for this with `input()`, which always gives text.
+- Which sign means "is not equal to"? → **!=**. `!=` means is not equal to. `==` means is equal to. And `=!` isn't a Python sign at all.
+
+**Hints (free, in this order):**
+
+1. Each `print` shows the answer to one question. It can only be `True` or `False`. Read one line at a time.
+2. `>=` means at least. `<` means less than. `!=` means is not equal to. And text in quotes is never equal to a number.
+3. (code example)
+
+```text
+gold >= 10  ->  True
+gold < 10   ->  ____
+gold != 10  ->  False
+"10" == 10  ->  False
+```
+
+### Gold for the Gatekeeper
+
+`r4-q3-gatekeeper`
+
+- **Type:** make
+- **Learning outcome:** Use if/else to choose between two actions based on a comparison.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** If gold is 10 or more, walk 6 steps right, through the gate. Else, say "I'll come back later."
+
+**Starter code:**
+
+```python
+from codeweald import hero
+gold = 7
+# 10 gold or more: walk right 6 steps.
+# Else: say "I'll come back later."
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+gold = 7
+if gold >= 10:
+    hero.move("right", 6)
+else:
+    hero.say("I'll come back later.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *assign-not-compare* — In Python, `=` stores a value. To *compare* two values, use `==` or `>=`.
+- *not-indented* — The lines under `if` and `else` must be pushed in by 4 spaces. That's how Python knows they belong to the `if` or the `else`.
+- *no-else* — Use `if` and `else`, so the hero knows what to do either way.
+- *not-through* — Try `gold = 12`. The hero should walk 6 steps right, through the gate, all the way to the exit. Does your `if` check for 10 *or more*? And does it walk the full 6 steps?
+- *boundary* — What happens when gold is exactly 10? "10 or more" includes 10! Try `>=`, which means "at least".
+- *walks-anyway* — With only 3 gold, the hero walked through anyway! Put the walking line inside the `if`, indented, so it only runs when there is enough gold.
+- *silent* — Nice choice! But with too little gold, the hero just stands there. Under `else:`, make the hero say "I'll come back later."
+
+**Hints (free, in this order):**
+
+1. What should happen when gold is 10 or more? And what should happen when it isn't?
+2. `if gold >= 10:` checks the purse. Put an indented `hero.move("right", 6)` under it. Then write `else:` with an indented `hero.say(...)` under it.
+3. (code example)
+
+```python
+if gold >= 10:
+    hero.move("right", 6)
+else:
+    ____
+```
+When it works, change `gold = 7` to `gold = 12` and run it again!
+
+### The Crooked Branches
+
+`r4-q4-crooked-branches`
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix syntax and indentation errors in an if/else statement.
+- **CSTA:** 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix the 3 bugs so the spell says the cart is full when it holds 10 logs, and says "Keep chopping, Burl!" when it doesn't.
+
+**Starter code:**
+
+```python
+logs = 10
+if logs = 10:
+print("Cart full! Off to the mill!")
+else
+    print("Keep chopping, Burl!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+logs = 10
+if logs == 10:
+    print("Cart full! Off to the mill!")
+else:
+    print("Keep chopping, Burl!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — Line 2 uses `=`, which *stores* a value. To compare two values, use two equals signs: `==`.
+- *not-indented* — The line under the `if` must be pushed in by 4 spaces. That's how Python knows it belongs to the `if`. Look at the line in the error message.
+- *missing-colon* — The `else` line needs a colon at the very end, just like the `if` line. Write `else:`.
+- *branch-lost* — No more errors! But with only 6 logs, Burl should hear "Keep chopping, Burl!". Keep the `if` and the `else`, so the spell can pick a branch.
+- *words-changed* — No more errors! But the words don't match. Compare each line with the starter code, letter by letter.
+
+**Hints (free, in this order):**
+
+1. Press Run and read the error message. Which line does it point to?
+2. Line 2 needs `==` to compare. Line 3 needs 4 spaces at the start. Line 4 needs a colon at the end.
+3. (code example)
+
+```python
+logs = 10
+if logs == 10:
+    print("Cart full! Off to the mill!")
+else____
+    print("Keep chopping, Burl!")
+```
+
+### Three Paths at the Fork
+
+`r4-q5-three-paths`
+
+- **Type:** parsons
+- **Learning outcome:** Arrange if/elif/else lines with correct indentation so the hero takes the right path for each weather report.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Put the lines in order with the right indents, so the hero takes the right path for sun, rain, or anything else.
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+weather = input("Sun, rain or fog? ")
+if weather == "sun":
+    hero.move("up", 2)
+elif weather == "rain":
+    hero.move("right", 3)
+else:
+    hero.move("left", 3)
+```
+
+**Distractor lines (not used):** `if weather == "rain":`, `elif weather = "rain":`
+
+**Input values the quest provides:** `rain`
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — One scrap uses `=`, which *stores* a value. To compare, Python needs `==`. Swap that scrap for the one with `==`.
+- *not-indented* — Each `hero.move` line must be pushed in under its own `if`, `elif` or `else`. Use the indent buttons (or the → key) to push it in.
+- *else-too-soon* — `else` must come last. It catches everything left over, so no `elif` can come after it.
+- *two-ifs* — A second `if` starts a brand new question, so Python checks it even after the sun path! Use the `elif` scrap instead. Then only one path runs.
+- *wrong-way* — The hero took the wrong path for one of the weather reports. Check that each `hero.move` line sits right under its own condition: sun goes up, rain goes right, anything else goes left.
+
+**Hints (free, in this order):**
+
+1. Start by asking for the weather. Then check for sun, then rain, and leave everything else to `else`.
+2. `if`, `elif` and `else` line up on the left. Each `hero.move` line is pushed in under its own condition. Use `elif`, not a second `if`.
+3. (code example)
+
+```python
+weather = input("Sun, rain or fog? ")
+if weather == "sun":
+    hero.move("up", 2)
+____
+    hero.move("right", 3)
+else:
+    hero.move("left", 3)
+```
+
+### The Picky Bridge Keeper
+
+`r4-q6-picky-bridge-keeper`
+
+- **Type:** modify
+- **Learning outcome:** Use and, or, and not to combine conditions in a working program.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Change the if so travelers cross when they are 10 or older and have at least 3 gold, or when they are 70 or older. Keep both messages the same.
+
+**Starter code:**
+
+```python
+age = int(input("How old are you? "))
+gold = input("How much gold? ")
+if age >= 10:
+    print("You may cross the bridge.")
+else:
+    print("Sorry, no crossing today.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+age = int(input("How old are you? "))
+gold = int(input("How much gold? "))
+if (age >= 10 and gold >= 3) or age >= 70:
+    print("You may cross the bridge.")
+else:
+    print("Sorry, no crossing today.")
+```
+
+**Input values the quest provides:** `11`, `2`
+
+**Common mistakes and the feedback students get:**
+
+- *gold-is-text* — `input()` always hands back text, like `"5"`, and text can't be compared with a number. Wrap the gold question in `int(...)`, just like the age question on line 1.
+- *words-changed* — Tobias only understands his own two messages. Keep them exactly as they were: "You may cross the bridge." and "Sorry, no crossing today."
+- *needs-both* — An 11-year-old with only 2 gold got across! The age rule and the gold rule must *both* be True. That's what `and` is for.
+- *grandparents* — Grandpa Gus is 72 and has no gold. He should cross for free! Add `or age >= 70` to your condition.
+- *at-least* — What about a traveler who is exactly 10, with exactly 3 gold? "At least" includes the number itself, so use `>=`.
+- *check-rules* — One traveler got the wrong answer. Check each rule again: 10 or older *and* at least 3 gold, *or* 70 or older. Kids under 10 can't cross, even with gold.
+- *use-and-or* — Every traveler gets the right answer. Nice! But Tobias wants one `if` that uses `and` and `or`. Can you join the rules that way?
+
+**Hints (free, in this order):**
+
+1. Which two things must both be true for most travelers? And who crosses for free?
+2. Join the age rule and the gold rule with `and`. Then add `or age >= 70`. Also look at line 2. `input()` gives text, so the gold needs `int(...)`.
+3. (code example)
+
+```python
+gold = int(input("How much gold? "))
+if (age >= 10 and gold >= 3) or ____:
+```
+
+### The Riddle Gate 🐛 boss
+
+`r4-boss-riddle-gate`
+
+**Boss:** The Riddle Gate (Riddlewig). Fix the Riddle Gate in four phases. Then Riddlewig turns back into a friendly firefly.
+
+#### Phase 1: The first riddle
+
+- **Type:** modify
+- **Learning outcome:** Use if/else with == to check an answer.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** If the answer is "owl", print "Correct! The lock clicks." Otherwise, print "WRONG! Hee hee hee!"
+
+**Starter code:**
+
+```python
+answer = input("Who hoots at night? ")
+print("WRONG! Hee hee hee!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl":
+    print("Correct! The lock clicks.")
+else:
+    print("WRONG! Hee hee hee!")
+```
+
+**Input values the quest provides:** `owl`
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — `=` stores a value. To check if the answer *is* "owl", use two: `answer == "owl"`.
+- *not-indented* — Push the `print` lines in by 4 spaces, so Python knows they belong to the `if` and the `else`.
+- *still-wrong* — The gate still says WRONG to "owl"! Use `if answer == "owl":` with "Correct! The lock clicks." under it. Put the WRONG line under `else:`, so it only runs for wrong answers.
+- *always-right* — Now "cat" opens the lock too! Put "WRONG! Hee hee hee!" under `else:`, so wrong answers still get it.
+- *no-else* — Use `if` and `else`, so the gate has an answer for right and wrong guesses.
+
+**Hints (free, in this order):**
+
+1. The gate needs to ask a question about `answer`. Is it equal to "owl"?
+2. Write `if answer == "owl":` with an indented `print("Correct! The lock clicks.")` under it. Then `else:` with the WRONG line under it.
+3. (code example)
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl":
+    print("Correct! The lock clicks.")
+____
+    print("WRONG! Hee hee hee!")
+```
+
+#### Phase 2: Two right answers
+
+- **Type:** modify
+- **Learning outcome:** Use or to accept more than one correct answer.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Print "Correct! The lock clicks." when the answer is "owl" or "Owl". Every other answer is still WRONG.
+
+**Starter code:**
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl":
+    print("Correct! The lock clicks.")
+else:
+    print("WRONG! Hee hee hee!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl" or answer == "Owl":
+    print("Correct! The lock clicks.")
+else:
+    print("WRONG! Hee hee hee!")
+```
+
+**Input values the quest provides:** `Owl`
+
+**Common mistakes and the feedback students get:**
+
+- *or-shortcut* — Each side of `or` needs its own comparison. Write `answer == "owl" or answer == "Owl"`. On its own, `"Owl"` always counts as True, so every answer would open the lock!
+- *capital-wrong* — The gate still says WRONG to "Owl". Add a second check with `or`: `answer == "owl" or answer == "Owl"`.
+- *cat-right* — Now "cat" opens the lock too! Only "owl" and "Owl" are right.
+- *need-or* — The gate works! But Riddlewig only respects `or`. Put both checks in one `if`, joined with `or`.
+
+**Hints (free, in this order):**
+
+1. There are two right answers now. How can one `if` check for either of them?
+2. `or` is True when at least one side is True. Each side needs its own `answer == ...`.
+3. (code example)
+
+```python
+if answer == "owl" or ____:
+    print("Correct! The lock clicks.")
+```
+
+#### Phase 3: Three doors
+
+- **Type:** make
+- **Learning outcome:** Use if/elif/else to choose one of several paths.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Use if, elif and else so the hero walks to the gold door, the silver door, or back to the start.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+# "Byte": walk up 2 to the gold door.
+# "owl": walk left 3 to the silver door.
+# Else: walk down 2, back to the start.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+if answer == "Byte":
+    hero.move("up", 2)
+elif answer == "owl":
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+**Input values the quest provides:** `owl`
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — To compare the answer, use `==`. One `=` stores a value.
+- *not-indented* — Push each `hero.move` line in by 4 spaces, under its own `if`, `elif` or `else`.
+- *two-ifs* — You wrote two separate `if`s, so Python asks both questions! Use `elif` for the second door. Then Python walks only the first path whose answer is True.
+- *three-paths* — Use `if`, `elif` and `else`, one for each door.
+- *gold-door* — When the answer is "Byte", the hero should walk 2 steps up, onto the gold door.
+- *silver-door* — When the answer is "owl", the hero should walk 3 steps left, onto the silver door.
+- *back-to-start* — For any other answer, the hero should walk 2 steps down, back to the start.
+
+**Hints (free, in this order):**
+
+1. Three answers, three paths. Which answer gets the `if`, which gets the `elif`, and what's left for `else`?
+2. `if answer == "Byte":` then an indented move. Then `elif answer == "owl":` and its move. Then `else:` and the move back down.
+3. (code example)
+
+```python
+if answer == "Byte":
+    hero.move("up", 2)
+elif ____:
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+#### Phase 4: Every door tested
+
+- **Type:** make
+- **Learning outcome:** Test a program with inputs that reach every branch.
+- **CSTA:** 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Run your program at least 3 times with different answers, until a lamp lights for every door.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+if answer == "Byte":
+    hero.move("up", 2)
+elif answer == "owl":
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+if answer == "Byte":
+    hero.move("up", 2)
+elif answer == "owl":
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+**Input values the quest provides:** `owl`
+
+**Common mistakes and the feedback students get:**
+
+- *three-doors* — Your gate needs three doors again, so use `if`, `elif` and `else`. Then test each one.
+- *broken-door* — Riddlewig was right: one door is broken! "Byte" goes 2 up, "owl" goes 3 left, and anything else goes 2 down. Fix it, then test every door again.
+
+**Hints (free, in this order):**
+
+1. Press Run and type an answer. Which lamp lit up? Now run it again with a different answer.
+2. Type "Byte" for the gold door, "owl" for the silver door, and anything else (like "pigeon") for the way back.
+3. (code example)
+
+Try these three runs, one after another:
+```text
+Run 1: Byte
+Run 2: owl
+Run 3: ____
+```
+
+### The Leap-Year Lantern Festival ⭐ side quest
+
+`r4-side1-leap-year-lanterns`
+
+- **Type:** make
+- **Learning outcome:** Use and, or, and % to decide if a year is a leap year.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Print "Leap year! Lanterns on!" for a leap year, or "Not a leap year." for any other year.
+
+**Starter code:**
+
+```python
+year = int(input("Which year? "))
+by_4 = year % 4 == 0
+# Rule 1: it divides evenly by 4.
+# Rule 2: but not if it divides by 100...
+# Rule 3: ...unless it divides by 400!
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+year = int(input("Which year? "))
+by_4 = year % 4 == 0
+by_100 = year % 100 == 0
+by_400 = year % 400 == 0
+if by_4 and (not by_100 or by_400):
+    print("Leap year! Lanterns on!")
+else:
+    print("Not a leap year.")
+```
+
+**Input values the quest provides:** `2024`
+
+**Common mistakes and the feedback students get:**
+
+- *year-is-text* — `input()` always hands back text, and `%` can't do maths with text. Wrap it in `int(...)`: `year = int(input("Which year? "))`.
+- *no-if* — Use `if` and `else`, so every year gets one message: "Leap year! Lanterns on!" or "Not a leap year."
+- *every-fourth* — 1900 divides evenly by 4, but it was NOT a leap year! Years that divide by 100 skip the lanterns, unless they also divide by 400.
+- *forgot-400* — 2000 divides evenly by 100, but it IS a leap year, because it also divides by 400. Add `or by_400` (or `or year % 400 == 0`) to the rule.
+- *check-years* — Some years got the wrong answer. Check the rules again with 2024 (leap), 2023 (not), 1900 (not) and 2000 (leap). And keep the messages exactly as shown.
+
+**Hints (free, in this order):**
+
+1. Try the rules by hand first. Is 2024 a leap year? What about 1900 and 2000?
+2. Make `by_100` and `by_400` like `by_4`. The year needs `by_4` *and* one more thing: `not by_100`, *or* `by_400`. Put that second part in brackets.
+3. (code example)
+
+```python
+by_100 = year % 100 == 0
+by_400 = year % 400 == 0
+if by_4 and (not by_100 or ____):
+    print("Leap year! Lanterns on!")
+else:
+    print("Not a leap year.")
+```
+
+### Rock, Paper, Mushroom ⭐ side quest
+
+`r4-side2-rock-paper-mushroom`
+
+- **Type:** make
+- **Learning outcome:** Use nested if statements to decide the winner of a two-player hand game.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Read both picks. Print "Player 1 wins!", "Player 2 wins!" or "It's a tie!". Use an if inside another if.
+
+**Starter code:**
+
+```python
+p1 = input("Player 1 picks: ")
+p2 = input("Player 2 picks: ")
+# rock squashes mushroom.
+# mushroom grows through paper.
+# paper wraps rock.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+p1 = input("Player 1 picks: ")
+p2 = input("Player 2 picks: ")
+if p1 == p2:
+    print("It's a tie!")
+elif p1 == "rock":
+    if p2 == "mushroom":
+        print("Player 1 wins!")
+    else:
+        print("Player 2 wins!")
+elif p1 == "mushroom":
+    if p2 == "paper":
+        print("Player 1 wins!")
+    else:
+        print("Player 2 wins!")
+else:
+    if p2 == "rock":
+        print("Player 1 wins!")
+    else:
+        print("Player 2 wins!")
+```
+
+**Input values the quest provides:** `rock`, `mushroom`
+
+**Common mistakes and the feedback students get:**
+
+- *no-winner* — Tilly is waiting for an answer! Print who won: "Player 1 wins!", "Player 2 wins!" or "It's a tie!".
+- *ties* — When both players pick rock, it's a tie! Check `if p1 == p2:` first, before anything else.
+- *wrong-winner* — Some games have the wrong winner. Check the rules: rock squashes mushroom, mushroom grows through paper, and paper wraps rock. And keep the messages exactly as shown.
+- *not-nested* — Every game is right. Great! Now try nesting: put an `if` inside another `if`. For example, inside `elif p1 == "rock":`, check `if p2 == "mushroom":`.
+
+**Hints (free, in this order):**
+
+1. Start with the easy case. What happens when both players pick the same thing?
+2. Then check Player 1's pick with `elif p1 == "rock":`. Inside it, indented one more step, check Player 2's pick to see who wins.
+3. (code example)
+
+```python
+if p1 == p2:
+    print("It's a tie!")
+elif p1 == "rock":
+    if p2 == "mushroom":
+        print("Player 1 wins!")
+    else:
+        ____
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+print(5 > 3 and 2 > 4)
+```
+
+   Answer:
+
+```text
+False
+```
+
+   `5 > 3` is True, but `2 > 4` is False. `and` needs both sides to be True, so the answer is False.
+
+2. What is the difference between `=` and `==`? → **One = stores a value in a variable. Two == check if two values are equal.**. `gold = 5` stores 5 in `gold`. `gold == 5` asks a question: is gold equal to 5? The answer is True or False.
+3. Which message will this print?
+
+```python
+temp = 15
+if temp > 25:
+    print("Swim in the lake!")
+elif temp > 10:
+    print("Go for a walk.")
+elif temp > 0:
+    print("Wear a warm coat.")
+else:
+    print("Build a snow owl!")
+```
+
+   Answer:
+
+```text
+Go for a walk.
+```
+
+   15 > 25 is False. 15 > 10 is True, so that path runs. Python skips the rest, even though 15 > 0 is True too. Only the first True path runs.
+
+4. Why is this code wrong? → **The print line is not indented, so Python can't tell it belongs to the if.**. The lines inside an `if` must be indented, usually by 4 spaces. That's how Python knows which lines belong to it.
+
 ## Region 5 — The Endless Mines
 
 **Concepts:** while loops; counters; loop conditions; infinite loops; break

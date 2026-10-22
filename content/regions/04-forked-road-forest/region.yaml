@@ -1,0 +1,211 @@
+# yaml-language-server: $schema=../../../schema/region.schema.json
+# Region 4: Forked Road Forest. Booleans, comparisons, if/elif/else, and/or/not,
+# and indentation. See docs/curriculum-map.md.
+id: forked-road-forest
+number: 4
+name: Forked Road Forest
+concepts:
+  - booleans
+  - comparisons
+  - if/elif/else
+  - and/or/not
+  - indentation
+
+intro:
+  - speaker: byte
+    text: Welcome to Forked Road Forest! Every path here splits in two. Then it splits again.
+  - speaker: byte
+    text: The signposts used to point the way. Now they just shrug. We must teach them to make choices.
+  - speaker: byte
+    text: At the end of the road waits the Riddle Gate. I hear it's a little bit grumpy. Talk to anyone with a **!** to begin.
+
+# The forest map. One character is one tile. See docs/specs.md §11.1 for the default legend.
+# P pine, m mushrooms (you can walk through them), S stump, l log pile,
+# G a pillar of the Riddle Gate, A the gate's arch (open), g the gatekeeper's toll gate.
+overworld:
+  grid: |
+    TTTTTTTTTTTTTT=TTTTTTTTTTTTTTT
+    T.m.PPTTT..PPGAGPP..TTTPP.,m.T
+    T...PP..,..:::::::...,..PP...T
+    TT..,.PP===:::::::====.P."...T
+    T..PP...=.TPPTPPTPPT.=..PP...T
+    T.,....m=.PPTTPPTTPP.=..,..o.T
+    TPP...b.g.PTTPPPTTPT.=.PP....T
+    T..RRR.,=.TPPmPPPPTP.=..b....T
+    T..RRR..=.PPTPPmPPTPP=====...T
+    T.lWdW..=.TPPTPPTPPT.=..,..".T
+    T...=====.PPTPPTPPTP.=...o...T
+    T."...,.=.TPPPTP~~~~~B~~~~~~~T
+    T...P,..=..PP...PPTP.=..""..,T
+    T..b....==============....b..T
+    T.P.,.."..T...=...T....P..P..T
+    T.~~.....P..m.=....P..,......T
+    T~~~..T.......=..".."T..P....T
+    T.~.....,.....=....b.......S.T
+    T...."..P.....=.....P.,......T
+    TTTTTTTTTTTTTT=TTTTTTTTTTTTTTT
+  legend:
+    P: { tile: grass, over: forest_pine, solid: true }
+    m: { tile: grass, over: forest_mushrooms }
+    S: { tile: grass, over: forest_stump, solid: true }
+    l: { tile: grass, over: forest_logs, solid: true }
+    G: { tile: cobble, over: riddle_pillar, solid: true }
+    A: { tile: path, over: riddle_arch }
+    g: { tile: path, over: toll_gate }
+  objects:
+    - { kind: spawn, at: [14, 17] }
+    - { kind: npc, id: byte, at: [15, 17] }
+    - { kind: npc, id: forky, at: [14, 12], quest: r4-q1-talking-signpost }
+    - { kind: npc, id: hazel, at: [16, 15], quest: r4-q2-true-or-false }
+    - { kind: npc, id: moss, at: [7, 6], quest: r4-q3-gatekeeper }
+    - { kind: npc, id: burl, at: [6, 9], quest: r4-q4-crooked-branches }
+    - { kind: npc, id: nimbus, at: [26, 8], quest: r4-q5-three-paths }
+    - { kind: npc, id: tobias, at: [22, 12], quest: r4-q6-picky-bridge-keeper }
+    - { kind: npc, id: riddlewig, at: [16, 2], quest: r4-boss-riddle-gate }
+    - { kind: npc, id: tilly, at: [10, 17] }
+    - { kind: board, at: [12, 16] }
+    - { kind: sign, at: [13, 18], text: "Forked Road Forest. Every path splits in two. Then it splits again. Good luck!" }
+    - { kind: sign, at: [9, 9], text: "LEFT: the woodcutter's cabin. UP: the toll gate. If you are lost... else... um. Ask Forky." }
+    - { kind: sign, at: [20, 7], text: "RIGHT: the Weather Watcher. UP: the Riddle Gate. If it rains, bring a hat. Else, bring a bigger hat." }
+    - { kind: sign, at: [12, 2], text: "THE RIDDLE GATE. Answer right, and you may pass. Answer wrong, and you go back to the start. (Lately, every answer is wrong.)" }
+    - { kind: poi, id: fairy-ring, at: [1, 1] }
+    - { kind: poi, id: owl-lookout, at: [28, 1] }
+    - { kind: poi, id: frog-pond, at: [1, 18] }
+    - { kind: poi, id: giant-stump, at: [28, 18] }
+    - { kind: exit, at: [14, 0], text: "The road north to the Endless Mines. It gets very dark down there." }
+
+npcs:
+  byte:
+    name: Byte
+    sprite: byte
+    greeting: Every path here splits in two. Luckily, I always pick the right one. Well, almost always.
+  forky:
+    name: Forky
+    sprite: npc_signpost_forky
+    greeting: Which way? Left? Right? I used to know. Now I just shrug. It's very embarrassing for a signpost.
+  hazel:
+    name: Ranger Hazel
+    sprite: npc_ranger_hazel
+    greeting: Out here, every question has just two answers. True or false. Want to try my quiz?
+  moss:
+    name: Gatekeeper Moss
+    sprite: npc_gatekeeper_moss
+    greeting: Halt! The toll is 10 gold. No gold, no gate. Those are the rules.
+  burl:
+    name: Woodcutter Burl
+    sprite: npc_woodcutter_burl
+    greeting: My spell should tell me when my log cart is full. But its branches are all crooked!
+  nimbus:
+    name: Nimbus
+    sprite: npc_weather_nimbus
+    greeting: Sun, rain or fog? I watch the sky all day, so travelers know which path to take.
+  tobias:
+    name: Tobias Toll
+    sprite: npc_bridge_tobias
+    greeting: Welcome to my bridge! I have rules. Lots of rules. Very picky ones.
+  riddlewig:
+    name: Riddlewig
+    sprite: bug_riddlewig
+    greeting: Hee hee! I live in the lock now. Answer my riddles! Oh, wait. Every answer is WRONG!
+  tilly:
+    name: Toadstool Tilly
+    sprite: npc_forager_tilly
+    greeting: Mushrooms! I love mushrooms. I put a mushroom game on the Quest Board. Come play when the forest is safe!
+
+concept_scene:
+  title: Which way? Choosing with if
+  analogy: >-
+    An [[if statement]] is a signpost at a fork in the road. It asks a yes-or-no question.
+    If the answer is True, you take one path. If it's False, you take the other. Only one
+    path gets walked.
+  lines:
+    - speaker: byte
+      text: Every path in this forest splits in two. The signposts used to say which way to go. Now they just shrug.
+    - speaker: byte
+      text: An `if` asks a question called a [[condition]], like `gold >= 10`. Python answers it with `True` or `False`.
+    - speaker: byte
+      text: When the answer is `True`, Python runs the indented lines under `if`. When it's `False`, it runs the lines under `else` instead.
+    - speaker: byte
+      text: Only one path gets walked. Never both! Run the example and watch which line Python picks.
+  worked_example:
+    stage: { kind: none }
+    code: |
+      gold = 12
+      if gold >= 10:
+          print("The gatekeeper waves you through.")
+      else:
+          print("Come back with more gold!")
+    explain:
+      - line: 1
+        text: The purse holds 12 gold.
+      - line: 2
+        text: "Python checks the [[condition]]: is 12 >= 10? Yes, so it's `True`!"
+      - line: 3
+        text: It's `True`, so Python walks this path. The line is indented, so it belongs to the `if`.
+      - line: 5
+        text: Python skips this line. The `else` path only runs when the condition is `False`.
+
+quests:
+  - r4-q1-talking-signpost
+  - r4-q2-true-or-false
+  - r4-q3-gatekeeper
+  - r4-q4-crooked-branches
+  - r4-q5-three-paths
+  - r4-q6-picky-bridge-keeper
+boss: r4-boss-riddle-gate
+side_quests:
+  - r4-side1-leap-year-lanterns
+  - r4-side2-rock-paper-mushroom
+
+knowledge_check:
+  items:
+    - kind: predict
+      question: What will this print?
+      code: print(5 > 3 and 2 > 4)
+      answer: "False"
+      explain: "`5 > 3` is True, but `2 > 4` is False. `and` needs both sides to be True, so the answer is False."
+    - kind: mcq
+      question: What is the difference between `=` and `==`?
+      options:
+        - One = stores a value in a variable. Two == check if two values are equal.
+        - They mean the same thing, so use whichever you like.
+        - Two == store a value twice, just to be safe.
+      answer: 0
+      explain: "`gold = 5` stores 5 in `gold`. `gold == 5` asks a question: is gold equal to 5? The answer is True or False."
+    - kind: predict
+      question: Which message will this print?
+      code: |
+        temp = 15
+        if temp > 25:
+            print("Swim in the lake!")
+        elif temp > 10:
+            print("Go for a walk.")
+        elif temp > 0:
+            print("Wear a warm coat.")
+        else:
+            print("Build a snow owl!")
+      answer: Go for a walk.
+      explain: "15 > 25 is False. 15 > 10 is True, so that path runs. Python skips the rest, even though 15 > 0 is True too. Only the first True path runs."
+    - kind: mcq
+      question: Why is this code wrong?
+      code: |
+        gold = 12
+        if gold >= 10:
+        print("You may pass.")
+      options:
+        - The print line is not indented, so Python can't tell it belongs to the if.
+        - 12 is not more than 10, so the if can never run.
+        - You are not allowed to use print inside an if.
+      answer: 0
+      explain: The lines inside an `if` must be indented, usually by 4 spaces. That's how Python knows which lines belong to it.
+
+fragment:
+  id: fragment-choices
+  name: "Script Fragment: Choices"
+  description: The piece of the Great Script that chooses a path. With it, every signpost in the realm knows the way again.
+
+pois:
+  - fairy-ring
+  - owl-lookout
+  - frog-pond
+  - giant-stump

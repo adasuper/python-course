@@ -1,0 +1,129 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-q4-crooked-branches
+region: forked-road-forest
+title: The Crooked Branches
+type: fix
+npc: burl
+learning_outcome: Identify and fix syntax and indentation errors in an if/else statement.
+csta: [2-AP-17]
+estimated_minutes: 8
+prerequisites: [r4-q3-gatekeeper]
+vocabulary: [if statement, else, indentation, syntax, error message]
+
+story_intro: |
+  Woodcutter Burl scratches his beard. "My log cart holds exactly 10 logs. My spell should tell me when it's full. But Python won't even read it!"
+
+  The branches of his [[if statement]] are crooked. This spell has **3 bugs**. Python shows you one [[error message]] at a time, so fix one, then run it again.
+goal: Fix the 3 bugs so the spell says the cart is full when it holds 10 logs, and says "Keep chopping, Burl!" when it doesn't.
+concept_card: |
+  Three rules keep an `if` straight:
+
+  - To compare, use `==`. One `=` stores a value.
+  - The `if` line and the `else` line end with a colon `:`.
+  - The lines inside are indented by 4 spaces.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_woodcutter_burl, name: Woodcutter Burl }
+
+starter_code: |
+  logs = 10
+  if logs = 10:
+  print("Cart full! Off to the mill!")
+  else
+      print("Keep chopping, Burl!")
+
+solution: |
+  logs = 10
+  if logs == 10:
+      print("Cart full! Off to the mill!")
+  else:
+      print("Keep chopping, Burl!")
+
+validators:
+  - id: full-cart
+    type: output
+    expect: Cart full! Off to the mill!
+    fail_hint: It runs now! But with 10 logs, the spell should print "Cart full! Off to the mill!"
+  - id: cases
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - { vars: { logs: 10 } }
+      - { vars: { logs: 6 } }
+  - id: if-else
+    type: ast
+    require: [If]
+    require_else: true
+    fail_hint: Keep the `if` and the `else`. Burl needs both branches.
+
+common_mistakes:
+  - id: one-equals
+    detect: { kind: error, key: syntax.assign_in_condition }
+    feedback: >-
+      Line 2 uses `=`, which *stores* a value. To compare two values, use two equals signs: `==`.
+  - id: not-indented
+    detect: { kind: error, key: indent.expected }
+    feedback: >-
+      The line under the `if` must be pushed in by 4 spaces. That's how Python knows it belongs to the
+      `if`. Look at the line in the error message.
+  - id: missing-colon
+    detect: { kind: error, key: syntax.missing_colon }
+    feedback: The `else` line needs a colon at the very end, just like the `if` line. Write `else:`.
+  - id: branch-lost
+    detect: { kind: hidden_case_fails, validator: cases, case: 1 }
+    feedback: >-
+      No more errors! But with only 6 logs, Burl should hear "Keep chopping, Burl!". Keep the `if` and
+      the `else`, so the spell can pick a branch.
+  - id: words-changed
+    detect: { kind: validator_failed, id: full-cart }
+    feedback: >-
+      No more errors! But the words don't match. Compare each line with the starter code, letter by letter.
+
+wrong_solutions:
+  - expect_mistake: not-indented
+    note: Only the = is fixed.
+    code: |
+      logs = 10
+      if logs == 10:
+      print("Cart full! Off to the mill!")
+      else
+          print("Keep chopping, Burl!")
+  - expect_mistake: missing-colon
+    note: The colon is still missing.
+    code: |
+      logs = 10
+      if logs == 10:
+          print("Cart full! Off to the mill!")
+      else
+          print("Keep chopping, Burl!")
+  - expect_mistake: one-equals
+    note: Only the indent and the colon are fixed.
+    code: |
+      logs = 10
+      if logs = 10:
+          print("Cart full! Off to the mill!")
+      else:
+          print("Keep chopping, Burl!")
+  - expect_mistake: branch-lost
+    note: The if/else was deleted instead of fixed.
+    code: |
+      logs = 10
+      print("Cart full! Off to the mill!")
+
+hints:
+  - Press Run and read the error message. Which line does it point to?
+  - Line 2 needs `==` to compare. Line 3 needs 4 spaces at the start. Line 4 needs a colon at the end.
+  - |
+    ```python
+    logs = 10
+    if logs == 10:
+        print("Cart full! Off to the mill!")
+    else____
+        print("Keep chopping, Burl!")
+    ```
+
+story_outro: |
+  "Cart full! Off to the mill!" Burl whoops and heaves his cart down the path. "Straight branches at last! Now try `logs = 6`. My spell knows that one too."

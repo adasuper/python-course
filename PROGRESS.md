@@ -10,11 +10,16 @@ Phase 2 (core loop polish) is done: see "Phase 2 — Core loop polish ✅" below
 |---|---|
 | M3.0 Groundwork: world map, travel, Phase 3 mechanics | ✅ Done |
 | M3.1 Region 2: Whispering Library | ✅ Done |
-| M3.2 Region 3: Merchant's Crossing | In progress |
-| M3.3 Region 4: Forked Road Forest | In progress |
-| M3.4 Region 5: The Endless Mines | In progress |
-| M3.5 Region 6: Clocktower Peaks | In progress |
-| M3.6 World map polish, badges, reading-level pass, final check | — |
+| M3.2 Region 3: Merchant's Crossing | ✅ Done |
+| M3.3 Region 4: Forked Road Forest | ✅ Done |
+| M3.4 Region 5: The Endless Mines | ✅ Done |
+| M3.5 Region 6: Clocktower Peaks | ✅ Done |
+| M3.6 World map polish, badges, reading-level pass, final check | Started (world map shows quests done per region) |
+
+**Paused here at the owner's request** (2026-10-22). Regions 7–11 (Phase 4) were being
+written in separate worktrees (`.claude/worktrees/region-7` … `region-11`, branches `region-7`
+… `region-11`, uncommitted drafts); they resume when work resumes, then merge into `dev`.
+Next after that: M3.6 (the Phase 3 final check), the Phase 4 merges and checks, Phase 5.
 
 ### Done in Phase 3
 
@@ -54,6 +59,35 @@ Phase 2 (core loop polish) is done: see "Phase 2 — Core loop polish ✅" below
 - E2E: the concept scene, the map, every quest with its reference solution, the boss, the
   knowledge check, and the road from Hearthvale on the world map, with axe on the map, a
   quest and the world map.
+
+#### M3.2–M3.5 Regions 3–6
+
+Written in parallel (one worktree per region) and merged into `dev`, each with its map,
+characters and Bug drawn in `src/art/regions/rN.ts`, concept scene, 6 quests, boss, side
+quests, knowledge check, items, glossary words, Restorer and Explorer badges, and an E2E smoke
+test (`tests/e2e/region-N.spec.ts`: concept scene, map, every quest with its reference
+solution, the boss, the check, axe).
+
+- **Region 3 — Merchant's Crossing:** numbers, operators, `input()` with answers handed over
+  by merchants (typed answers optional), `int()`/`str()`, rounding; the Haggling Bug.
+- **Region 4 — Forked Road Forest:** booleans, comparisons, `if`/`elif`/`else`, `and`/`or`/
+  `not`, gates and doors on grid maps; the Riddle Gate.
+- **Region 5 — The Endless Mines:** `while`, counters, `break`, runaway loops, `world.look()`
+  in dark tunnels; the Cave-In.
+- **Region 6 — Clocktower Peaks:** `for`, `range` with steps, accumulators, nested loops and
+  patterns on the tapestry; the Broken Clock.
+
+Fixes found while writing them:
+
+- Runaway `while` loops name the right variable (the one written first; never `len` or
+  `world`; a list changed with `.pop()` counts as changed), also when the loop wears out the
+  hero or the scroll first (`limits.busy_while_unchanged`).
+- The Spellbook's code colours are our own, each at least 4.5:1 on every code background
+  (CodeMirror's default f-string colour was 3.2:1); a unit test checks them.
+- The code area is always in the tab order, so long lines that scroll sideways pass axe
+  (`scrollable-region-focusable`), read-only code too.
+- Dev routes to a quest or check of a later region move the dev profile there, so "Back to the
+  map" works; region tests play typed-input quests with their own answers.
 
 ### Phase 4 groundwork (started early, while Regions 3–6 are written)
 

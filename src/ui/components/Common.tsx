@@ -76,7 +76,7 @@ export function Modal({
   );
 }
 
-export function Toasts({ onSave }: { onSave: () => void }) {
+export function Toasts({ onCopyCode, onSaveFile }: { onCopyCode: () => void; onSaveFile: () => void }) {
   return (
     <div class="toasts">
       {toasts.value.map((toast) => (
@@ -86,9 +86,14 @@ export function Toasts({ onSave }: { onSave: () => void }) {
           </span>
           <span>{toast.text}</span>
           {toast.kind === 'save-point' && (
-            <button type="button" class="small" onClick={onSave}>
-              {t.hud.save}
-            </button>
+            <>
+              <button type="button" class="small" onClick={onCopyCode}>
+                {t.save.copy}
+              </button>
+              <button type="button" class="small" onClick={onSaveFile}>
+                {t.save.saveFile}
+              </button>
+            </>
           )}
           <button
             type="button"

@@ -19,6 +19,7 @@ import {
 } from './state/store';
 import { App } from './ui/App';
 import { applySettings } from './ui/flow';
+import { setKnowledgeCheckGates } from './state/progress';
 import './ui/tokens.css';
 import './ui/styles.css';
 
@@ -27,6 +28,7 @@ async function boot() {
   applySettings(null);
   const [cfg, storage] = await Promise.all([loadConfig(), Storage.open()]);
   config.value = cfg;
+  setKnowledgeCheckGates(cfg.features.knowledgeCheckGates);
   loadCourse();
   // Python starts loading right away, while the student picks a profile (§5.1).
   const runner = new PyRunner({

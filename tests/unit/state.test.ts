@@ -6,10 +6,15 @@ import {
   completeCheck,
   completePhase,
   completeQuest,
+  hintsShown,
   questState,
+  record,
   recordAttempt,
   regionUnlocked,
+  setKnowledgeCheckGates,
+  useHint,
 } from '../../src/state/progress';
+import { shuffledOrder } from '../../src/ui/order';
 import { parseProgressFile, makeProgressFile } from '../../src/state/progressFile';
 
 describe('nickname filter', () => {
@@ -170,6 +175,46 @@ describe('progress rules', () => {
     const before = progressHash(p);
     completeQuest(p, course, 'q1', 'a');
     expect(progressHash(p)).not.toBe(before);
+  });
+});
+
+describe('progress rules (Phase 1 audit)', () => {
+  it('marks a quest in progress as soon as it is opened (F-QST-01)', () => {
+    const p = newProfile('Newt', 'avatar-1', 'moss', 'one');
+    record(p, 'q1');
+    expect(questState(p, course, 'q1')).toBe('in_progress');
+  });
+
+  it('keeps boss hints per phase, unlocking in order (F-FBK-11)', () => {
+    const p = newProfile('Newt', 'avatar-1', 'moss', 'one');
+    useHint(p, 'boss', 2, 'p1');
+    expect(hintsShown(p, 'boss', 'p1')).toBe(2);
+    expect(hintsShown(p, 'boss', 'p2')).toBe(0);
+    expect(hintsShown(p, 'boss')).toBe(2);
+    useHint(p, 'boss', 1, 'p1');
+    expect(hintsShown(p, 'boss', 'p1')).toBe(2);
+  });
+
+  it('can make the knowledge check gate the next region (F-BOS-04)', () => {
+    const p = newProfile('Newt', 'avatar-1', 'moss', 'one');
+    for (const ph of ['p1', 'p2']) completePhase(p, course, 'boss', ph, 'x');
+    expect(regionUnlocked(p, course, 'two')).toBe(true);
+    setKnowledgeCheckGates(true);
+    try {
+      expect(regionUnlocked(p, course, 'two')).toBe(false);
+      completeCheck(p, 'one', 2, 4);
+      expect(regionUnlocked(p, course, 'two')).toBe(true);
+    } finally {
+      setKnowledgeCheckGates(false);
+    }
+  });
+
+  it('shuffles knowledge-check options differently per attempt', () => {
+    const a = shuffledOrder(4, 'one:0:1');
+    expect([...a].sort()).toEqual([0, 1, 2, 3]);
+    expect(shuffledOrder(4, 'one:0:1')).toEqual(a);
+    const orders = new Set([0, 1, 2, 3, 4, 5].map((n) => shuffledOrder(4, `one:${n}:1`).join('')));
+    expect(orders.size).toBeGreaterThan(1);
   });
 });
 

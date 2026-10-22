@@ -5,6 +5,14 @@ import { CHECK_XP, BOSS_DEFEAT_XP, BOSS_PHASE_XP } from '../content/types';
 import type { Marker } from '../game/worldView';
 import { emptyRecord, hashText, levelFor, today, type Profile, type QuestRecord } from './profile';
 
+let checkGates = false;
+
+/** Deploy setting `features.knowledgeCheckGates`: the next region also waits for the
+ *  previous region's knowledge check (off by default; F-BOS-04). */
+export function setKnowledgeCheckGates(on: boolean) {
+  checkGates = on;
+}
+
 export function regionUnlocked(p: Profile, course: Course, regionId: string, unlockedThrough = 0): boolean {
   const index = course.regions.findIndex((r) => r.id === regionId);
   if (index <= 0) return index === 0;
@@ -13,7 +21,8 @@ export function regionUnlocked(p: Profile, course: Course, regionId: string, unl
   const bossId = course.questOrder.find(
     (q) => course.questInfo[q]?.region === previous.id && course.questInfo[q]?.type === 'boss',
   );
-  return Boolean(bossId && p.quests[bossId]?.status === 'completed');
+  const bossBeaten = Boolean(bossId && p.quests[bossId]?.status === 'completed');
+  return bossBeaten && (!checkGates || Boolean(p.checks[previous.id]));
 }
 
 export function questState(p: Profile, course: Course, questId: string, unlockedThrough = 0): Marker {
@@ -61,9 +70,20 @@ export function recordAttempt(p: Profile, questId: string, code: string, passed:
   if (!passed && rec.status !== 'completed') rec.failedBeforePass++;
 }
 
-export function useHint(p: Profile, questId: string, tier: 1 | 2 | 3) {
+/** Hints unlock in order, per quest, or per phase of a boss (F-FBK-11). */
+export function useHint(p: Profile, questId: string, tier: 1 | 2 | 3, phaseId?: string) {
   const rec = record(p, questId);
   if (tier > rec.hintsUsed) rec.hintsUsed = tier;
+  if (phaseId) {
+    rec.phaseHints ??= {};
+    if (tier > (rec.phaseHints[phaseId] ?? 0)) rec.phaseHints[phaseId] = tier;
+  }
+}
+
+export function hintsShown(p: Profile, questId: string, phaseId?: string): 0 | 1 | 2 | 3 {
+  const rec = p.quests[questId];
+  if (!rec) return 0;
+  return phaseId ? (rec.phaseHints?.[phaseId] ?? 0) : rec.hintsUsed;
 }
 
 export interface Reward {

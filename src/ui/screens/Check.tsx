@@ -1,9 +1,10 @@
 // Knowledge check: 3–5 low-stakes, retakeable review questions (§9.7).
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { t } from '../../i18n/en';
 import { completeCheck } from '../../state/progress';
-import { go, regions, update } from '../../state/store';
+import { go, profile, regions, update } from '../../state/store';
 import { RichText } from '../components/RichText';
+import { shuffledOrder } from '../order';
 import { normalizeAnswer } from '../quest/Predict';
 import { Hud } from './Overworld';
 
@@ -15,6 +16,8 @@ export function CheckScreen({ regionId }: { regionId: string }) {
   const [round, setRound] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [round]);
+  // Options come in a new order on every attempt (F-BOS-04). Answers keep the original index.
+  const attempt = useMemo(() => profile.value?.checks[regionId]?.attempts ?? 0, [round]);
 
   const correct = items.map((it, i) =>
     it.kind === 'mcq'
@@ -46,7 +49,7 @@ export function CheckScreen({ regionId }: { regionId: string }) {
               {it.code && <pre class="code-block">{it.code}</pre>}
               {it.kind === 'mcq' ? (
                 <div class="options">
-                  {it.options.map((opt, j) => (
+                  {shuffledOrder(it.options.length, `${regionId}:${attempt}:${i}`).map((j) => (
                     <label key={j} class="option">
                       <input
                         type="radio"
@@ -54,7 +57,7 @@ export function CheckScreen({ regionId }: { regionId: string }) {
                         checked={answers[i] === String(j)}
                         onChange={() => setAnswers((a) => a.map((x, k) => (k === i ? String(j) : x)))}
                       />
-                      <span>{opt}</span>
+                      <span>{it.options[j]}</span>
                     </label>
                   ))}
                 </div>

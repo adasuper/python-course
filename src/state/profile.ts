@@ -19,6 +19,8 @@ export interface QuestRecord {
   solution?: string;
   /** Boss quests: completed phase ids. */
   phasesDone?: string[];
+  /** Boss quests: hint tiers revealed per phase (hintsUsed is the highest of them). */
+  phaseHints?: Record<string, 0 | 1 | 2 | 3>;
 }
 
 export interface CheckRecord {
@@ -37,8 +39,13 @@ export interface Settings {
   font: 'atkinson' | 'opendyslexic' | 'system';
 }
 
+export interface Counters {
+  /** Times "Show the real Python error" was opened (the Error Reader badge). */
+  realErrorViews: number;
+}
+
 export interface Profile {
-  schemaVersion: 1;
+  schemaVersion: 2;
   id: string;
   nickname: string;
   avatarId: string;
@@ -50,8 +57,10 @@ export interface Profile {
   items: string[];
   poisVisited: Record<string, string[]>;
   seen: { opening: boolean; regionIntros: string[]; conceptScenes: string[] };
-  location: { region: string; at: [number, number] | null };
+  /** Where the student left off: region, map position and the quest that was open. */
+  location: { region: string; at: [number, number] | null; quest: string | null };
   settings: Settings;
+  counters: Counters;
   /** Hash of the progress last saved out (save code or file); see §12.5. */
   lastSavedOutHash: string | null;
 }
@@ -76,7 +85,7 @@ export function newProfile(
   firstRegion: string,
 ): Profile {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: crypto.randomUUID(),
     nickname,
     avatarId,
@@ -88,8 +97,9 @@ export function newProfile(
     items: [],
     poisVisited: {},
     seen: { opening: false, regionIntros: [], conceptScenes: [] },
-    location: { region: firstRegion, at: null },
+    location: { region: firstRegion, at: null, quest: null },
     settings: { ...DEFAULT_SETTINGS },
+    counters: { realErrorViews: 0 },
     lastSavedOutHash: null,
   };
 }

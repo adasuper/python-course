@@ -3,12 +3,37 @@ import { AVATARS, THEMES } from '../art';
 import { progressHash, type Profile } from './profile';
 import { fileName, makeProgressFile, parseProgressFile, saveFile } from './progressFile';
 import { decodeSaveCode, encodeSaveCode, sameProfile } from './saveCode';
-import { course, flushSave, getStorage, markSavedOut, profile, profiles } from './store';
+import { t } from '../i18n/en';
+import {
+  announce,
+  course,
+  flushSave,
+  getStorage,
+  markSavedOut,
+  profile,
+  profiles,
+  saveDialogOpen,
+  toast,
+} from './store';
 
 export const CHOICES = { avatars: AVATARS.map((a) => a.id), themes: THEMES.map((th) => th.id) };
 
 export function currentSaveCode(): string {
   return encodeSaveCode(profile.value!, course.value!, CHOICES);
+}
+
+/** Copy the save code (the toast after a save point). Falls back to the save dialog. */
+export async function copySaveCode(): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(currentSaveCode());
+    markSavedOut();
+    announce(t.save.copied);
+    toast('info', t.save.copied, 3000);
+    return true;
+  } catch {
+    saveDialogOpen.value = true;
+    return false;
+  }
 }
 
 export async function saveProgressFile(): Promise<'saved' | 'downloaded' | 'cancelled'> {

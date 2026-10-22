@@ -2,6 +2,7 @@
 // (docs/specs.md §12.3, §12.5). Imported files are untrusted and fully validated.
 import { z } from 'zod';
 import type { Course } from '../content/types';
+import { CURRENT_SCHEMA, migrateProfile } from './migrations';
 import type { Profile } from './profile';
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -19,10 +20,13 @@ const QuestRecordSchema = z.object({
   bonus: z.array(z.string().max(64)).max(20).optional(),
   solution: z.string().max(50_000).optional(),
   phasesDone: z.array(z.string().max(64)).max(8).optional(),
+  phaseHints: z
+    .record(z.string().max(64), z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]))
+    .optional(),
 });
 
 const ProfileSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(CURRENT_SCHEMA),
   id: z.string().max(64),
   nickname: z.string().min(1).max(16),
   avatarId: z.string().max(32),
@@ -41,7 +45,11 @@ const ProfileSchema = z.object({
     regionIntros: z.array(z.string().max(64)).max(50),
     conceptScenes: z.array(z.string().max(64)).max(50),
   }),
-  location: z.object({ region: z.string().max(64), at: z.tuple([z.number(), z.number()]).nullable() }),
+  location: z.object({
+    region: z.string().max(64),
+    at: z.tuple([z.number(), z.number()]).nullable(),
+    quest: z.string().max(80).nullable(),
+  }),
   settings: z.object({
     textScale: z.union([z.literal(1), z.literal(1.25), z.literal(1.5), z.literal(2)]),
     reducedMotion: z.enum(['system', 'on', 'off']),
@@ -51,6 +59,7 @@ const ProfileSchema = z.object({
     font: z.enum(['atkinson', 'opendyslexic', 'system']),
   }),
   lastSavedOutHash: z.string().max(16).nullable(),
+  counters: z.object({ realErrorViews: z.number().int().min(0).max(1e6) }),
 });
 
 const FileSchema = z.object({
@@ -105,7 +114,14 @@ export function parseProgressFile(text: string): ParseResult {
   ) {
     return { ok: false, reason: 'not-codeweald' };
   }
-  const parsed = FileSchema.safeParse(raw);
+  // Files saved by older versions of the game are upgraded first (F-SAV-03).
+  const file = raw as { profile?: unknown };
+  try {
+    if (file.profile) file.profile = migrateProfile(file.profile);
+  } catch {
+    return { ok: false, reason: 'invalid' };
+  }
+  const parsed = FileSchema.safeParse(file);
   return parsed.success ? { ok: true, file: parsed.data as ProgressFile } : { ok: false, reason: 'invalid' };
 }
 

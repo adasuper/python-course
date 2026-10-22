@@ -38,7 +38,7 @@ export function OutputScroll({
           </button>
         )}
       </div>
-      <div class="output-body" ref={ref} role="log" aria-live="polite" tabIndex={0}>
+      <div id="output-body" class="output-body" ref={ref} role="log" aria-live="polite" tabIndex={0}>
         {lines.length === 0 ? (
           <p class="muted">{empty}</p>
         ) : (

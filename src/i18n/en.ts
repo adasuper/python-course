@@ -70,6 +70,8 @@ export const t = {
     errorOnLine: (line: number | null, title: string) =>
       line ? `Error on line ${line}: ${title}` : `Error: ${title}`,
     showAllOutput: 'Show all output now',
+    skipToEditor: 'Skip to editor',
+    skipToOutput: 'Skip to output',
     errorOutput: 'Error output:',
     reset: 'Reset code',
     resetConfirm: 'Put back the starting code? Your changes will be replaced.',

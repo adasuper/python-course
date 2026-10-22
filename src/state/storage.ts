@@ -1,6 +1,7 @@
 // Local storage for profiles and code drafts (docs/specs.md §12.2).
 // IndexedDB first, then localStorage, then memory (with a "can't save" banner).
 import { createStore, del, get, keys, set, type UseStore } from 'idb-keyval';
+import { migrateProfile } from './migrations';
 import type { Profile } from './profile';
 
 export type StorageMode = 'indexeddb' | 'localstorage' | 'memory';
@@ -77,8 +78,16 @@ export class Storage {
 
   async profiles(): Promise<Profile[]> {
     const ids = (await this.kv.keys()).filter((k) => k.startsWith('profile:'));
-    const list = await Promise.all(ids.map((k) => this.kv.get<Profile>(k)));
-    return list.filter((p): p is Profile => Boolean(p)).map(migrate);
+    const list = await Promise.all(ids.map((k) => this.kv.get<unknown>(k)));
+    const out: Profile[] = [];
+    for (const raw of list) {
+      try {
+        if (raw) out.push(migrateProfile(raw));
+      } catch {
+        /* a save from a newer game version, or damaged: leave it untouched */
+      }
+    }
+    return out;
   }
 
   saveProfile(profile: Profile) {
@@ -90,20 +99,21 @@ export class Storage {
     for (const k of await this.kv.keys()) if (k.startsWith(`draft:${id}:`)) await this.kv.del(k);
   }
 
-  draft(profileId: string, key: string) {
-    return this.kv.get<string>(`draft:${profileId}:${key}`);
+  async draft(profileId: string, key: string): Promise<string | undefined> {
+    return draftCode(await this.kv.get<unknown>(`draft:${profileId}:${key}`));
   }
 
   saveDraft(profileId: string, key: string, code: string) {
-    return this.kv.set(`draft:${profileId}:${key}`, code);
+    const record: DraftRecord = { schemaVersion: 1, code };
+    return this.kv.set(`draft:${profileId}:${key}`, record);
   }
 
   async drafts(profileId: string): Promise<Record<string, string>> {
     const out: Record<string, string> = {};
     for (const k of await this.kv.keys()) {
       if (k.startsWith(`draft:${profileId}:`)) {
-        const code = await this.kv.get<string>(k);
-        if (typeof code === 'string') out[k.slice(`draft:${profileId}:`.length)] = code;
+        const code = draftCode(await this.kv.get<unknown>(k));
+        if (code !== undefined) out[k.slice(`draft:${profileId}:`.length)] = code;
       }
     }
     return out;
@@ -118,7 +128,15 @@ export class Storage {
   }
 }
 
-/** Upgrade older saved profiles. Each future schema version adds a step here. */
-export function migrate(profile: Profile): Profile {
-  return profile;
+/** A saved draft. Version 1 drafts were stored as bare strings. */
+interface DraftRecord {
+  schemaVersion: 1;
+  code: string;
+}
+
+export function draftCode(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && typeof (value as DraftRecord).code === 'string')
+    return (value as DraftRecord).code;
+  return undefined;
 }

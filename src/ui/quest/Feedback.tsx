@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { fillRich, parseRich } from '../../content/richtext';
 import { t } from '../../i18n/en';
 import type { PyErrorInfo, RunResult } from '../../runtime/protocol';
-import { course } from '../../state/store';
+import { course, update } from '../../state/store';
 import { RichText } from '../components/RichText';
 
 export function errorTemplate(error: PyErrorInfo) {
@@ -34,7 +34,16 @@ export function ErrorExplanation({ error }: { error: PyErrorInfo }) {
       )}
       {error.raw && (
         <>
-          <button type="button" class="small ghost" aria-expanded={real} onClick={() => setReal(!real)}>
+          <button
+            type="button"
+            class="small ghost"
+            aria-expanded={real}
+            onClick={() => {
+              // Reading real errors counts toward the Error Reader badge (F-FBK-09).
+              if (!real) update((p) => void p.counters.realErrorViews++);
+              setReal(!real);
+            }}
+          >
             {real ? t.quest.hideRealError : t.quest.showRealError}
           </button>
           {real && (

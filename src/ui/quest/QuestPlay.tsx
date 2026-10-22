@@ -6,7 +6,7 @@ import { ReplayEngine, type ReplayState, type ReplayView, type Speed } from '../
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
 import type { RunRequest, RunResult } from '../../runtime/protocol';
-import { recordAttempt, useHint, type Reward } from '../../state/progress';
+import { hintsShown, recordAttempt, useHint, type Reward } from '../../state/progress';
 import { announce, config, course, getRunner, getStorage, profile, toast, update } from '../../state/store';
 import { LoadingPanel } from '../components/Common';
 import { CodeSize, Editor } from '../components/Editor';
@@ -31,13 +31,15 @@ export interface UnitProps {
   quest: Quest;
   body: QuestBody;
   unitKey: string;
+  /** Set for a boss phase: hints are kept per phase. */
+  phaseId?: string;
   outro: import('../../content/richtext').Rich | null;
   starter: string;
   onPassed(code: string): Reward;
   afterPass?: preact.ComponentChildren;
 }
 
-export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afterPass }: UnitProps) {
+export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPassed, afterPass }: UnitProps) {
   const p = profile.value!;
   const runner = getRunner();
   const isPredict = body.type === 'predict';
@@ -65,7 +67,7 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
   const stageHolder = useRef<HTMLDivElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const pendingCode = useRef('');
-  const hintsRevealed = p.quests[quest.id]?.hintsUsed ?? 0;
+  const hintsRevealed = hintsShown(p, quest.id, phaseId);
 
   const engine = useMemo(
     () =>
@@ -115,14 +117,32 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
     return () => engine.cancel();
   }, [unitKey]);
 
-  // Save drafts (debounced).
+  // Save drafts: 1 s after the last change, and at once when the page is hidden or left
+  // (F-EDT-04, F-SAV-01).
+  const unsavedDraft = useRef<string | null>(null);
+  const saveDraftNow = () => {
+    if (unsavedDraft.current === null) return;
+    void getStorage().saveDraft(p.id, unitKey, unsavedDraft.current);
+    unsavedDraft.current = null;
+  };
   useEffect(() => {
     if (isPredict) return;
     const value = body.type === 'parsons' ? (parsons ? JSON.stringify(parsons) : null) : code;
     if (value === null) return;
-    const timer = setTimeout(() => void getStorage().saveDraft(p.id, unitKey, value), 800);
+    unsavedDraft.current = value;
+    const timer = setTimeout(saveDraftNow, 1000);
     return () => clearTimeout(timer);
   }, [code, parsons]);
+  useEffect(() => {
+    const onHide = () => document.visibilityState === 'hidden' && saveDraftNow();
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', saveDraftNow);
+    return () => {
+      saveDraftNow();
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', saveDraftNow);
+    };
+  }, [unitKey]);
 
   // Time on task: active seconds while visible, focused and recently used (§9.1).
   useEffect(() => {
@@ -131,19 +151,18 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
     const onInput = () => (lastInput = Date.now());
     document.addEventListener('keydown', onInput);
     document.addEventListener('pointerdown', onInput);
+    const flush = () => {
+      const add = pending;
+      pending = 0;
+      if (add) update((x) => void (x.quests[quest.id] && (x.quests[quest.id]!.activeSeconds += add)));
+    };
     const tick = setInterval(() => {
       if (document.visibilityState === 'visible' && document.hasFocus() && Date.now() - lastInput < 120_000)
         pending += 5;
-      if (pending >= 30) {
-        const add = pending;
-        pending = 0;
-        update((x) => {
-          const rec = x.quests[quest.id];
-          if (rec) rec.activeSeconds += add;
-        });
-      }
+      if (pending >= 30) flush();
     }, 5000);
     return () => {
+      flush();
       clearInterval(tick);
       document.removeEventListener('keydown', onInput);
       document.removeEventListener('pointerdown', onInput);
@@ -269,7 +288,7 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
   };
 
   const reveal3 = (tier: 1 | 2 | 3) => {
-    update((x) => useHint(x, quest.id, tier));
+    update((x) => useHint(x, quest.id, tier, phaseId));
     announce(`${t.quest.hintButton(tier)} shown.`);
   };
 
@@ -315,6 +334,7 @@ export function QuestPlay({ quest, body, unitKey, outro, starter, onPassed, afte
               readOnly={isPredict}
               onChange={setCode}
               onRun={() => void run()}
+              id="code-editor"
               fontSize={p.settings.editorFontSize}
               replayLine={replayLine}
               error={editorError}

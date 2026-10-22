@@ -173,7 +173,11 @@ export function decodeSaveCode(code: string, course: Course, choices: Choices): 
       if (best !== 7) profile.checks[region.id] = { best, latest: best, total: 0, attempts: 1 };
     }
     const regionIndex = r.read(4);
-    profile.location = { region: course.regions[regionIndex]?.id ?? course.regions[0]!.id, at: null };
+    profile.location = {
+      region: course.regions[regionIndex]?.id ?? course.regions[0]!.id,
+      at: null,
+      quest: null,
+    };
     profile.createdOn = new Date(EPOCH + days * 86_400_000).toISOString().slice(0, 10);
     const started = Object.keys(profile.quests).length > 0;
     profile.seen = {

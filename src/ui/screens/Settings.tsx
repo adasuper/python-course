@@ -9,6 +9,7 @@ import { go, profile, regions, saveDialogOpen, update } from '../../state/store'
 import { applyAudio, playEffect } from '../audio';
 import { useCanSpeak } from '../components/ReadAloud';
 import { applySettings } from '../flow';
+import { OfflineStatus } from '../components/OfflineStatus';
 import { offlineVoices, onVoicesChanged, speak } from '../speech';
 import { Hud } from './Overworld';
 
@@ -313,6 +314,14 @@ export function SettingsScreen() {
           <p>{t.save.why}</p>
           <button type="button" onClick={() => (saveDialogOpen.value = true)}>
             {t.hud.save}
+          </button>
+        </section>
+
+        <section class="card" aria-labelledby="set-offline">
+          <h2 id="set-offline">📶 {t.offline.heading}</h2>
+          <OfflineStatus />
+          <button type="button" class="small" onClick={() => go({ name: 'system' })}>
+            🩺 {t.system.link}
           </button>
         </section>
       </main>

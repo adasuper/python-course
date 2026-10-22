@@ -126,9 +126,19 @@ request, in three stages:
 
 `npm run build` produces a static site in `dist/` that works on any static host (GitHub
 Pages, a school web server). Use `CODEWEALD_BASE=/repo-name/ npm run build` for a sub-path.
-No special headers are needed, but serve `.wasm` as `application/wasm` and use HTTPS. On
-GitHub, the CI/CD pipeline above does all of this for you. Notes for other servers arrive
-in Phase 6.
+No special headers are needed, but serve `.wasm` as `application/wasm` and use HTTPS (the
+offline service worker needs it). On GitHub, the CI/CD pipeline above does all of this for
+you. Notes for other servers arrive in Phase 6.
+
+**Offline play:** after one visit, the game works with no network. The title screen shows
+"Ready to play offline ✓" once the game and Python (about 14 MB, downloaded once) are
+stored. Before the first lesson, open the game once on each computer while online. A new
+version waits until the student clicks **Reload now**.
+
+**System check:** the title screen's **System check** button shows whether this computer
+and network can run the game: the offline helper (service worker), saving, WebAssembly, the
+`.wasm` file type, free space, Python, offline readiness and read-aloud voices. Each failure
+comes with a tip for fixing it.
 
 **Handling exported files:** a progress file contains the student's nickname and their code.
 Keep it somewhere private, such as the student's own Google Drive.

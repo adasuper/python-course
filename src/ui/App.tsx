@@ -14,6 +14,9 @@ import { InventoryScreen, ItemScreen } from './screens/Inventory';
 import { SpellbookScreen } from './screens/Spellbook';
 import { WorkshopScreen } from './screens/Workshop';
 import { SettingsScreen } from './screens/Settings';
+import { SystemCheckScreen } from './screens/SystemCheck';
+import { reloadForUpdate, updateReady } from './pwa';
+import { flushSave } from '../state/store';
 import { OverworldScreen } from './screens/Overworld';
 import { StoryScreen } from './screens/Story';
 import { TitleScreen } from './screens/Title';
@@ -85,9 +88,13 @@ export function App() {
     case 'credits':
       screen = <CreditsScreen />;
       break;
+    case 'system':
+      screen = <SystemCheckScreen />;
+      break;
   }
   return (
     <>
+      {updateReady.value && <UpdateBanner />}
       {screen}
       <Toasts
         onCopyCode={() => void copySaveCode()}
@@ -96,5 +103,24 @@ export function App() {
       {saveDialogOpen.value && <SaveDialog onClose={() => (saveDialogOpen.value = false)} />}
       <LiveRegion />
     </>
+  );
+}
+
+/** A new version never reloads by itself mid-quest (F-OFF-04): the student chooses when. */
+function UpdateBanner() {
+  return (
+    <div class="banner info update-banner" role="status">
+      <span>🆕 {t.offline.update}</span>
+      <button
+        type="button"
+        class="small"
+        onClick={async () => {
+          await flushSave();
+          await reloadForUpdate();
+        }}
+      >
+        ↻ {t.offline.reload}
+      </button>
+    </div>
   );
 }

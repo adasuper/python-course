@@ -168,7 +168,13 @@ export interface RunResult {
 }
 
 export type ToWorker =
-  { kind: 'init'; indexURL: string } | { kind: 'run'; runId: number; request: RunRequest };
+  | {
+      kind: 'init';
+      indexURL: string;
+      /** A service worker controls the page, so Python's files are kept in its cache (§16). */
+      cached?: boolean;
+    }
+  | { kind: 'run'; runId: number; request: RunRequest };
 
 export type FromWorker =
   | { kind: 'progress'; stage: 'download' | 'compile' | 'stdlib' | 'ready'; loaded?: number; total?: number }

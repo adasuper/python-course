@@ -38,7 +38,7 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | M2.7 Workshop | ✅ Done |
 | M2.8 Save polish | ✅ Done |
 | M2.9 Settings and a11y features | ✅ Done (manual screen-reader and voice checks pending) |
-| M2.10 PWA basics | Next |
+| M2.10 PWA basics | ✅ Done |
 
 ### Done in Phase 2
 
@@ -205,6 +205,25 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 - **Still to check by hand:** NVDA/ChromeVox on Settings and the quest tabs; real voices on a
   Chromebook.
 
+#### M2.10 Offline play (PWA basics)
+
+- **Installable and offline:** a service worker (vite-plugin-pwa / Workbox) precaches the game
+  (about 95 files, 2.5 MB). Python is cached the first time it loads. The manifest uses
+  Byte as the app icon.
+- **Python downloads once.** The E2E test counts downloads on the server: each Python file
+  is fetched exactly once on a first visit. This fixes the old "downloads Pyodide twice"
+  issue. It also found and fixed a cache miss: the server's `Vary: Origin` header made the
+  cache skip `pyodide.asm.mjs`.
+- **"Ready to play offline ✓"** on the title screen and in Settings, and **📴 Offline** in the
+  HUD with no network.
+- **Updates wait:** "A new version of Codeweald is ready — reload when you're done with this
+  quest" with a **Reload now** button. Nothing reloads by itself.
+- **System check** page (title screen and Settings). This was planned for Phase 6
+  (F-OFF-08) and came early because it is part of M2.10.
+- **Tests:** E2E: first visit → offline → reload → a quest with a Python run, with no
+  network; one download per Python file; a new version waits, then reloads when asked; the
+  System check rows. Unit tests for the System check rules. axe on the System check page.
+
 ## Phase 1 — Vertical slice ✅
 
 ### Done in Phase 1
@@ -349,8 +368,6 @@ of them are now closed:
 ## Known issues
 
 - **Art direction:** this is the first look. Please react to the mood and palette (Q6).
-- **First load downloads Pyodide twice:** once for the progress bar, then again from the
-  browser cache. The service worker in Phase 2 removes this.
 - **Main script size:** it is 556 KB gzipped (mostly Phaser and CodeMirror). Splitting it
   could speed up the first screen.
 - **CSTA wording:** the descriptions are paraphrased. Verify them verbatim against

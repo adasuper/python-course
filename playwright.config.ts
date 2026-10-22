@@ -24,6 +24,8 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npx vite preview --port 4173 --strictPort',
+    // Test hooks for tests/e2e/offline.spec.ts (see vite.config.ts).
+    env: { CODEWEALD_TEST_SERVER: '1' },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

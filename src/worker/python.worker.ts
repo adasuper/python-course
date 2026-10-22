@@ -19,9 +19,24 @@ let run: ((json: string) => string) | null = null;
 
 const post = (message: FromWorker) => self.postMessage(message);
 
-/** Download the big files ourselves first, so the loading screen can show real progress. */
-async function prefetch(indexURL: string): Promise<void> {
-  const files = ['pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide.asm.mjs'];
+/** True once `url` is in the service worker's cache, waiting up to `ms` for it to arrive. */
+async function inCache(url: string, ms: number): Promise<boolean> {
+  if (typeof caches === 'undefined') return false;
+  for (let waited = 0; ; waited += 50) {
+    if (await caches.match(url, { ignoreVary: true })) return true;
+    if (waited >= ms) return false;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
+
+/** Download the big files ourselves first, so the loading screen can show real progress.
+ *  With a service worker, files it already holds are skipped, and each download is given
+ *  time to reach its cache, so Pyodide's own requests never download a file twice (§16). */
+async function prefetch(indexURL: string, cached: boolean): Promise<void> {
+  const files: string[] = [];
+  for (const file of ['pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide.asm.mjs']) {
+    if (!(cached && (await inCache(indexURL + file, 0)))) files.push(file);
+  }
   const sizes = await Promise.all(
     files.map(async (f) => {
       const res = await fetch(indexURL + f, { method: 'HEAD' }).catch(() => null);
@@ -40,11 +55,12 @@ async function prefetch(indexURL: string): Promise<void> {
       loaded += value.byteLength;
       post({ kind: 'progress', stage: 'download', loaded, total });
     }
+    if (cached) await inCache(indexURL + file, 3000);
   }
 }
 
-async function init(indexURL: string): Promise<void> {
-  await prefetch(indexURL);
+async function init(indexURL: string, cached: boolean): Promise<void> {
+  await prefetch(indexURL, cached);
   post({ kind: 'progress', stage: 'compile' });
   const pyodide: PyodideInterface = await loadPyodide({ indexURL, stdout: () => {}, stderr: () => {} });
   post({ kind: 'progress', stage: 'stdlib' });
@@ -68,7 +84,7 @@ self.onmessage = async (event: MessageEvent<ToWorker>) => {
   const message = event.data;
   if (message.kind === 'init') {
     try {
-      await init(message.indexURL);
+      await init(message.indexURL, message.cached ?? false);
     } catch (error) {
       post({ kind: 'failed', message: String(error) });
     }

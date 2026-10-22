@@ -2,6 +2,7 @@ import '@fontsource/atkinson-hyperlegible-next/400.css';
 import '@fontsource/atkinson-hyperlegible-next/700.css';
 import '@fontsource/atkinson-hyperlegible-mono/400.css';
 import '@fontsource/opendyslexic/400.css';
+import { effect } from '@preact/signals';
 import { render } from 'preact';
 import type { Quest } from './content/types';
 import { PyRunner } from './runtime/pyRunner';
@@ -22,6 +23,8 @@ import {
 } from './state/store';
 import { App } from './ui/App';
 import { applySettings } from './ui/flow';
+import { checkOfflineReady, whenControlled } from './ui/pwa';
+import { registerServiceWorker } from './ui/registerSW';
 import { configureRules } from './state/progress';
 import './ui/tokens.css';
 import './ui/styles.css';
@@ -29,6 +32,7 @@ import './ui/styles.css';
 async function boot() {
   render(<App />, document.getElementById('app')!);
   applySettings(null);
+  registerServiceWorker();
   const [cfg, storage] = await Promise.all([loadConfig(), Storage.open()]);
   config.value = cfg;
   configureRules(cfg.features);
@@ -37,8 +41,14 @@ async function boot() {
   const runner = new PyRunner({
     indexURL: new URL(`${import.meta.env.BASE_URL}pyodide/`, location.href).href,
     timeoutMs: cfg.execution.timeoutSeconds * 1000,
+    // Python's downloads should go through the service worker, so they land in its cache.
+    beforeInit: whenControlled(),
   });
   attachServices(storage, runner);
+  // Once Python has loaded, check (and finish) the offline caches.
+  effect(() => {
+    if (runner.status.value === 'ready') void checkOfflineReady(true);
+  });
   profiles.value = await storage.profiles();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') void flushSave();

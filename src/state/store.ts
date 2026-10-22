@@ -23,6 +23,7 @@ export type Route =
   | { name: 'item'; id: string }
   | { name: 'workshop' }
   | { name: 'settings' }
+  | { name: 'system' }
   | { name: 'spellbook'; tab?: 'pages' | 'spells' | 'examples' | 'scenes' | 'glossary' }
   | { name: 'credits' };
 

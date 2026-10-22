@@ -21,6 +21,7 @@ import {
 import { Portrait } from '../components/Common';
 import { RichText } from '../components/RichText';
 import { switchProfile } from '../flow';
+import { online } from '../pwa';
 
 const KEYS: Record<string, Dir> = {
   ArrowUp: 'up',
@@ -53,7 +54,15 @@ export function Hud({ regionName }: { regionName: string }) {
         <progress class="xp" max={next - base} value={p.xp - base} aria-label={t.hud.xp(p.xp, next)} />
         <span class="muted small-text">{t.hud.xp(p.xp, next)}</span>
       </div>
-      <p class="hud-region">{regionName}</p>
+      <p class="hud-region">
+        {regionName}
+        {!online.value && (
+          <span class="pill offline-pill" title={t.offline.offlineHelp}>
+            📴 {t.offline.offline}
+            <span class="sr-only">. {t.offline.offlineHelp}</span>
+          </span>
+        )}
+      </p>
       <nav class="hud-actions" aria-label={t.hud.menu}>
         <button
           type="button"

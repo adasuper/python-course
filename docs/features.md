@@ -1261,7 +1261,7 @@ Priority: Must · Phase: 2 · Spec: §16 · Brief: §1
 As a School IT admin, I want Pyodide downloaded once and cached, so that the school network isn't hit twice.
 **Acceptance criteria**
 - Pyodide core files are runtime-cached (CacheFirst, cache `pyodide-<version>`), not precached.
-- The SW uses `skipWaiting` + `clientsClaim`; the worker starts after the SW controls the page (3 s fallback), so its fetches land in the cache.
+- The SW uses `clientsClaim` (and `skipWaiting` once the student accepts an update, F-OFF-04); the worker starts after the SW controls the page (3 s fallback), so its fetches land in the cache.
 - On a first visit, each Pyodide file is downloaded exactly once (E2E request count).
 
 Priority: Must · Phase: 2 · Spec: §16 · Brief: §1, §7
@@ -1311,7 +1311,7 @@ As a School IT admin, I want a built-in system check, so that I can see quickly 
 **Acceptance criteria**
 - A page reports: service worker active, IndexedDB available, WebAssembly works, `.wasm` served as `application/wasm`, storage quota, local TTS voices and offline readiness, each with pass/fail text and a fix tip.
 
-Priority: Should · Phase: 6 · Spec: §21 · Brief: §1, §8
+Priority: Should · Phase: 6 (delivered early, in M2.10) · Spec: §16, §21 · Brief: §1, §8
 
 ### F-OFF-09 — Honest about limits
 As an Instructor, I want the dashboard and guide to say progress is self-reported, so that I use it for formative feedback, not grading.

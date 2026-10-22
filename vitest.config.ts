@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  define: { __PYODIDE_VERSION__: JSON.stringify('test') },
   test: {
     include: ['tests/unit/**/*.test.ts', 'tests/python/**/*.test.ts', 'tests/content/**/*.test.ts'],
     environment: 'node',

@@ -171,6 +171,32 @@ for (const character of Object.values(CHARACTERS)) {
   );
 }
 
+// ── App icons (web app manifest, F-OFF-01) ──
+/** Byte's portrait, scaled up in whole pixels and centred on the night-sky colour, inside the
+ *  safe zone of a maskable icon. */
+function appIcon(size: number, scaleBy: number): Buffer {
+  const frame = BYTE_PORTRAIT.frames[0]!;
+  const inner = frame.length * scaleBy;
+  const pad = Math.floor((size - inner) / 2);
+  const rgba = new Uint8Array(size * size * 4);
+  const [br, bg, bb] = hexToRgba('#20192b');
+  for (let i = 0; i < size * size; i++) rgba.set([br, bg, bb, 255], i * 4);
+  frame.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const c = row.charAt(x);
+      if (c === '.') continue;
+      const color = hexToRgba(BYTE_PORTRAIT.palette[c]!);
+      for (let dy = 0; dy < scaleBy; dy++)
+        for (let dx = 0; dx < scaleBy; dx++)
+          rgba.set(color, ((pad + y * scaleBy + dy) * size + pad + x * scaleBy + dx) * 4);
+    }
+  });
+  return encodePng(size, size, rgba);
+}
+mkdirSync(join(OUT, 'app'), { recursive: true });
+writeFileSync(join(OUT, 'app', 'icon-192.png'), appIcon(192, 4));
+writeFileSync(join(OUT, 'app', 'icon-512.png'), appIcon(512, 12));
+
 // ── Icons ──
 const iconPngs: Record<string, Buffer> = {};
 for (const item of Object.values(ITEMS)) {

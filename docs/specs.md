@@ -1543,15 +1543,33 @@ its own quick text-size and contrast toggles before any profile exists. They are
 - **Pyodide** (≈ 14 MB unpacked: `pyodide.asm.wasm`, `python_stdlib.zip`, `pyodide.asm.js`,
   `pyodide.mjs`, `pyodide-lock.json`) is **runtime-cached** (CacheFirst, cache name
   `pyodide-<version>`), not precached. This avoids a double download on the first visit:
-  1. The SW installs with the small precache, then `skipWaiting` + `clientsClaim`.
+  1. The SW installs with the small precache, then `clientsClaim`, so it controls the
+     page on the first visit.
   2. The worker starts after the SW controls the page (with a 3 s fallback).
   3. Its fetches go through the SW and land in the cache.
-  4. The worker streams the downloads and reports byte progress to the loading screen.
+  4. The worker streams the downloads and reports byte progress to the loading screen. It
+     skips files already cached, and waits for each download to reach the cache before
+     Pyodide asks for it again.
+  5. The cache ignores `Vary` (servers may send `Vary: Origin`, and Pyodide imports
+     `pyodide.asm.mjs` as a module after fetching it plainly).
+  6. If Python loaded before the SW took over, the files are copied into the cache once
+     Python is ready, mostly from the browser's HTTP cache.
+- **Precache** holds about 95 files (≈ 2.5 MB): `.woff2` fonts only (no `.woff`), and not
+  the art preview page.
 - **"Ready to play offline ✓"** shows in Settings and on the title screen once the precache
   and the Pyodide cache are both complete.
 - **Updates:** a new version shows "A new version of Codeweald is ready — reload when you're
-  done with this quest". It never auto-reloads mid-quest. Save data survives updates.
-  Content-version changes run migrations.
+  done with this quest". It never auto-reloads mid-quest. The waiting SW gets `skipWaiting`
+  only when the student clicks **Reload now**; the page saves, then reloads when the new SW
+  takes control. Save data survives updates. Content-version changes run migrations.
+- **Offline indicator:** the HUD shows "📴 Offline" while there is no network.
+- **System check** (title screen and Settings, F-OFF-08): service worker, storage, WebAssembly,
+  the `.wasm` Content-Type, storage quota (60 MB free needed), Python, offline readiness and
+  installed voices. Each row says Pass, Fail or Warning in words, with a fix tip.
+- **E2E test hooks:** with `CODEWEALD_TEST_SERVER=1`, `vite preview` counts downloads of
+  Python's files (`/__codeweald-requests`) and can serve a changed `sw.js`
+  (`/__codeweald-next-version`) to test updates. Browsers don't report a service worker's
+  own requests to Playwright, so the counting happens on the server.
 - `.wasm` must be served as `application/wasm` (deployment docs).
 - No COOP/COEP headers are required (§6.5).
 

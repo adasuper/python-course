@@ -1502,3 +1502,46 @@ button.danger {
 .sticky-run .run-bar {
   margin: 0;
 }
+
+/* ----- offline, updates and the system check (§16, F-OFF-08) ----- */
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.4rem 0.8rem 0;
+}
+.offline-status.ready {
+  font-weight: 700;
+}
+.offline-pill {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: var(--parchment-2);
+  border: 1px solid var(--line);
+}
+.system-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6rem 0;
+}
+.system-table th,
+.system-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .system-table thead {
+    display: none;
+  }
+  .system-table tr,
+  .system-table th,
+  .system-table td {
+    display: block;
+  }
+}

@@ -6,6 +6,7 @@ import { announce, getStorage, go, profiles, storageMode, toast } from '../../st
 import { Modal } from '../components/Common';
 import { RestoreDialog } from '../components/SaveDialogs';
 import { applySettings, selectProfile } from '../flow';
+import { OfflineStatus } from '../components/OfflineStatus';
 import { loadQuick, nextScale, saveQuick } from '../quickPrefs';
 
 const ART = `${import.meta.env.BASE_URL}assets/art/`;
@@ -68,9 +69,13 @@ export function TitleScreen() {
         </div>
       </section>
       <QuickSettings />
+      <OfflineStatus />
       <p class="credits-link">
         <button type="button" class="ghost small" onClick={() => go({ name: 'credits' })}>
           {t.credits.link}
+        </button>
+        <button type="button" class="ghost small" onClick={() => go({ name: 'system' })}>
+          {t.system.link}
         </button>
       </p>
       {deleting && <DeleteProfile profile={deleting} onClose={() => setDeleting(null)} />}

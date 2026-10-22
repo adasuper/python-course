@@ -200,3 +200,10 @@ test('Settings, and the quest screen as tabs on a narrow screen', async ({ page 
   await page.getByRole('tab', { name: /Stage and output/ }).click();
   await scan(page, 'narrow quest screen, stage tab');
 });
+
+test('System check', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'System check' }).click();
+  await expect(page.locator('.system-table')).toBeVisible();
+  await scan(page, 'system check');
+});

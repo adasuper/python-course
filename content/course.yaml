@@ -21,4 +21,7 @@ opening:
 regions:
   - id: hearthvale-village
     lessons: 2
+  # Region 6: Clocktower Peaks
+  - id: clocktower-peaks
+    lessons: 2
 side_quests: true

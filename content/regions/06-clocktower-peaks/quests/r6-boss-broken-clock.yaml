@@ -1,0 +1,398 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-boss-broken-clock
+region: clocktower-peaks
+title: The Broken Clock
+type: boss
+npc: tick_tock_tick
+learning_outcome: Use for loops, range steps, nested loops and an accumulator together to rebuild a clock's timetable.
+csta: [2-AP-11, 2-AP-12]
+estimated_minutes: 16
+prerequisites:
+  - r6-q1-counting-the-bells
+  - r6-q2-the-clockmakers-loop
+  - r6-q3-rewind-the-lift
+  - r6-q4-the-toll-bucket
+  - r6-q5-the-skipping-clock
+  - r6-q6-the-pattern-weaver
+vocabulary: [bug, for loop, nested loop, accumulator]
+
+boss:
+  name: The Broken Clock
+  bug: Tick-Tock-Tick
+  sprite: bug_ticktock
+
+story_intro: |
+  A [[bug]] with three clock hands is wedged in the great clock's door. "Tick! Tock! TICK! I ate the timetable! Now nobody knows when the bells will ring!"
+
+  This is Tick-Tock-Tick. Rebuild the timetable in three phases: the hours on the dial, the chimes for each hour, and the total count of bell rings.
+goal: Rebuild the great clock's timetable in three phases. Then Tick-Tock-Tick turns back into a friendly firefly.
+concept_card: |
+  A `for` loop counts. A loop inside a loop makes a table. An accumulator adds things up. Together, they keep perfect time.
+
+phases:
+  - id: hours-on-the-dial
+    title: Hours on the dial
+    type: make
+    learning_outcome: Use range() with a start and stop to print a sequence.
+    csta: [2-AP-12]
+    estimated_minutes: 5
+    story_intro: |
+      Tick-Tock-Tick scrambled the numbers on the dial! Put them back. Print the hours from 1 to 12, one on each line, with a [[for loop]].
+    goal: Use a for loop to print the hours 1 to 12, one per line.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_ticktock, name: Tick-Tock-Tick }
+        - { sprite: npc_peaks_clockmaker, name: Gerta Gearwright }
+    starter_code: |
+      # Print the hours 1 to 12 with a for loop.
+    solution: |
+      # Print the hours 1 to 12 with a for loop.
+      for hour in range(1, 13):
+          print(hour)
+    validators:
+      - id: dial
+        type: output
+        expect: |
+          1
+          2
+          3
+          4
+          5
+          6
+          7
+          8
+          9
+          10
+          11
+          12
+        fail_hint: The dial needs the numbers 1 to 12, one on each line.
+      - id: uses-for
+        type: ast
+        require: [For]
+        fail_hint: Use a for loop with `range`, not twelve print lines.
+      - id: short
+        type: ast
+        max_lines: 3
+        fail_hint: A for loop can print the whole dial in just two lines.
+    common_mistakes:
+      - id: starts-at-zero
+        detect: { kind: output_regex, pattern: "\\A0$" }
+        feedback: >-
+          There's no 0 on a clock! With one number, `range` starts at 0. Give it a start:
+          `range(1, ...)`.
+      - id: stops-at-eleven
+        detect: { kind: detector, name: range_off_by_one, last: 12 }
+        feedback: >-
+          The dial stops at 11! `range` stops just *before* its stop number. To reach 12,
+          use 13 as the stop.
+      - id: no-loop
+        detect: { kind: validator_failed, id: uses-for }
+        feedback: >-
+          Tick-Tock-Tick laughs at all those lines. "Too slow!" Use one `for` loop with
+          `range(1, 13)` to print every hour.
+      - id: too-long
+        detect: { kind: validator_failed, id: short }
+        feedback: The dial is right! Now let the loop do all the work. Two lines are enough.
+      - id: wrong-dial
+        detect: { kind: validator_failed, id: dial }
+        feedback: Compare the Scroll with a clock face. Just the numbers 1 to 12, one on each line.
+    wrong_solutions:
+      - expect_mistake: starts-at-zero
+        code: |
+          for hour in range(12):
+              print(hour)
+      - expect_mistake: stops-at-eleven
+        code: |
+          for hour in range(1, 12):
+              print(hour)
+      - expect_mistake: no-loop
+        code: |
+          print(1)
+          print(2)
+          print(3)
+          print(4)
+          print(5)
+          print(6)
+          print(7)
+          print(8)
+          print(9)
+          print(10)
+          print(11)
+          print(12)
+    hints:
+      - Which number does the dial start at? Which number does it end at?
+      - "`range` stops just before its stop number. For 1 to 12, use `range(1, 13)`. Print the loop variable on each pass."
+      - |
+        ```python
+        for hour in range(1, ____):
+            print(hour)
+        ```
+    story_outro: |
+      The numbers snap back onto the dial. Tick-Tock-Tick's hour hand droops. "Tick... tock?"
+
+  - id: the-timetable
+    title: The timetable
+    type: make
+    carry_code: true
+    learning_outcome: Use nested loops and a range step to print a timetable pattern.
+    csta: [2-AP-12]
+    estimated_minutes: 6
+    story_intro: |
+      Next, the timetable! The bell chimes every quarter hour: at 0, 15, 30 and 45 minutes. Print one row for each hour, like this:
+      ```text
+      1: 0 15 30 45
+      2: 0 15 30 45
+      ```
+      ...and so on, down to 12. Use a [[nested loop]]. The hour loop makes the rows. A minute loop inside it builds each row with a `range` step.
+    goal: Use a minute loop inside the hour loop to print the timetable, one row per hour, from 1 to 12.
+    stage: { kind: none, view: tapestry }
+    starter_code: |
+      for hour in range(1, 13):
+          print(hour)
+    solution: |
+      for hour in range(1, 13):
+          row = f"{hour}:"
+          for minute in range(0, 60, 15):
+              row = row + f" {minute}"
+          print(row)
+    validators:
+      - id: timetable
+        type: output
+        expect: |
+          1: 0 15 30 45
+          2: 0 15 30 45
+          3: 0 15 30 45
+          4: 0 15 30 45
+          5: 0 15 30 45
+          6: 0 15 30 45
+          7: 0 15 30 45
+          8: 0 15 30 45
+          9: 0 15 30 45
+          10: 0 15 30 45
+          11: 0 15 30 45
+          12: 0 15 30 45
+        fail_hint: Each row is the hour, a colon, then the minutes 0 15 30 45.
+      - id: nested
+        type: custom
+        fail_hint: Put a minute loop inside the hour loop.
+        python: |
+          def check(ctx):
+              tree = ctx.tree
+              if tree is not None:
+                  for outer in ast.walk(tree):
+                      if isinstance(outer, ast.For):
+                          for inner in ast.walk(outer):
+                              if inner is not outer and isinstance(inner, ast.For):
+                                  return Pass()
+              return Fail("Put a minute loop inside the hour loop.")
+      - id: counted-minutes
+        type: custom
+        fail_hint: "Let `range` count the minutes with a step: `range(0, 60, 15)`."
+        python: |
+          def check(ctx):
+              tree = ctx.tree
+              if tree is not None:
+                  for node in ast.walk(tree):
+                      call = node.iter if isinstance(node, ast.For) else None
+                      if (
+                          isinstance(call, ast.Call)
+                          and isinstance(call.func, ast.Name)
+                          and call.func.id == "range"
+                          and len(call.args) == 3
+                      ):
+                          return Pass()
+              return Fail("Let range count the minutes with a step: range(0, 60, 15).")
+    common_mistakes:
+      - id: one-loop
+        detect: { kind: validator_failed, id: nested }
+        feedback: >-
+          Tick-Tock-Tick snickers. "Where's the second loop?" Put a minute loop inside the
+          hour loop. It adds each minute to the row.
+      - id: typed-minutes
+        detect: { kind: validator_failed, id: counted-minutes }
+        feedback: >-
+          No typing the minutes! Let `range` count them for you with a step:
+          `range(0, 60, 15)`.
+      - id: step-ten
+        detect: { kind: output_regex, pattern: ": 0 10 20" }
+        feedback: >-
+          The bell chimes every 15 minutes, not every 10. The third number in `range` is
+          the step.
+      - id: too-many-rows
+        detect:
+          kind: custom
+          python: |
+            def detect(ctx):
+                rows = [r for r in ctx.lines if r.strip()]
+                return len(rows) > 12
+        feedback: >-
+          The timetable has far too many rows! Is `print(row)` inside the minute loop? Move
+          it out one step, so each hour prints just one row.
+      - id: growing-rows
+        detect:
+          kind: custom
+          python: |
+            def detect(ctx):
+                rows = [r for r in ctx.lines if r.strip()]
+                return len(rows) > 1 and len(rows[-1]) > len(rows[0]) + 10
+        feedback: >-
+          The rows keep getting longer! Start a fresh row on every pass of the hour loop,
+          just before the minute loop.
+      - id: wrong-rows
+        detect: { kind: validator_failed, id: timetable }
+        feedback: >-
+          Compare the timetable with the example, row by row. Each row is the hour, a colon,
+          then the minutes with a space before each one.
+    wrong_solutions:
+      - expect_mistake: one-loop
+        code: |
+          for hour in range(1, 13):
+              print(f"{hour}: 0 15 30 45")
+      - expect_mistake: step-ten
+        code: |
+          for hour in range(1, 13):
+              row = f"{hour}:"
+              for minute in range(0, 60, 10):
+                  row = row + f" {minute}"
+              print(row)
+      - expect_mistake: too-many-rows
+        code: |
+          for hour in range(1, 13):
+              row = f"{hour}:"
+              for minute in range(0, 60, 15):
+                  row = row + f" {minute}"
+                  print(row)
+      - expect_mistake: typed-minutes
+        code: |
+          for hour in range(1, 13):
+              row = f"{hour}:"
+              for minute in range(1):
+                  row = row + " 0 15 30 45"
+              print(row)
+    hints:
+      - Look at one row. Which part comes from the hour loop? Which parts come from a minute loop?
+      - "Inside the hour loop, start a row with `row = f\"{hour}:\"`. Then loop with `range(0, 60, 15)` and add each minute with `row = row + f\" {minute}\"`. Print the row after the minute loop."
+      - |
+        ```python
+        for hour in range(1, 13):
+            row = f"{hour}:"
+            for minute in range(0, 60, ____):
+                row = row + f" {minute}"
+            print(row)
+        ```
+    story_outro: |
+      Twelve tidy rows of chimes glow on the loom. Tick-Tock-Tick's second hand spins in a panic. "Tick-tick-tick-tick!"
+
+  - id: count-the-chimes
+    title: Count the chimes
+    type: make
+    learning_outcome: Use an accumulator to total values across loop passes.
+    csta: [2-AP-11]
+    estimated_minutes: 5
+    story_intro: |
+      Last part! At 1 o'clock the big bell rings once. At 2 o'clock it rings twice. At 12 o'clock it rings 12 times. How many times does it ring from 1 to 12 o'clock? Use an [[accumulator]] to add them all up.
+    goal: Use a for loop to add up the chimes from 1 to 12 o'clock in `chimes`, then print the total.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_ticktock, name: Tick-Tock-Tick }
+        - { sprite: npc_peaks_bellringer, name: Dinah Dong }
+    starter_code: |
+      # The bell rings 1 time at 1 o'clock,
+      # 2 times at 2 o'clock, and so on.
+      chimes = 0
+      # Add up the chimes from 1 to 12 o'clock.
+
+      print(f"Total chimes: {chimes}")
+    solution: |
+      # The bell rings 1 time at 1 o'clock,
+      # 2 times at 2 o'clock, and so on.
+      chimes = 0
+      # Add up the chimes from 1 to 12 o'clock.
+      for hour in range(1, 13):
+          chimes = chimes + hour
+      print(f"Total chimes: {chimes}")
+    validators:
+      - id: total
+        type: output
+        expect: "Total chimes: 78"
+        fail_hint: Dinah counted every chime once. Check what your total says.
+      - id: uses-for
+        type: ast
+        require: [For]
+        fail_hint: Use a for loop to visit every hour from 1 to 12.
+      - id: not-typed
+        type: ast
+        no_literal: [78]
+        fail_hint: No typing the answer! Let the loop add up the chimes.
+    common_mistakes:
+      - id: typed-in
+        detect: { kind: validator_failed, id: not-typed }
+        feedback: >-
+          Tick-Tock-Tick spots the typed number. "Cheater, cheater, clock eater!" Let a for
+          loop add each hour's chimes to `chimes`.
+      - id: reset-inside
+        detect: { kind: code_regex, pattern: "^[ \\t]+chimes\\s*=\\s*0\\s*$" }
+        feedback: >-
+          `chimes = 0` inside the loop empties the count on every pass! Keep it before the
+          loop, so the chimes pile up.
+      - id: counts-hours
+        detect: { kind: code_regex, pattern: "chimes\\s*(=\\s*chimes\\s*\\+|\\+=)\\s*1\\s*$" }
+        feedback: >-
+          Adding 1 counts the hours, not the chimes. At each hour the bell rings `hour`
+          times, so add `hour`.
+      - id: stops-short
+        detect: { kind: detector, name: range_off_by_one, last: 12 }
+        feedback: >-
+          You forgot 12 o'clock, the loudest hour of all! `range` stops just before its stop
+          number. Use 13.
+      - id: no-loop
+        detect: { kind: validator_failed, id: uses-for }
+        feedback: Use a for loop with `range(1, 13)`. On each pass, add that hour's chimes.
+      - id: wrong-total
+        detect: { kind: validator_failed, id: total }
+        feedback: >-
+          Not quite. Start `chimes` at 0 before the loop. Then, inside the loop, add `hour`
+          on every pass.
+    wrong_solutions:
+      - expect_mistake: typed-in
+        code: |
+          chimes = 78
+          print(f"Total chimes: {chimes}")
+      - expect_mistake: reset-inside
+        code: |
+          chimes = 0
+          for hour in range(1, 13):
+              chimes = 0
+              chimes = chimes + hour
+          print(f"Total chimes: {chimes}")
+      - expect_mistake: counts-hours
+        code: |
+          chimes = 0
+          for hour in range(1, 13):
+              chimes = chimes + 1
+          print(f"Total chimes: {chimes}")
+      - expect_mistake: stops-short
+        code: |
+          chimes = 0
+          for hour in range(1, 12):
+              chimes = chimes + hour
+          print(f"Total chimes: {chimes}")
+    hints:
+      - How many chimes at 1 o'clock? At 2 o'clock? What do you add each time?
+      - "Loop over the hours with `range(1, 13)`. On each pass, add that hour to the total: `chimes = chimes + hour`."
+      - |
+        ```python
+        chimes = 0
+        for hour in range(1, 13):
+            chimes = ____
+        print(f"Total chimes: {chimes}")
+        ```
+    story_outro: |
+      DONG! DONG! DONG! The great clock starts ticking, steady and true.
+
+story_outro: |
+  Tick-Tock-Tick wobbles, glows, and turns into a friendly little firefly. "Ooh. One hand is plenty," it hums, and settles on the minute hand to keep watch.
+
+  You found **Script Fragment: Rhythm**, the piece of the Great Script that keeps a steady beat! Byte fluffs up proudly. "I knew you could do it. I've been counting on you. In a loop."

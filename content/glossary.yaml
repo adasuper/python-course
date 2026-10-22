@@ -83,3 +83,42 @@
   definition: Your character in a quest. You control the hero with instructions like hero.move("up").
   example: '`hero.say("Hi!")`'
   related: [instruction]
+# Region 6: Clocktower Peaks
+- term: for loop
+  definition: A loop that runs its indented lines once for each value it is given. It knows how many times it will run before it starts.
+  example: |
+    ```python
+    for bell in range(3):
+        print("DONG!")
+    ```
+  related: [range, loop variable, nested loop]
+- term: range
+  definition: Makes the numbers for a for loop. `range(start, stop, step)` starts at start, jumps by step, and stops just before stop.
+  example: '`range(1, 10, 2)` gives 1, 3, 5, 7, 9.'
+  related: [for loop, off-by-one error]
+- term: loop variable
+  definition: The variable in a for loop that holds the current value. The loop gives it the next value on every pass, all by itself.
+  example: 'In `for step in range(4):`, the loop variable is `step`. It is 0, then 1, then 2, then 3.'
+  related: [for loop]
+- term: accumulator
+  definition: A variable that collects a total while a loop runs. It starts at 0, and every pass adds a little more.
+  example: |
+    ```python
+    total = 0
+    for coins in range(1, 4):
+        total = total + coins
+    ```
+  related: [for loop]
+- term: nested loop
+  definition: A loop inside another loop. The inner loop runs all the way through on every pass of the outer loop.
+  example: |
+    ```python
+    for row in range(2):
+        for col in range(3):
+            print("*")
+    ```
+  related: [for loop]
+- term: off-by-one error
+  definition: A bug where a loop runs one time too many or one time too few. With range, it often happens because range stops just before its stop number.
+  example: "`range(1, 12)` stops at 11, so 12 o'clock is skipped."
+  related: [range, bug]

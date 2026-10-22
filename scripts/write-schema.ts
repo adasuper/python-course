@@ -7,6 +7,7 @@ import { z } from 'zod';
 import {
   BadgesSchema,
   CourseSchema,
+  ErrorsSchema,
   GlossarySchema,
   ItemsSchema,
   QuestSchema,
@@ -24,6 +25,7 @@ export function writeSchemas() {
     glossary: GlossarySchema,
     items: ItemsSchema,
     badges: BadgesSchema,
+    errors: ErrorsSchema,
   };
   for (const [name, schema] of Object.entries(schemas)) {
     const json = z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' });

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { CONTENT_DIR, crossCheck, gridProblems, loadContent, units, type Problem } from '../../scripts/lib/content';
 import { checkUnit } from '../../scripts/lib/contentCheck';
+import { contentFiles } from '../../scripts/lib/prose';
 import { getPyHost } from '../../scripts/lib/pyHost';
 
 const R1 = 'regions/01-hearthvale-village';
@@ -171,5 +172,14 @@ describe('order-checked Parsons and predict twins are proven (M2.1)', () => {
     expect(q3).toContain('wrong solution 2: a check: order puzzle has no mistakes; use expect_feedback_contains');
     const q1 = checkUnit(host, units(content).find((u) => u.key === 'r1-q1-first-steps')!);
     expect(q1).toContain('prompt 2 twin: answer "5" ≠ real output "4\\n"');
+  });
+});
+
+describe('editor support for authors (F-AUT-07)', () => {
+  it('every content file names its JSON Schema, so VS Code autocompletes and checks it', () => {
+    const missing = contentFiles(CONTENT_DIR).filter(
+      (f) => !/^# yaml-language-server: \$schema=\S+\.schema\.json/.test(readFileSync(f, 'utf8')),
+    );
+    expect(missing).toEqual([]);
   });
 });

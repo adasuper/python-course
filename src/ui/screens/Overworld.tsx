@@ -62,6 +62,9 @@ export function Hud({ regionName }: { regionName: string }) {
           💾 {t.hud.save}
           {unsaved.value && <span class="badge">{t.hud.unsaved}</span>}
         </button>
+        <button type="button" onClick={() => go({ name: 'spellbook' })}>
+          📖 {t.hud.spellbook}
+        </button>
         <button type="button" onClick={() => go({ name: 'inventory' })}>
           🎒 {t.hud.inventory}
         </button>

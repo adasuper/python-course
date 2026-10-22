@@ -10,6 +10,7 @@ import { CreditsScreen } from './screens/Credits';
 import { ConceptScreen } from './screens/Concept';
 import { CreatorScreen } from './screens/Creator';
 import { InventoryScreen, ItemScreen } from './screens/Inventory';
+import { SpellbookScreen } from './screens/Spellbook';
 import { OverworldScreen } from './screens/Overworld';
 import { StoryScreen } from './screens/Story';
 import { TitleScreen } from './screens/Title';
@@ -66,6 +67,9 @@ export function App() {
       break;
     case 'item':
       screen = <ItemScreen key={r.id} id={r.id} />;
+      break;
+    case 'spellbook':
+      screen = <SpellbookScreen key={r.tab} tab={r.tab} />;
       break;
     case 'credits':
       screen = <CreditsScreen />;

@@ -1165,6 +1165,12 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
   diagnostics for errors.
 - **Spell Pages:** concept cards of completed quests, worked examples from concept scenes,
   and "My Spells", the student's own passing solution for each quest (viewable, copyable).
+  The Spellbook screen (HUD → 📖 Spellbook) has five tabs (WAI-ARIA tabs: ←/→ move between
+  them): Spell Pages, My Spells (not for predict and investigate quests, whose code isn't the
+  student's), Worked examples (with their line notes), Concept scenes ("Watch again") and the
+  Glossary (A–Z with search; words from quests the student hasn't started are marked "not met
+  yet", and a checkbox hides them). Copy uses the clipboard, or selects the code when a managed
+  device blocks it.
 - **Keyboard:** Tab indents. **Esc, then Tab** leaves the editor (CodeMirror's escape
   convention, explained in a visible hint under the editor), which satisfies "no keyboard
   trap". `Ctrl+Enter` runs.

@@ -34,8 +34,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | M2.3 Full error translation | ✅ Done |
 | M2.4 Feedback engine | ✅ Done |
 | M2.5 Progression | ✅ Done |
-| M2.6 Spellbook reference | Next |
-| M2.7 Workshop | — |
+| M2.6 Spellbook reference | ✅ Done |
+| M2.7 Workshop | Next |
 | M2.8 Save polish | — |
 | M2.9 Settings and a11y features | — |
 | M2.10 PWA basics | — |
@@ -135,6 +135,15 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   migration. Save codes are version 2 (`CW2-…`): they keep bonus challenges and earned badges,
   so restoring no longer lets bonus XP be earned twice. Phase 1 `CW1-` codes still restore, and
   a test decodes a real one.
+
+#### M2.6 Spellbook reference
+
+- **Spellbook screen** (📖 in the HUD), with keyboard tabs: **Spell Pages** (concept cards of
+  finished quests), **My Spells** (your own passing code, with Copy), **Worked examples** (from
+  concept scenes, with their notes), **Concept scenes** (watch any seen scene again) and the
+  **Glossary** (A–Z, search, and "not met yet" words marked or hidden).
+- `content/errors.yaml` now names its JSON Schema too, and a test checks that every content file
+  does (editor autocomplete for authors, F-AUT-07).
 
 ## Phase 1 — Vertical slice ✅
 

@@ -21,6 +21,7 @@ export type Route =
   | { name: 'check'; regionId: string }
   | { name: 'inventory' }
   | { name: 'item'; id: string }
+  | { name: 'spellbook'; tab?: 'pages' | 'spells' | 'examples' | 'scenes' | 'glossary' }
   | { name: 'credits' };
 
 export interface Toast {

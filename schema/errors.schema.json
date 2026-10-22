@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "propertyNames": {
+    "type": "string"
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "message": {
+        "type": "string"
+      },
+      "tip": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "title",
+      "message"
+    ],
+    "additionalProperties": false
+  }
+}

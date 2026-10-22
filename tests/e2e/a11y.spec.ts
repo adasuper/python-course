@@ -111,6 +111,21 @@ test('notebook: items, badges and an item page', async ({ page }) => {
   await scan(page, 'item page');
 });
 
+test('Spellbook: every tab', async ({ page }) => {
+  await page.goto('./?dev#/dev/quest/r1-q6-welcome-sign');
+  await solveBody(page, quest('r1-q6-welcome-sign') as never);
+  await page
+    .locator('#feedback')
+    .getByRole('button', { name: /Back to the map/ })
+    .click();
+  await page.getByRole('button', { name: /Spellbook/ }).click();
+  for (const tab of ['Spell Pages', 'My Spells', 'Worked examples', 'Concept scenes', 'Glossary']) {
+    await page.getByRole('tab', { name: tab }).click();
+    await expect(page.getByRole('tab', { name: tab })).toHaveAttribute('aria-selected', 'true');
+    await scan(page, `spellbook ${tab}`);
+  }
+});
+
 test('Parsons listboxes with lines in both lists and one picked up', async ({ page }) => {
   await openFixture(page, 'gate');
   const first = page.locator('.parsons-scraps [role="option"]').first();

@@ -1342,3 +1342,59 @@ img.pixel,
   white-space: pre;
   overflow: auto;
 }
+
+/* ----- tabs (WAI-ARIA pattern) and the Spellbook ----- */
+.tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  border-bottom: 3px solid var(--line);
+  margin-bottom: 0.6rem;
+}
+.tab-list [role='tab'] {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+.tab-list [role='tab'][aria-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.spell-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.spell-list h3 {
+  margin-top: 0;
+}
+.spell-code {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+}
+.spell-code .code-block {
+  width: 100%;
+  white-space: pre;
+  overflow-x: auto;
+}
+.example-notes li {
+  margin: 0.2rem 0;
+}
+.glossary-entry {
+  margin-bottom: 0.5rem;
+}
+.glossary-example {
+  border-left: 4px solid var(--accent);
+  padding-left: 0.6rem;
+}
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  min-height: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+}

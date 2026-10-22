@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schema/errors.schema.json
 # Kid-friendly messages for every error key the Python runtime can report.
 # Byte says these. {placeholders} are filled in by the game, e.g. {line} is the line number.
 # Teachers can change the wording here; no code changes needed.

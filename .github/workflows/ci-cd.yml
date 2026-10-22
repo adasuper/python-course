@@ -2,6 +2,7 @@
 #
 #   Build  ─►  Test (static checks · unit/Python/content · end-to-end + axe)  ─►  Deploy
 #
+# Branch flow: work on `dev` → pull request to `main` (tested here) → merge → deploy.
 # Every push and pull request runs Build and Test. Deploy runs only for the `main` branch
 # (on push, or by hand with "Run workflow"), and only once GitHub Pages is turned on with
 # Settings → Pages → Source: "GitHub Actions". Until then it is skipped with a note.

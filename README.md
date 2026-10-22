@@ -78,6 +78,20 @@ actions as animation, highlighting the line of code that caused each one. Infini
 stopped by a loop budget inside Python, naming the line, and a hard wall-clock timeout
 restarts the worker as a backstop. Details: [docs/specs.md](docs/specs.md).
 
+## Branches and releases
+
+- **`dev`:** all day-to-day work, including Claude Code's (see [CLAUDE.md](CLAUDE.md)).
+  Every push runs the Build and Test stages below.
+- **`main`:** the live site. To release, open a pull request from `dev` to `main`. The
+  pipeline tests the pull request, and once you merge it, the pipeline runs on `main` and
+  deploys to GitHub Pages automatically.
+
+Recommended GitHub settings:
+
+- **Settings → General → Default branch:** `main`.
+- **Settings → Rules → Rulesets:** a branch ruleset for `main` that requires a pull request
+  and the CI/CD status checks to pass, so nothing reaches `main` without review and tests.
+
 ## CI/CD
 
 [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) runs on every push and pull

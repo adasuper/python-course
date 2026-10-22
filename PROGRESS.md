@@ -96,6 +96,10 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   GitHub Pages. The site is built once, and the E2E tests play that exact build under its
   GitHub Pages path (`/python-course/`). The planned Phase 6 Pages workflow is now part of it.
 
+- **Branches:** `main` is the live site and `dev` is where all work happens, including
+  Claude Code's (see [CLAUDE.md](CLAUDE.md)). Releases are a pull request from `dev` to
+  `main`, opened and merged by hand. Each merge deploys to GitHub Pages.
+
 ### Requirement changes during Phase 1
 
 - **No teacher features (Q13).** The course is self-paced. Teacher mode, class codes, the
@@ -117,9 +121,10 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 
 ### Known issues
 
-- **Deploys need GitHub Pages and a `main` branch.** Turn Pages on with Settings → Pages →
-  Source: "GitHub Actions". Deploys run only from `main`, which doesn't exist yet (all work
-  is on `claude/new-session-aahe56`). Until both are in place, the deploy job is skipped.
+- **Deploys need GitHub Pages turned on:** Settings → Pages → Source: "GitHub Actions".
+  Until then, runs on `main` skip the deploy job with a warning.
+- **Old branch:** `claude/new-session-aahe56` is still the repository's default branch, so
+  GitHub won't delete it. Make `main` the default branch, then delete the old one.
 - **Art direction:** this is the first look. Please react to the mood and palette (Q6).
 - **Narrow screens:** the quest screen stacks its panels vertically below 1100 px wide.
   Tabs are planned for Phase 2.

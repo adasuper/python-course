@@ -144,6 +144,9 @@ def _runtime(exc, source, info):
                 info["key"] = "type.bad_operands"
         elif "cannot be interpreted as an integer" in message:
             info["key"] = "type.str_as_int" if message.startswith("'str'") else "type.not_int"
+        elif "by non-int of type" in message or "indices must be integers" in message:
+            # "ab" * 1.5, or my_list["a"]: both needed a whole number.
+            info["key"] = "type.not_int"
         elif re.search(r"takes \d+ positional arguments? but \d+ (were|was) given", message) or (
             "required positional argument" in message
         ):
@@ -180,7 +183,10 @@ def _runtime(exc, source, info):
             params.update(what=m.group(1), name=m.group(2))
     elif isinstance(exc, RecursionError):
         info["key"] = "limits.recursion"
-    elif isinstance(exc, MemoryError):
+    elif isinstance(exc, MemoryError) or (
+        isinstance(exc, OverflowError) and ("index-sized integer" in message or "convert to C" in message)
+    ):
+        # [0] * 10**9 runs out of memory; [0] * 2**40 is too big to even try.
         info["key"] = "limits.memory"
 
 

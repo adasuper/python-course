@@ -1,13 +1,39 @@
 // Brief §7: keyboard-only playthrough of one quest — from the map, with no mouse at all.
 import { expect, test, type Page } from '@playwright/test';
-import { newPlayer } from './helpers';
 
-async function tabTo(page: Page, matches: () => Promise<boolean>, max = 60) {
+async function tabTo(page: Page, matches: () => Promise<boolean>, max = 60, key = 'Tab') {
   for (let i = 0; i < max; i++) {
     if (await matches()) return;
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(key);
   }
-  throw new Error('could not reach the element with Tab');
+  throw new Error(`could not reach the element with ${key}`);
+}
+
+/** A focused button whose text matches. */
+const focusedText = (page: Page, re: RegExp) => () =>
+  page.evaluate((source) => {
+    const el = document.activeElement;
+    return el instanceof HTMLButtonElement && new RegExp(source).test(el.textContent ?? '');
+  }, re.source);
+
+/** Title screen → creator → story → concept scene → map, with the keyboard only. */
+async function keyboardNewPlayer(page: Page) {
+  await page.goto('./');
+  await tabTo(page, focusedText(page, /New adventurer/));
+  await page.keyboard.press('Enter');
+  await tabTo(page, focusedIs(page, 'input[type="text"], input:not([type])'));
+  await page.keyboard.type('Key Newt');
+  await tabTo(page, focusedText(page, /Start my adventure/));
+  await page.keyboard.press('Enter');
+  // Story lines: "Next" has focus; Enter advances. Then the concept scene's "Let's go!".
+  for (let i = 0; i < 40 && !(await page.getByRole('application').count()); i++) {
+    if (await page.locator('.concept-screen').count()) {
+      await tabTo(page, focusedText(page, /Let's go/));
+    }
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(100);
+  }
+  await expect(page.getByRole('application')).toBeFocused();
 }
 
 const focusedIs = (page: Page, selector: string) => () =>
@@ -15,9 +41,7 @@ const focusedIs = (page: Page, selector: string) => () =>
 
 test('play the first quest using only the keyboard', async ({ page }) => {
   test.setTimeout(180_000);
-  await newPlayer(page); // creates a player, then stops on the map
-  await page.locator('body').focus();
-  await tabTo(page, focusedIs(page, '[role="application"]'));
+  await keyboardNewPlayer(page); // ends with the map focused
   await page.keyboard.press('ArrowRight'); // Byte stands to the right of the spawn point
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog', { name: 'Byte' })).toBeVisible();
@@ -42,13 +66,13 @@ test('play the first quest using only the keyboard', async ({ page }) => {
 test('the editor never traps the keyboard: Esc, then Tab, leaves it', async ({ page }) => {
   await page.goto('./?dev#/dev/quest/r1-q6-welcome-sign');
   await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
-  await page.locator('.cm-content').focus();
+  await tabTo(page, focusedIs(page, '.cm-content'));
   await page.keyboard.type('print("Hi")');
   await page.keyboard.press('Control+Enter');
   await expect(page.locator('.output-body')).toContainText('Hi', { timeout: 20_000 });
   // After a run, feedback takes focus (so screen readers hear it). Then we go back to the editor.
   await expect(page.locator('#feedback')).toBeFocused({ timeout: 20_000 });
-  await page.locator('.cm-content').focus();
+  await tabTo(page, focusedIs(page, '.cm-content'), 60, 'Shift+Tab');
   await page.keyboard.press('Tab'); // indents inside the editor
   await expect(page.locator('.cm-content')).toBeFocused();
   await page.keyboard.press('Escape');

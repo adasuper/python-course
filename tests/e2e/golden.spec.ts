@@ -14,6 +14,20 @@ test('a new player completes Region 1 and keeps their progress after a reload', 
   await expect(page.getByRole('heading', { name: 'Quill of Printing' })).toBeVisible();
   await expect(page.getByRole('heading', { name: region.fragment.name })).toBeVisible();
 
+  // The knowledge check opens after the boss (F-BOS-04), and answering everything right scores full marks.
+  await page.getByRole('button', { name: /Back to the map/ }).click();
+  await page.locator('#quest-log-button').click();
+  await page.locator('.quest-row', { hasText: 'Review riddles' }).getByRole('button', { name: 'Go' }).click();
+  const items = region.knowledge_check.items;
+  for (const [i, item] of items.entries()) {
+    const fieldset = page.locator('fieldset').nth(i);
+    if (item.kind === 'mcq')
+      await fieldset.getByRole('radio', { name: item.options[item.answer]!, exact: true }).check();
+    else await fieldset.locator('textarea').fill(item.answer.trimEnd());
+  }
+  await page.getByRole('button', { name: 'Check my answers' }).click();
+  await expect(page.locator('#check-score')).toHaveText(`You got ${items.length} of ${items.length}.`);
+
   await page.reload();
   await page.getByRole('button', { name: /Clever Newt/ }).click();
   await skipToOverworld(page);

@@ -36,6 +36,20 @@ test('credits', async ({ page }) => {
   await scan(page, 'credits');
 });
 
+test('concept scene', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: /New adventurer/ }).click();
+  await page.getByLabel('Your nickname').fill('Axe Concept');
+  await page.getByRole('button', { name: 'Start my adventure' }).click();
+  for (let i = 0; i < 30 && !(await page.locator('.concept-screen').count()); i++) {
+    await page.getByRole('button', { name: /^(Next|Done)/ }).click();
+  }
+  await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
+  await page.getByRole('button', { name: /Run the example/ }).click();
+  await expect(page.locator('.output-body')).toContainText('Hello', { timeout: 20_000 });
+  await scan(page, 'concept scene');
+});
+
 test('story, overworld, save dialog, inventory', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: /New adventurer/ }).click();
@@ -55,11 +69,15 @@ test('story, overworld, save dialog, inventory', async ({ page }) => {
   await scan(page, 'inventory');
 });
 
+// One of every quest type: predict, investigate, parsons, modify, fix, make, boss.
 for (const quest of [
   'r1-q1-first-steps',
   'r1-q2-hello-hearthvale',
   'r1-q3-path-to-the-well',
+  'r1-q4-notes-for-the-baker',
   'r1-q5-criers-crooked-announcement',
+  'r1-q6-welcome-sign',
+  'r1-side1-banner-painter',
   'r1-boss-village-crier-bug',
 ]) {
   test(`quest screen: ${quest}`, async ({ page }) => {

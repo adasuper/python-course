@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getPyHost, type PyHost } from '../../scripts/lib/pyHost';
 
@@ -5,6 +7,13 @@ let py: PyHost;
 beforeAll(async () => {
   py = await getPyHost();
 });
+
+// 101 nested blocks: "too many levels of indentation".
+const DEEP =
+  Array.from({ length: 101 }, (_, i) => '    '.repeat(i) + 'if True:').join('\n') +
+  '\n' +
+  '    '.repeat(101) +
+  'pass';
 
 // One fixture per classifier row in docs/specs.md §6.8, pinned to Python 3.14 messages.
 const CASES: [string, string, Record<string, string>?, number?][] = [
@@ -41,7 +50,40 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['float("x")', 'value.float_conversion'],
   ['[1].remove(2)', 'value.remove_missing'],
   ['"abc".append(1)', 'attribute.generic', { what: 'str', name: 'append' }],
+  // Rows added in the Phase 1 audit, so every key in errors.yaml has a fixture.
+  ['x = 3 € 4', 'syntax.invalid_character', { char: '€' }],
+  ['print(1 2)', 'syntax.missing_comma'],
+  ['5 = x', 'syntax.assign_to_value'],
+  ['x = = 1', 'syntax.generic'],
+  ['if True:\n\tx = 1\n        y = 2', 'indent.tabs'],
+  [DEEP, 'indent.generic'],
+  ['for i in range(2.5):\n    pass', 'type.not_int'],
+  ['x = "ab" * 1.5', 'type.not_int'],
+  ['print([1, 2]["a"])', 'type.not_int'],
+  ['print([1] - [2])', 'type.bad_operands'],
+  ['len(5)', 'type.generic'],
+  ['import math\nmath.sqrt(-1)', 'value.generic'],
+  ['x = [0] * (10**9)', 'limits.memory'],
+  ['x = [0] * (2**40)', 'limits.memory'],
+  ['assert False', 'generic'],
+  ['import time\ntime.sleep("1")', 'api.sleep_not_number'],
+  ['import time\ntime.sleep(-1)', 'api.sleep_negative'],
 ];
+
+const GRID = { kind: 'grid' as const, grid: 'H..' };
+const API_CASES: [string, string][] = [
+  ['hero.move(5)', 'api.direction_not_text'],
+  ['hero.move("right", [1])', 'api.steps_not_number'],
+  ['hero.move("right", 1.5)', 'api.steps_not_whole'],
+  ['hero.move("right", -1)', 'api.steps_negative'],
+];
+
+/** Keys produced outside Python, or that student code can't reach. */
+const ELSEWHERE: Record<string, string> = {
+  'limits.timeout': 'the PyRunner hard timeout (tests/e2e/runaway.spec.ts)',
+  'limits.crashed': 'the PyRunner crash recovery (tests/unit/runner.test.ts)',
+  'api.no_world': 'only raised if the API is used outside a run',
+};
 
 describe('error translation', () => {
   it.each(CASES)('%j → %s', (code, key, params = {}, line) => {
@@ -50,6 +92,40 @@ describe('error translation', () => {
     expect(r.error?.key).toBe(key);
     expect(r.error?.params).toMatchObject(params);
     if (line !== undefined) expect(r.error?.line).toBe(line);
+  });
+
+  it.each(API_CASES)('%s → %s', (call, key) => {
+    const r = py.run({ code: `from codeweald import hero\n${call}`, stage: GRID });
+    expect(r.error?.key).toBe(key);
+    expect(r.error?.line).toBe(2);
+  });
+
+  it('has a fixture for every key in content/errors.yaml (F-QA-03)', () => {
+    const yaml = readFileSync(join(import.meta.dirname, '../../content/errors.yaml'), 'utf8');
+    const keys = [...yaml.matchAll(/^([a-z_.]+):\s*$/gm)].map((m) => m[1]!);
+    const tested = new Set(CASES.map((c) => c[1]));
+    for (const [, key] of API_CASES) tested.add(key);
+    // Tested on their own below.
+    tested.add('stage.invalid').add('limits.output');
+    const elsewhere = readFileSync(join(import.meta.dirname, 'sandbox.test.ts'), 'utf8');
+    const world = readFileSync(join(import.meta.dirname, 'world.test.ts'), 'utf8');
+    const missing = keys.filter(
+      (k) =>
+        !tested.has(k) && !(k in ELSEWHERE) && !elsewhere.includes(`'${k}'`) && !world.includes(`'${k}'`),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it('turns a broken quest map into a clear error', () => {
+    const r = py.run({ code: 'print(1)', stage: { kind: 'grid', grid: 'H.Z' } });
+    expect(r.error?.key).toBe('stage.invalid');
+    expect(r.error?.params.problem).toMatch(/'Z'/);
+  });
+
+  it('stops a print flood with limits.output', () => {
+    const r = py.run({ code: 'while True:\n    print("x" * 1000)' });
+    expect(r.status).toBe('output-budget');
+    expect(r.error?.key).toBe('limits.output');
   });
 
   it('keeps a real, trimmed traceback for the "show the real error" toggle', () => {

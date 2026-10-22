@@ -68,21 +68,73 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   - hidden-test expectations baked from the solutions
   - the instructor answer key (`npm run solutions` → [docs/solutions.md](docs/solutions.md))
 - **Tests (all passing):**
-  - 156 Vitest tests: Python runtime, error translation, validators, content, save codes,
-    storage, progress rules, nickname filter, replay, rich text, schema.
-  - 16 Playwright tests:
-    - golden path (a new player completes all of Region 1 → items in inventory → reload →
-      progress persists)
+  - 291 Vitest tests in 20 files: Python runtime and sandbox escapes, every error-message
+    row, every mistake detector, validators, content rules (on a broken copy of the
+    content), reading level, save codes (with fuzzing), migrations, storage fallbacks,
+    progress rules, nickname filter, contrast tokens, credits, replay, rich text, schemas.
+  - 24 Playwright tests:
+    - golden path: a new player completes all of Region 1 and its knowledge check, then
+      reloads and keeps everything
     - the map stays still and fills its frame after a quest
-    - infinite loop (both safety layers)
-    - keyboard-only quest from the map, and Esc+Tab leaving the editor
-    - save code restoring in a fresh browser
-    - axe scans of all main screens: no serious or critical violations
+    - infinite loop (both safety layers); a run error marks its line without moving focus
+    - keyboard only, from the title screen to a finished quest, and Esc+Tab out of the editor
+    - a save code restores progress and items in a fresh browser
+    - no request to any other site during a whole session
+    - axe on every main screen and every quest type: no serious or critical violations
 - **CI/CD:** `.github/workflows/ci-cd.yml` runs Build → Test → Deploy. It builds the site
   once (types and size budget included), then runs lint and format, content validation, the
   answer-key check, unit tests, and E2E plus axe against that same build. On `main` only,
   it then publishes the tested build to GitHub Pages (see the README).
 - **Size:** the app is 0.99 MB gzipped excluding Pyodide (budget 4 MB).
+
+### Phase 1 final check
+
+Before starting Phase 2, every Phase 1 story in [features.md](docs/features.md) (107 stories)
+was checked against the code by four independent reviews. They found 79 acceptance criteria
+that were missing or only partly met, although the build plan's exit checklist passed. All
+of them are now closed:
+
+- **Missing tools:** the reading-level report (`npm run reading-level`, also a CI job) and
+  the quest scaffolder (`npm run new-quest`); the editor's code size buttons.
+- **Security:** student code could reach Python's internals (`__loader__`, `__globals__`,
+  generator frames) and so fake a quest check. Python's own machinery is now locked, the
+  JavaScript bridge modules are removed after boot, and a test proves patching the game
+  can't fake a pass. A crashed Python worker now restarts like a timeout.
+- **Accessibility:**
+  - Two focus rings and one theme's speaker names were below the WCAG contrast minimum.
+    A token test now checks every theme.
+  - Run errors moved focus away from the editor.
+  - The Quest Log wasn't a dialog.
+  - Glossary tips weren't announced.
+  - Skip links were missing.
+- **Content checks:** quest maps, glossary links in all text, `____` gaps, the bug count in
+  fix quests, minutes per quest, and investigate answers proven against the real program.
+  Every problem now has file and line.
+- **Saving:** a real migration chain (schema 2), versioned drafts flushed when the page is
+  hidden, the open quest restored, Copy/Save buttons on save points, and save-code fuzzing.
+- **Smaller fixes:**
+  - NPC portraits, dialogue Back, replaying the opening.
+  - A step-by-step concept-scene replay.
+  - The Bug → firefly ending.
+  - Crisp whole-number map zoom.
+  - Nickname filter false positives ("Bob", "Buttons") and bypasses ("Sh-it").
+  - The deploy config's defaults are now used.
+  - A Credits screen.
+  - Content hot reload.
+  - An ESLint rule against `innerHTML`.
+  - The specified size budgets.
+- **Spec updated instead of the code** (the code was right):
+  - The run button says "Running…", not "casting…".
+  - Validators skip a program that errored.
+  - Storage is one IndexedDB store with key prefixes.
+  - The boss field is `carry_code`.
+  - Icons whose name is printed beside them have empty alt text.
+  - "Re-import validators from a frozen copy" was replaced by the stronger locked-machinery
+    design (specs §6.4).
+- **Moved to Phase 2:**
+  - Special badges in the save code (with the badges, M2.5).
+  - The Parsons keyboard reducer test (when M2.2 rebuilds Parsons).
+- **Moved to Phase 3:** the per-region pacing summary (F-AUT-11).
 
 ### Fixed after the demo
 

@@ -321,7 +321,7 @@ interface RunResult {
 | Layer | Where | Catches | Cost | Student sees |
 |---|---|---|---|---|
 | 1. Loop budget | Python, `sys.monitoring` `JUMP` events (backward jumps = loop iterations); fallback `sys.settrace` line counting | `while True:`, a counter never updated, huge `range()` loops | None: the program stops with a special exception; no restart | "Your loop on **line 4** ran 100,000 times! Check that your loop condition eventually becomes `False`." Line highlighted. |
-| 2. Action / output budget | Python, in `codeweald` | A hero walking forever into a wall; a print flood | None | "Your hero is exhausted after 2,000 moves!" / "That's a LOT of printing…" |
+| 2. Action / output budget | Python, in `codeweald` | A hero walking forever into a wall; a print flood | None | "The hero is exhausted" (more than 2,000 actions) / "That's a LOT of printing" |
 | 3. Wall clock | Main thread, `PyRunner` timer (default 3 s, configurable) | Long C-level work (`10**10**8`, `"a" * 10**9`), anything layer 1 misses | `worker.terminate()`, then a new worker re-inits Pyodide from cache (~1–4 s) | "Your code took too long, so Byte stopped it. Your loop might be running forever! Check that your loop condition eventually becomes False." Byte re-warms the spellbook. |
 
 - The timer pauses while the program waits for the player to type input (§6.5).
@@ -731,7 +731,7 @@ phases:
     validators: [...]
     hints: [...]
   - id: p2
-    starter_code: carry    # start from the student's passing phase-1 code
+    carry_code: true       # start from the student's passing phase-1 code
 ```
 
 - 2–4 phases, each saved separately. A student can leave and come back.
@@ -1223,9 +1223,11 @@ the profile.
 
 ### 12.2 Storage
 
-- **IndexedDB** database `codeweald` with stores `profiles` and `drafts`, accessed
-  via `idb-keyval` (custom stores).
-- Saves are debounced (500 ms) and flushed on `visibilitychange` and `pagehide`.
+- **IndexedDB** database `codeweald` with one `idb-keyval` store, `kv`. Keys are
+  `profile:<id>`, `draft:<profile id>:<quest or quest›phase>` and `meta:*`. Drafts are
+  `{ schemaVersion, code }` records.
+- Profile saves are debounced (500 ms), drafts 1 s; both are flushed on `visibilitychange`
+  and `pagehide`.
 - `navigator.storage.persist()` is requested to reduce eviction.
 - **Fallbacks:** localStorage, then memory-only. In memory-only mode a banner says "This
   browser can't save. Use **Save code** before you leave."
@@ -1239,7 +1241,8 @@ the profile.
 - It holds everything, including the student's code.
 - **Import:** user-picked file only, ≤ 5 MB, Zod-validated, never rendered as HTML.
   - Unknown quest ids (from other content versions) are kept but ignored.
-  - The student chooses **Replace this profile** or **Add as new profile**. A third option,
+  - When the adventurer is already on this computer, the student chooses **Replace** or
+    **Keep both**; otherwise it is added. A third option,
     **Merge**, keeps the best of both: union of completions, items and badges; max of XP,
     hints, attempts and time.
 
@@ -1496,7 +1499,7 @@ toggle, before any profile exists.
 - Schema: good and bad fixtures for every schema.
 - XP/levels, badge triggers, nickname filter, glossary linker,
   reading-level calculator.
-- Parsons keyboard reducer, replay scheduling and narration merging.
+- Parsons keyboard reducer (Phase 2, M2.2), replay scheduling and narration merging.
 
 ### 18.2 Python (Vitest + Pyodide in Node)
 

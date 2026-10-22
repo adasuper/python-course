@@ -135,9 +135,15 @@ export const MAX_TOASTS = 3;
 
 export function toast(kind: Toast['kind'], text: string, ms = 6000, icon?: string) {
   const item = { id: ++toastId, kind, text, ...(icon ? { icon } : {}) };
-  // A new save point replaces the last one; the newest toasts win.
+  // A new save point replaces the last one. Over the limit, older toasts go first, but
+  // celebrations (badges, level-ups) outlast the rest.
   const kept = kind === 'save-point' ? toasts.value.filter((x) => x.kind !== 'save-point') : toasts.value;
-  toasts.value = [...kept, item].slice(-MAX_TOASTS);
+  const next = [...kept, item];
+  while (next.length > MAX_TOASTS) {
+    const old = next.findIndex((x) => x.kind !== 'celebrate' && x !== item);
+    next.splice(old >= 0 ? old : 0, 1);
+  }
+  toasts.value = next;
   announce(text);
   if (ms > 0) setTimeout(() => dismissToast(item.id), ms);
 }

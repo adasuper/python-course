@@ -14,4 +14,17 @@ describe('toasts', () => {
     // Messages that arrive together are joined for screen readers.
     expect(announcement.value.text).toContain('Level up! Badge A Badge B');
   });
+
+  it('lets celebrations outlast XP and save-point toasts when a pass brings many', () => {
+    toasts.value = [];
+    toast('celebrate', 'Badge earned: First Bug Squashed!', 0);
+    toast('celebrate', 'Badge earned: Clean Cast!', 0);
+    toast('reward', '+35 XP', 0);
+    toast('save-point', 'Save point', 0);
+    expect(toasts.value.map((x) => x.text)).toEqual([
+      'Badge earned: First Bug Squashed!',
+      'Badge earned: Clean Cast!',
+      'Save point',
+    ]);
+  });
 });

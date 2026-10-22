@@ -1516,6 +1516,7 @@ button.danger {
   font-weight: 700;
 }
 .offline-pill {
+  color: var(--ink);
   margin-left: 0.5rem;
   padding: 0.05rem 0.5rem;
   border-radius: 999px;

@@ -1,6 +1,8 @@
 # Progress
 
-## Current phase: 2 — Core loop polish (in progress)
+## Current phase: 3 — Regions 2–6 (next)
+
+Phase 2 (core loop polish) is done: see "Phase 2 — Core loop polish ✅" below.
 
 **Live site:** <https://adasuper.github.io/python-course/> (deployed from `main`).
 
@@ -24,6 +26,8 @@ npm run preview          # then open http://localhost:4173 in Chrome or Edge
    **Continue from a save** on the title screen.
 
 To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path-to-the-well`.
+
+## Phase 2 — Core loop polish ✅
 
 ### Phase 2 milestones
 
@@ -223,6 +227,44 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 - **Tests:** E2E: first visit → offline → reload → a quest with a Python run, with no
   network; one download per Python file; a new version waits, then reloads when asked; the
   System check rows. Unit tests for the System check rules. axe on the System check page.
+
+### Phase 2 final check
+
+Every Phase 2 story in [features.md](docs/features.md) (58 stories) was checked against the code
+and the tests, criterion by criterion. Fixed and added:
+
+- **Bug fixed: reduced motion on the map.** The map never applied the setting, so NPCs bobbed,
+  water moved and walking slid, whether reduced motion came from the computer or the game.
+- **Words for the map (F-WLD-06):** the map picture names the place and the nearest person or
+  thing, updated on every step. "Describe surroundings" is a button as well as `L`, and names
+  the way out.
+- **Quest Board (F-WLD-07):** it lists side quests and any quest without a map NPC. Side quests
+  open once the region's core quests are done. New content checks: every map has a Quest
+  Board, and a quest that names an NPC is offered by that NPC on the map.
+- **Replay narration (F-API-12):** bumps, pickups and speech merge like moves do. A replay shown
+  all at once (Instant or Skip to end) is announced as a one-sentence summary.
+- **Avatars (F-ONB-03):** each has a bump frame (stars over the head; this is also the still
+  "bonk" picture with reduced motion) and a celebration frame (arms up; the wheelchair stays).
+  The hero cheers when a quest passes.
+- **Custom checks** get `ctx.call(name, *args)` (F-FBK-04).
+- **Seeds (F-EXE-10):** a quest without `seed:` gets a new random seed every run, and the
+  content check asks a quest that uses `random` for one. A test shows the same code, seed and
+  inputs give the identical action log.
+- **Toasts (F-PRG-08):** XP and items get a toast too. Badges and level-ups outlast the other
+  toasts when a pass brings several.
+- **Read aloud** in the map's talk dialog (F-DLG-07).
+- **Contrast fix:** the HUD's "Offline" marker failed axe's contrast check (found by the new
+  scans).
+- **Exit criteria, now all covered by tests:**
+  - every quest type played with only the keyboard: predict, investigate, Parsons
+    (including a plan checked by its order), fill, fix, modify, make, the boss with
+    **Next phase**, and typed input
+  - every validator field, not just every type
+  - classifier fixtures for more message variants; runner tests for the hard timeout
+  - axe on every Phase 2 screen, now also: the title with adventurers, the delete dialog,
+    the restore chooser, the Quest Board, the Workshop with a saved program, the locked-line
+    note, toasts, the offline marker and the update banner
+- **Tests now:** 444 Vitest tests in 31 files and 74 Playwright tests, all passing.
 
 ## Phase 1 — Vertical slice ✅
 

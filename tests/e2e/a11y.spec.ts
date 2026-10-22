@@ -118,6 +118,10 @@ test('Workshop', async ({ page }) => {
   await page.getByRole('button', { name: /^▶ Run$/ }).click();
   await page.locator('.api-ref details summary').click();
   await scan(page, 'workshop');
+  await page.getByRole('textbox', { name: 'Program name' }).fill('Greeter');
+  await page.getByRole('button', { name: /^💾 Save$/ }).click();
+  await expect(page.getByRole('button', { name: 'Open Greeter' })).toBeVisible();
+  await scan(page, 'workshop with a saved program');
 });
 
 test('Spellbook: every tab', async ({ page }) => {
@@ -206,4 +210,71 @@ test('System check', async ({ page }) => {
   await page.getByRole('button', { name: 'System check' }).click();
   await expect(page.locator('.system-table')).toBeVisible();
   await scan(page, 'system check');
+});
+
+test('title with an adventurer, the delete dialog and the restore chooser', async ({ page }) => {
+  await newPlayer(page, 'Axe Delta');
+  await page
+    .locator('.hud')
+    .getByRole('button', { name: /Save progress/ })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Save your progress' });
+  const code = await dialog.locator('#save-code').inputValue();
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('button', { name: 'Switch adventurer' }).click();
+  await expect(page.locator('.profile-row')).toHaveCount(1);
+  await scan(page, 'title with an adventurer');
+  await page.getByRole('button', { name: 'Delete Axe Delta' }).click();
+  await scan(page, 'delete dialog');
+  await page.getByRole('button', { name: 'Keep it' }).click();
+  await page.getByRole('button', { name: /Continue from a save/ }).click();
+  await page.getByLabel('Paste your save code').fill(code);
+  await page.getByRole('button', { name: 'Continue with this code' }).click();
+  await expect(page.getByRole('button', { name: /Merge them/ })).toBeVisible();
+  await scan(page, 'restore chooser');
+});
+
+test('map extras: the Quest Board, the offline marker, the locked-line note and toasts', async ({
+  page,
+  context,
+}) => {
+  await newPlayer(page, 'Axe Echo', './?dev');
+  await page.evaluate(
+    `(() => { const s = window.__codewealdGame.scene.getScene('overworld');
+      s.opts.onInteract(s.opts.region.overworld.objects.find((o) => o.kind === 'board')); })()`,
+  );
+  await expect(page.getByRole('dialog', { name: 'Quest Board' })).toBeVisible();
+  await scan(page, 'quest board');
+  await page.keyboard.press('Escape');
+  await context.setOffline(true);
+  await expect(page.locator('.offline-pill')).toBeVisible();
+  await scan(page, 'offline marker');
+  await context.setOffline(false);
+
+  await openFixture(page, 'fill');
+  await page.getByRole('textbox', { name: /Spellbook: your Python code/ }).click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.type('x');
+  await expect(page.locator('.note-locked')).toBeVisible();
+  await scan(page, 'locked-line note');
+
+  // A pass: reward, save-point and level-up toasts at once.
+  await page.getByRole('button', { name: /Next gap/ }).click();
+  await page.keyboard.type('12');
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(page.locator('.toast-reward')).toBeVisible({ timeout: 30_000 });
+  await scan(page, 'toasts');
+});
+
+test('the update banner', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByText('Ready to play offline ✓')).toBeVisible({ timeout: 120_000 });
+  await page.request.post('./__codeweald-next-version');
+  try {
+    await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.update());
+    await expect(page.locator('.update-banner')).toBeVisible({ timeout: 30_000 });
+    await scan(page, 'update banner');
+  } finally {
+    await page.request.delete('./__codeweald-next-version');
+  }
 });

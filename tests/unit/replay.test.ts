@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { narrate } from '../../src/game/narration';
+import { narrate, narration, summarize } from '../../src/game/narration';
 import { ReplayEngine, type ReplayView } from '../../src/game/replay';
 import type { Action } from '../../src/runtime/protocol';
 
@@ -24,6 +24,60 @@ describe('narration', () => {
   it('merges consecutive moves and skips printed output', () => {
     expect(narrate(actions)).toEqual(['Moved right 2 steps.', 'Bumped into the wall.', 'Hero says: Ouch']);
     expect(narrate([{ t: 'pickup', at: [0, 0], item: 'apple', ln: 1 }])).toEqual(['Picked up an apple.']);
+  });
+
+  const bonk = (into: string): Action => ({ t: 'bonk', dir: 'up', at: [0, 0], into, ln: 1 });
+  const pick = (item: string | null): Action => ({ t: 'pickup', at: [0, 0], item, ln: 1 });
+  const say = (text: string): Action => ({ t: 'say', text, ln: 1 });
+  const move = (dir: 'up' | 'right'): Action => ({ t: 'move', dir, from: [0, 0], to: [0, 0], ln: 1 });
+
+  it('merges bumps, pickups and speech too (F-API-12)', () => {
+    expect(narrate([bonk('wall'), bonk('wall'), bonk('wall'), bonk('tree')])).toEqual([
+      'Bumped into the wall 3 times.',
+      'Bumped into a tree.',
+    ]);
+    expect(narrate([bonk('wall'), bonk('wall')])).toEqual(['Bumped into the wall twice.']);
+    expect(narrate([pick('apple'), pick('key'), pick(null), pick('coin'), pick(null)])).toEqual([
+      'Picked up an apple, a key and a coin.',
+      'Nothing to pick up, twice.',
+    ]);
+    expect(narrate([say('Hi'), say('Bye')])).toEqual(['Hero says: Hi, then Bye']);
+    expect(narrate([move('right'), move('right'), move('up'), say('Hi')])).toEqual([
+      'Moved right 2 steps.',
+      'Moved up.',
+      'Hero says: Hi',
+    ]);
+  });
+
+  it('sums up a replay shown all at once, unless it is short anyway', () => {
+    const long = [
+      move('right'),
+      move('right'),
+      bonk('wall'),
+      say('A'),
+      move('up'),
+      pick('key'),
+      bonk('wall'),
+    ];
+    expect(summarize(long)).toBe('The hero walked 3 steps, bumped twice, said 1 thing and picked up 1 item.');
+    expect(narration(long, true)).toBe(summarize(long));
+    expect(narration(long, false)).toContain('Moved right 2 steps.');
+    expect(narration([move('right'), say('Hi')], true)).toBe('Moved right. Hero says: Hi');
+    expect(summarize([{ t: 'out', stream: 'stdout', text: 'x', ln: 1 }])).toBeNull();
+  });
+
+  it('tells the screen which narration came from an instant replay', async () => {
+    const { view } = fakeView();
+    const calls: [number, boolean][] = [];
+    const engine = new ReplayEngine(view, { onNarrate: (a, allAtOnce) => calls.push([a.length, allAtOnce]) });
+    engine.load(actions);
+    engine.setSpeed('instant');
+    await engine.play();
+    expect(calls).toEqual([[4, true]]);
+    calls.length = 0;
+    engine.load(actions);
+    await engine.step();
+    expect(calls).toEqual([[1, false]]);
   });
 });
 

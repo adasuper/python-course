@@ -58,8 +58,12 @@ function frameOf(scene: Phaser.Scene, sheet: 'tiles' | 'chars', name: string): n
   return found ?? 0;
 }
 
-function heroFrame(scene: Phaser.Scene, look: Look, dir: Dir, step: number): number {
-  return frameOf(scene, 'chars', `${look.avatar}:${look.theme}:${dir}:${step % 2}`);
+function heroFrame(scene: Phaser.Scene, look: Look, dir: Dir, step: number | 'bonk'): number {
+  return frameOf(
+    scene,
+    'chars',
+    `${look.avatar}:${look.theme}:${dir}:${step === 'bonk' ? 'bonk' : step % 2}`,
+  );
 }
 
 function wait(scene: Phaser.Scene, ms: number): Promise<void> {
@@ -521,7 +525,8 @@ class StageScene extends Phaser.Scene {
       case 'bonk': {
         if (!hero) return;
         this.facing = action.dir;
-        hero.setFrame(heroFrame(this, this.data_, action.dir, 0));
+        // Stars over the head: a still picture, plus the word, even with reduced motion.
+        hero.setFrame(heroFrame(this, this.data_, action.dir, 'bonk'));
         this.flash(action.at, 'bonk!', ms);
         if (!this.reducedMotion && ms > 0) {
           const [dx, dy] = DELTA[action.dir];
@@ -531,6 +536,7 @@ class StageScene extends Phaser.Scene {
             ms / 2,
           );
         } else await wait(this, ms);
+        if (ms > 0) hero.setFrame(heroFrame(this, this.data_, action.dir, 0));
         return;
       }
       case 'face':
@@ -583,6 +589,23 @@ class StageScene extends Phaser.Scene {
   }
 
   /** The Bug turns into a friendly, glowing firefly (F-BOS-03). Static with reduced motion. */
+  /** The hero cheers when a quest passes (F-ONB-03): arms up, with a small hop unless motion
+   *  is reduced. */
+  cheer() {
+    const hero = this.hero;
+    if (!hero) return;
+    hero.setFrame(frameOf(this, 'chars', `${this.data_.avatar}:${this.data_.theme}:celebrate`));
+    if (this.reducedMotion) return;
+    this.tweens.add({
+      targets: hero,
+      y: hero.y - 3,
+      duration: 160,
+      yoyo: true,
+      repeat: 1,
+      ease: 'Quad.easeOut',
+    });
+  }
+
   celebrate(bugSprite: string) {
     const bugFrame = String(frameOf(this, 'chars', bugSprite));
     const bug = this.children.list.find(
@@ -739,6 +762,10 @@ export class WorldView implements ReplayView {
   apply(action: Action, ms: number): Promise<void> {
     if (!this.game.scene.isActive('stage')) return Promise.resolve();
     return this.stage.apply(action, ms);
+  }
+
+  cheer() {
+    if (this.game.scene.isActive('stage')) this.stage.cheer();
   }
 
   celebrateBoss(bugSprite: string) {

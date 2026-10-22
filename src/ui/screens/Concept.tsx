@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { narrate } from '../../game/narration';
+import { narration } from '../../game/narration';
 import { ReplayEngine, type ReplayState, type ReplayView, type Speed } from '../../game/replay';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
@@ -52,9 +52,9 @@ export function ConceptScreen({ route }: { route: Extract<Route, { name: 'concep
           setOut([]);
           setPos(0);
         },
-        onNarrate: (actions) => {
-          const sentences = narrate(actions);
-          if (sentences.length) announce(sentences.join(' '));
+        onNarrate: (actions, allAtOnce) => {
+          const text = narration(actions, allAtOnce);
+          if (text) announce(text);
         },
       }),
     [hasStage],

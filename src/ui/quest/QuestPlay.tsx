@@ -2,7 +2,7 @@
 import type { EditorView } from '@codemirror/view';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Quest, QuestBody } from '../../content/types';
-import { narrate } from '../../game/narration';
+import { narration } from '../../game/narration';
 import { ReplayEngine, type ReplayState, type ReplayView, type Speed } from '../../game/replay';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
@@ -117,9 +117,9 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
           setOut([]);
           setReplayPos(0);
         },
-        onNarrate: (actions) => {
-          const sentences = narrate(actions);
-          if (sentences.length) announce(sentences.join(' '));
+        onNarrate: (actions, allAtOnce) => {
+          const text = narration(actions, allAtOnce);
+          if (text) announce(text);
         },
       }),
     [hasStage],
@@ -345,6 +345,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
 
   const finishPass = (finalCode: string, bonusIds: string[] = []) => {
     playEffect('success');
+    if (hasStage) getWorldView().cheer();
     const r = onPassed(finalCode);
     const itemName = r.item ? (course.value!.items[r.item]?.name ?? r.item) : null;
     // Bonus challenges are checked on a passing run; their XP is given once (§9.4).

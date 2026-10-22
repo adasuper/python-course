@@ -144,7 +144,17 @@ for (const avatar of AVATARS) {
       art[dir].forEach((frame, i) => {
         avatarCells.push({ key: `${avatar.id}:${theme.id}:${dir}:${i}`, frame, palette: art.palette });
       });
+      avatarCells.push({
+        key: `${avatar.id}:${theme.id}:${dir}:bonk`,
+        frame: art.bonk[dir],
+        palette: art.palette,
+      });
     }
+    avatarCells.push({
+      key: `${avatar.id}:${theme.id}:celebrate`,
+      frame: art.celebrate,
+      palette: art.palette,
+    });
   }
 }
 for (const cell of avatarCells) {

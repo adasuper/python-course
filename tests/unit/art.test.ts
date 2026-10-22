@@ -151,6 +151,26 @@ describe('pixel art', () => {
     }
   });
 
+  it('draws a bump frame per direction and a celebration for every avatar (F-ONB-03)', () => {
+    for (const a of AVATARS) {
+      for (const t of THEMES) {
+        const art = avatarFrames(a.id, t.id);
+        const frames = [...DIRECTIONS.map((d) => art.bonk[d]), art.celebrate];
+        expectWellFormed({
+          name: `${a.id}/${t.id}/extra`,
+          width: 16,
+          height: 16,
+          frames,
+          palette: art.palette,
+        });
+        for (const d of DIRECTIONS) expect(art.bonk[d], `${a.id} ${d}`).not.toEqual(art[d][0]);
+        expect(art.celebrate.join('')).toContain('Y');
+      }
+    }
+    // The wheelchair stays in the celebration.
+    expect(avatarFrames('avatar-7', 'moss').celebrate.join('')).toContain('W');
+  });
+
   it('mirrors left-facing art for right-facing art', () => {
     const art = avatarFrames('avatar-1', 'moss');
     expect(art.right[0]?.[6]).toBe([...(art.left[0]?.[6] ?? '')].reverse().join(''));

@@ -18,7 +18,8 @@ export interface ReplayCallbacks {
   onLine?(line: number | null): void;
   onOutput?(action: Extract<Action, { t: 'out' } | { t: 'input' }>): void;
   onReset?(): void;
-  onNarrate?(sentences: Action[]): void;
+  /** `allAtOnce`: these actions were shown instantly (Instant speed or Skip to end). */
+  onNarrate?(actions: Action[], allAtOnce: boolean): void;
 }
 
 /** How long each action takes at 1× speed. */
@@ -54,6 +55,7 @@ export class ReplayEngine {
   private index = 0;
   private token = 0;
   private narrateBuffer: Action[] = [];
+  private narrateAllAtOnce = false;
   state: ReplayState = 'idle';
   speed: Speed = 1;
 
@@ -149,6 +151,7 @@ export class ReplayEngine {
       return;
     }
     this.narrateBuffer.push(action);
+    if (speed === 'instant') this.narrateAllAtOnce = true;
     if (speed !== 'instant' && this.narrateBuffer.length > 1 && this.narrateBuffer.at(-2)!.t !== action.t) {
       const last = this.narrateBuffer.pop()!;
       this.flushNarration();
@@ -158,8 +161,9 @@ export class ReplayEngine {
   }
 
   private flushNarration() {
-    if (this.narrateBuffer.length) this.callbacks.onNarrate?.(this.narrateBuffer);
+    if (this.narrateBuffer.length) this.callbacks.onNarrate?.(this.narrateBuffer, this.narrateAllAtOnce);
     this.narrateBuffer = [];
+    this.narrateAllAtOnce = false;
   }
 
   private finish() {

@@ -2,7 +2,7 @@
 // input (Mode B) and the larger loop budget. No checks. Programs can be saved (up to 20) and
 // downloaded as .py files (F-WSH-01–04).
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { narrate } from '../../game/narration';
+import { narration } from '../../game/narration';
 import { ReplayEngine, type ReplayState, type Speed } from '../../game/replay';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
@@ -107,9 +107,9 @@ export function WorkshopScreen() {
           setOut([]);
           setReplayPos(0);
         },
-        onNarrate: (actions) => {
-          const sentences = narrate(actions);
-          if (sentences.length) announce(sentences.join(' '));
+        onNarrate: (actions, allAtOnce) => {
+          const text = narration(actions, allAtOnce);
+          if (text) announce(text);
         },
       }),
     [],

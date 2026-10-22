@@ -1,0 +1,164 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-q4-the-toll-bucket
+region: clocktower-peaks
+title: The Toll Bucket
+type: fill
+locked: true
+npc: tollkeeper_copperpot
+learning_outcome: Use an accumulator inside a for loop to add up a range of numbers.
+csta: [2-AP-11, 2-AP-12]
+estimated_minutes: 8
+prerequisites: [r6-q3-rewind-the-lift]
+vocabulary: [accumulator, for loop, range]
+rewards: { item: bucket-of-totals }
+
+story_intro: |
+  Tollkeeper Copperpot rattles a big copper bucket. "The first traveler pays 5 coins, the next pays 10, then 15, and so on up to 50. How much is in my bucket? I always lose count around forty!"
+
+  The loop already visits every toll. Your job is the bucket. A variable that collects a total like this is called an [[accumulator]].
+goal: Fill the two gaps so the program adds up every toll and prints the total.
+concept_card: |
+  An **accumulator** collects a total. Start it at 0 *before* the loop. Inside the loop, add a little more on every pass.
+  ```python
+  total = 0
+  for toll in range(5, 51, 5):
+      total = total + toll
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_peaks_tollkeeper, name: Tollkeeper Copperpot }
+
+starter_code: |
+  # Tolls go 5, 10, 15... up to 50 coins.
+  first = 5
+  last = 50
+  ____
+  for toll in range(first, last + 1, 5):
+      ____
+  print(f"The bucket holds {total} coins.")
+
+solution: |
+  # Tolls go 5, 10, 15... up to 50 coins.
+  first = 5
+  last = 50
+  total = 0
+  for toll in range(first, last + 1, 5):
+      total = total + toll
+  print(f"The bucket holds {total} coins.")
+
+validators:
+  - id: bucket
+    type: output
+    expect: The bucket holds 275 coins.
+    fail_hint: "Copperpot counted 275 coins by hand (it took all night). Check what your bucket holds."
+  - id: other-tolls
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - { vars: { last: 20 } }
+      - { vars: { last: 5 } }
+      - { vars: { first: 10, last: 100 } }
+    fail_hint: Your bucket must work for other tolls too. Let the loop add up each `toll`.
+  - id: not-typed
+    type: ast
+    no_literal: [275]
+    fail_hint: No typing the answer! Let the loop add up the coins.
+
+common_mistakes:
+  - id: typed-total
+    detect: { kind: validator_failed, id: not-typed }
+    feedback: >-
+      Nice try, but no typing the answer! Copperpot's tolls change every day. Start the
+      bucket at 0, then add each `toll` inside the loop.
+  - id: reset-inside
+    detect: { kind: code_regex, pattern: "^[ \\t]+total\\s*=\\s*0\\s*$" }
+    feedback: >-
+      `total = 0` is inside the loop, so the bucket is emptied on every pass! Only the last
+      toll is left. Start the bucket once, before the loop.
+  - id: replaces
+    detect: { kind: code_regex, pattern: "^[ \\t]+total\\s*=\\s*toll\\s*$" }
+    feedback: >-
+      `total = toll` throws away the coins already in the bucket. Add to them instead:
+      `total = total + toll`.
+  - id: counts-travelers
+    detect: { kind: code_regex, pattern: "total\\s*(=\\s*total\\s*\\+|\\+=)\\s*1\\s*$" }
+    feedback: >-
+      Adding 1 counts the travelers, not their coins. Add the toll each traveler pays:
+      `total = total + toll`.
+  - id: no-start
+    detect: { kind: error, type: NameError }
+    feedback: >-
+      Python doesn't know that name yet. A bucket must exist before you add to it. In the
+      first gap, start it empty: `total = 0`.
+  - id: other-tolls-fail
+    detect: { kind: validator_failed, id: other-tolls }
+    feedback: >-
+      Your bucket is right for 5 to 50, but not for other tolls. Don't type the total. Let
+      the loop add each `toll`, and print `total`.
+
+wrong_solutions:
+  - expect_mistake: typed-total
+    code: |
+      first = 5
+      last = 50
+      total = 0
+      for toll in range(first, last + 1, 5):
+          total = 275
+      print(f"The bucket holds {total} coins.")
+  - expect_mistake: reset-inside
+    code: |
+      first = 5
+      last = 50
+      total = 0
+      for toll in range(first, last + 1, 5):
+          total = 0
+          total = total + toll
+      print(f"The bucket holds {total} coins.")
+  - expect_mistake: replaces
+    code: |
+      first = 5
+      last = 50
+      total = 0
+      for toll in range(first, last + 1, 5):
+          total = toll
+      print(f"The bucket holds {total} coins.")
+  - expect_mistake: counts-travelers
+    code: |
+      first = 5
+      last = 50
+      total = 0
+      for toll in range(first, last + 1, 5):
+          total = total + 1
+      print(f"The bucket holds {total} coins.")
+  - expect_mistake: no-start
+    code: |
+      first = 5
+      last = 50
+      total = toll
+      for toll in range(first, last + 1, 5):
+          total = total + toll
+      print(f"The bucket holds {total} coins.")
+  - expect_mistake: other-tolls-fail
+    code: |
+      first = 5
+      last = 50
+      total = 0
+      for toll in range(first, last + 1, 5):
+          total = total + toll
+      print("The bucket holds 275 coins.")
+
+hints:
+  - The bucket needs a starting amount before any traveler pays. What should that be?
+  - "In the first gap, start the bucket empty: `total = 0`. In the second gap, add this traveler's toll to what's already there."
+  - |
+    ```python
+    total = 0
+    for toll in range(first, last + 1, 5):
+        total = ____
+    ```
+
+story_outro: |
+  CLINK! Copperpot peers into the bucket. "275 coins! And I didn't lose count once. Well, you didn't." You earned the **Bucket of Totals**. Start at 0, then add a little more each time around.

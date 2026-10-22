@@ -1,14 +1,19 @@
 import { useState } from 'preact/hooks';
 import { t } from '../../i18n/en';
-import { levelFor } from '../../state/profile';
-import { go, profiles, storageMode, toast } from '../../state/store';
+import { levelFor, type Profile } from '../../state/profile';
+import { exportProfile } from '../../state/saving';
+import { announce, getStorage, go, profiles, storageMode, toast } from '../../state/store';
+import { Modal } from '../components/Common';
 import { RestoreDialog } from '../components/SaveDialogs';
-import { selectProfile } from '../flow';
+import { applySettings, selectProfile } from '../flow';
+import { OfflineStatus } from '../components/OfflineStatus';
+import { loadQuick, nextScale, saveQuick } from '../quickPrefs';
 
 const ART = `${import.meta.env.BASE_URL}assets/art/`;
 
 export function TitleScreen() {
   const [restoring, setRestoring] = useState(false);
+  const [deleting, setDeleting] = useState<Profile | null>(null);
   return (
     <main id="main" class="screen title-screen" tabIndex={-1}>
       <header class="title-header">
@@ -29,7 +34,7 @@ export function TitleScreen() {
         {profiles.value.length === 0 && <p class="muted">{t.title.noProfiles}</p>}
         <ul class="profile-list">
           {profiles.value.map((p) => (
-            <li key={p.id}>
+            <li key={p.id} class="profile-row">
               <button type="button" class="profile-button" onClick={() => void selectProfile(p)}>
                 <img
                   src={`${ART}icons/${p.avatarId}-${p.themeId}.png`}
@@ -43,6 +48,14 @@ export function TitleScreen() {
                   <span class="muted"> · {t.title.level(levelFor(p.xp))}</span>
                 </span>
               </button>
+              <button
+                type="button"
+                class="small ghost"
+                aria-label={t.title.deleteLabel(p.nickname)}
+                onClick={() => setDeleting(p)}
+              >
+                🗑 {t.title.delete}
+              </button>
             </li>
           ))}
         </ul>
@@ -55,11 +68,17 @@ export function TitleScreen() {
           </button>
         </div>
       </section>
+      <QuickSettings />
+      <OfflineStatus />
       <p class="credits-link">
         <button type="button" class="ghost small" onClick={() => go({ name: 'credits' })}>
           {t.credits.link}
         </button>
+        <button type="button" class="ghost small" onClick={() => go({ name: 'system' })}>
+          {t.system.link}
+        </button>
       </p>
+      {deleting && <DeleteProfile profile={deleting} onClose={() => setDeleting(null)} />}
       {restoring && (
         <RestoreDialog
           onClose={() => setRestoring(false)}
@@ -71,5 +90,81 @@ export function TitleScreen() {
         />
       )}
     </main>
+  );
+}
+
+/** Text size and contrast before anyone has a profile (F-A11-13). */
+function QuickSettings() {
+  const [prefs, setPrefs] = useState(loadQuick);
+  const change = (next: typeof prefs) => {
+    saveQuick(next);
+    setPrefs(next);
+    applySettings(null);
+  };
+  return (
+    <section aria-labelledby="quick" class="quick-settings">
+      <h2 id="quick" class="small-heading">
+        {t.settings.quick}
+      </h2>
+      <div class="row">
+        <button
+          type="button"
+          class="small"
+          onClick={() => change({ ...prefs, textScale: nextScale(prefs.textScale) })}
+        >
+          🔍 {t.settings.biggerText}: {Math.round((prefs.textScale ?? 1) * 100)}%
+        </button>
+        <button
+          type="button"
+          class="small"
+          aria-pressed={prefs.highContrast === true}
+          onClick={() => change({ ...prefs, highContrast: !prefs.highContrast })}
+        >
+          ◐ {t.settings.contrast}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/** Removing a profile names it and offers to save a progress file first (F-SAV-09). */
+function DeleteProfile({ profile: p, onClose }: { profile: Profile; onClose(): void }) {
+  const [saved, setSaved] = useState(false);
+  return (
+    <Modal title={t.title.deleteHeading(p.nickname)} onClose={onClose} labelId="delete-title">
+      <p>{t.title.deleteWarning(p.nickname)}</p>
+      <div class="modal-actions">
+        <button
+          type="button"
+          onClick={async () => {
+            if ((await exportProfile(p)) === 'cancelled') return;
+            setSaved(true);
+            announce(t.title.deleteSaved);
+          }}
+        >
+          💾 {t.title.deleteSaveFirst}
+        </button>
+        <button
+          type="button"
+          class="danger"
+          onClick={async () => {
+            await getStorage().deleteProfile(p.id);
+            profiles.value = profiles.value.filter((x) => x.id !== p.id);
+            onClose();
+            toast('info', t.title.deleted(p.nickname));
+          }}
+        >
+          🗑 {t.title.deleteConfirm(p.nickname)}
+        </button>
+        <button type="button" class="ghost" data-autofocus onClick={onClose}>
+          {t.title.deleteCancel}
+        </button>
+      </div>
+      {saved && (
+        <p role="status" class="small-text">
+          ✓ {t.title.deleteSaved}
+        </p>
+      )}
+    </Modal>
   );
 }

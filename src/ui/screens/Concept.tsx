@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { narrate } from '../../game/narration';
+import { narration } from '../../game/narration';
 import { ReplayEngine, type ReplayState, type ReplayView, type Speed } from '../../game/replay';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
@@ -7,6 +7,7 @@ import { announce, getRunner, go, profile, regions, update, type Route } from '.
 import { LoadingPanel, Portrait } from '../components/Common';
 import { Editor } from '../components/Editor';
 import { OutputScroll, type OutLine } from '../components/Output';
+import { ReadAloud } from '../components/ReadAloud';
 import { RichText } from '../components/RichText';
 import { prefersReducedMotion } from '../flow';
 import { ReplayControls } from '../quest/ReplayControls';
@@ -51,9 +52,9 @@ export function ConceptScreen({ route }: { route: Extract<Route, { name: 'concep
           setOut([]);
           setPos(0);
         },
-        onNarrate: (actions) => {
-          const sentences = narrate(actions);
-          if (sentences.length) announce(sentences.join(' '));
+        onNarrate: (actions, allAtOnce) => {
+          const text = narration(actions, allAtOnce);
+          if (text) announce(text);
         },
       }),
     [hasStage],
@@ -122,6 +123,7 @@ export function ConceptScreen({ route }: { route: Extract<Route, { name: 'concep
               </li>
             ))}
           </ol>
+          <ReadAloud rich={[...scene.analogy, ...scene.lines.flatMap((l) => l.text)]} />
         </section>
         <section class="card" aria-labelledby="example-h">
           <h2 id="example-h">Worked example</h2>

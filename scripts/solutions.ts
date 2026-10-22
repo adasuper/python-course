@@ -48,12 +48,26 @@ function bodySection(body: Body, heading: string): string[] {
     out.push('');
   } else {
     if (body.starter_code.trim()) out.push('**Starter code:**', '', fence(body.starter_code), '');
+    for (const st of body.starters ?? [])
+      out.push(
+        `**Starter students can pick: ${st.title}** — ${oneLine(st.description)}`,
+        '',
+        fence(st.code),
+        '',
+      );
+    if (body.duck)
+      out.push(
+        '**Talk to the Duck:** students explain each line in their own words first (not graded, not saved in files).',
+        '',
+      );
     out.push(
       '**Reference solution** (other correct answers also pass — the checks test behavior):',
       '',
       fence(solutionCode(body)),
       '',
     );
+    for (const sample of body.sample_solutions)
+      out.push(`**Another answer that passes: ${sample.name}**`, '', fence(sample.code), '');
     if (body.type === 'parsons' && body.parsons?.distractors.length) {
       out.push(
         `**Distractor lines (not used):** ${body.parsons.distractors.map((d) => `\`${d}\``).join(', ')}`,

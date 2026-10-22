@@ -1,0 +1,28 @@
+# A fill quest with locked lines (M2.1). Region 1 has none; Region 2 brings the real ones.
+id: r1-q91-fill-the-purse
+region: hearthvale-village
+title: Fill the Purse
+type: fill
+locked: true
+learning_outcome: Use a variable to store a number, then print it.
+csta: [2-AP-11]
+estimated_minutes: 5
+story_intro: The merchant's purse has a gap where the number should be.
+goal: Fill the gap so the program prints 12.
+concept_card: A variable stores a value under a name.
+starter_code: |
+  gold = ____
+  print(gold)
+solution: |
+  gold = 12
+  print(gold)
+validators:
+  - { type: output, expect: '12' }
+hints:
+  - What number should the purse hold?
+  - Put 12 where the gap is.
+  - |
+    ```python
+    gold = ____
+    ```
+story_outro: The purse jingles happily.

@@ -14,7 +14,14 @@ export type Action = { ln: number | null } & (
   | { t: 'chest'; at: XY; ok: boolean; code: string; loot: string[]; missing?: boolean }
   | { t: 'look'; at: XY; saw: string }
   | { t: 'wait'; seconds: number }
-  | { t: 'input'; prompt: string; value: string; source: 'queue' | 'player' }
+  | {
+      t: 'input';
+      prompt: string;
+      value: string;
+      source: 'queue' | 'player';
+      /** Who handed the answer over: the first named character on stage (F-EXE-12). */
+      by?: string;
+    }
 );
 
 export interface LegendEntry {
@@ -36,6 +43,8 @@ export interface StageSpec {
   npcs?: Record<string, { name?: string; sprite?: string }>;
   /** For kind: npc — who stands on stage with the hero. */
   cast?: { sprite: string; name: string }[];
+  /** kind none: show the output as a woven "tapestry" grid (Region 6 patterns). */
+  view?: 'scroll' | 'tapestry';
 }
 
 export interface Limits {
@@ -77,6 +86,30 @@ export interface RunRequest {
   bonus: BonusSpec[];
   limits?: Partial<Limits>;
   coverage?: boolean;
+  /** Earlier runs in this quest session, for session validators (§9.3). */
+  session?: SessionRun[];
+}
+
+/** What a quest session remembers about one run (session validators, §9.3). */
+export interface SessionRun {
+  /** Same value = same program (comments and spacing don't count). */
+  program: string;
+  ok: boolean;
+  inputs: string[];
+  /** The program's if/elif/else doors, e.g. "1.1if,1.2else". */
+  shape: string;
+  /** The line each door is written on, in the same order. */
+  lines: number[];
+  /** The doors that ran. */
+  lit: string[];
+}
+
+/** A branch_coverage lamp: one if/elif/else door and whether it has run yet. */
+export interface Lamp {
+  id: string;
+  kind: 'if' | 'elif' | 'else';
+  line: number;
+  lit: boolean;
 }
 
 export interface PyErrorInfo {
@@ -123,6 +156,8 @@ export interface ValidationReport {
   results: ValidatorResult[];
   feedback: { source: FeedbackSource; id?: string; text?: string };
   bonus: string[];
+  /** This run's summary, when the quest has session validators. */
+  session?: SessionRun;
 }
 
 export type RunStatus =
@@ -142,7 +177,13 @@ export interface RunResult {
 }
 
 export type ToWorker =
-  { kind: 'init'; indexURL: string } | { kind: 'run'; runId: number; request: RunRequest };
+  | {
+      kind: 'init';
+      indexURL: string;
+      /** A service worker controls the page, so Python's files are kept in its cache (§16). */
+      cached?: boolean;
+    }
+  | { kind: 'run'; runId: number; request: RunRequest };
 
 export type FromWorker =
   | { kind: 'progress'; stage: 'download' | 'compile' | 'stdlib' | 'ready'; loaded?: number; total?: number }

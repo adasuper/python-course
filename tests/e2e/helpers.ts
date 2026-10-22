@@ -1,10 +1,37 @@
 // Shared steps for end-to-end tests: play quests through the real UI using the
 // content's own reference solutions.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, type Page } from '@playwright/test';
-import { loadContent, solutionCode, type Body } from '../../scripts/lib/content';
-import type { BossQuestFile, NormalQuestFile } from '../../src/content/schema';
+import { parse } from 'yaml';
+import { compileQuest, loadContent, solutionCode, type Body } from '../../scripts/lib/content';
+import { NormalQuestSchema, type BossQuestFile, type NormalQuestFile } from '../../src/content/schema';
+import type { Quest } from '../../src/content/types';
 
 export const content = loadContent();
+
+/** Opens a quest from tests/e2e/fixtures, for quest types the real content doesn't use
+ *  yet. It goes through the same schema and compiler as content/. */
+export async function openFixture(
+  page: Page,
+  name: string,
+  options: { regionNumber?: number } = {},
+): Promise<Quest> {
+  const raw = parse(readFileSync(join(import.meta.dirname, 'fixtures', `${name}.yaml`), 'utf8')) as unknown;
+  const quest = compileQuest(NormalQuestSchema.parse(raw), new Map());
+  await page.goto('./?dev');
+  await page.waitForFunction(() => '__codewealdTest' in window);
+  await page.evaluate(
+    ([q, o]) =>
+      (
+        window as unknown as { __codewealdTest: { openQuest(q: unknown, o: unknown): Promise<void> } }
+      ).__codewealdTest.openQuest(q, o),
+    [quest, options] as const,
+  );
+  await expect(page.locator('#quest-title')).toHaveText(quest.title);
+  await waitForPython(page);
+  return quest;
+}
 
 export function quest(id: string) {
   const q = content.quests.get(id);
@@ -52,7 +79,7 @@ export async function setCode(page: Page, code: string) {
   await page.keyboard.insertText(code);
 }
 
-async function waitForPython(page: Page) {
+export async function waitForPython(page: Page) {
   await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
 }
 
@@ -64,10 +91,12 @@ export async function solveBody(page: Page, body: Body) {
     .selectOption('instant')
     .catch(() => {});
   if (body.type === 'predict') {
-    for (const prompt of body.prompts ?? []) {
+    // Each prompt in its own fieldset: two prompts may share an option's words.
+    for (const [i, prompt] of (body.prompts ?? []).entries()) {
+      const fieldset = page.locator('.predict fieldset.prompt').nth(i);
       if (prompt.kind === 'mcq')
-        await page.getByRole('radio', { name: prompt.options[prompt.answer]!, exact: true }).first().check();
-      else await page.getByRole('textbox', { name: /Your prediction/ }).fill(prompt.answer);
+        await fieldset.getByRole('radio', { name: prompt.options[prompt.answer]!, exact: true }).check();
+      else await fieldset.getByRole('textbox', { name: /Your prediction/ }).fill(prompt.answer);
     }
     await page.getByRole('button', { name: /Lock in/ }).click();
     await page.getByRole('button', { name: /Run to check/ }).click();
@@ -90,14 +119,35 @@ export async function solveBody(page: Page, body: Body) {
           has: page.locator('code', { hasText: new RegExp(`^${escape(line.trim())}$`) }),
         })
         .first();
-      await item.getByRole('button', { name: 'Move to the other list' }).click();
+      // The per-line mouse buttons (hidden from assistive technology; their tooltip names them).
+      await item.locator('button[title="Move to the other list"]').click();
       const indent = (line.length - line.trimStart().length) / 4;
       const placed = page.locator('.parsons-spell .parsons-item').last();
-      for (let k = 0; k < indent; k++) await placed.getByRole('button', { name: 'Indent more' }).click();
+      for (let k = 0; k < indent; k++) await placed.locator('button[title="Indent more"]').click();
+    }
+    await page.getByRole('button', { name: /^▶ Run$/ }).click();
+  } else if (body.type === 'fill') {
+    // Locked lines can't be replaced wholesale: fill each gap, the way a student does.
+    for (const value of gapAnswers(body.starter_code, solutionCode(body))) {
+      await page.getByRole('button', { name: /Next gap/ }).click();
+      await page.keyboard.insertText(value);
     }
     await page.getByRole('button', { name: /^▶ Run$/ }).click();
   } else {
+    // Quests with typed input: play the quest's own answers (the box is on by default).
+    const typeOwn = page.getByRole('checkbox', { name: /Let me type the answers/ });
+    if (await typeOwn.count()) await typeOwn.uncheck();
+    if (body.starters) await page.getByRole('button', { name: 'Start with this one' }).click();
     await setCode(page, solutionCode(body));
+    // runs_ok needs several runs without a crash (the capstone's free part).
+    const runsOk = body.validators.find((v) => v.type === 'runs_ok');
+    const runs = runsOk?.type === 'runs_ok' ? runsOk.min_runs : 1;
+    for (let i = 1; i < runs; i++) {
+      await page.getByRole('button', { name: /^▶ Run$/ }).click();
+      await expect(page.locator('#feedback')).toContainText(`Runs without a crash: ${i} of ${runs}.`, {
+        timeout: 30_000,
+      });
+    }
     await page.getByRole('button', { name: /^▶ Run$/ }).click();
   }
   await expect(page.locator('#feedback')).toContainText('Quest complete!', { timeout: 30_000 });
@@ -121,6 +171,36 @@ export async function solveQuest(page: Page, id: string) {
     .getByRole('button', { name: /Back to the map/ })
     .click();
   await expect(page.getByRole('application')).toBeVisible();
+}
+
+/** Beats the Region 1 boss through the dev route (it opens the Workshop). */
+export async function defeatTheFirstBoss(page: Page) {
+  // A new query string makes this a real page load (a hash change alone isn't).
+  await page.goto('./?dev&boss#/dev/quest/r1-boss-village-crier-bug');
+  const boss = quest('r1-boss-village-crier-bug') as BossQuestFile;
+  for (const [i, phase] of boss.phases.entries()) {
+    await solveBody(page, phase);
+    if (i < boss.phases.length - 1) await page.getByRole('button', { name: /Next phase/ }).click();
+  }
+  await page
+    .locator('#feedback')
+    .getByRole('button', { name: /Back to the map/ })
+    .click();
+}
+
+/** What goes in each `____` gap of a fill quest, read off its solution (same lines, in order). */
+export function gapAnswers(starter: string, solution: string): string[] {
+  const starterLines = starter.split('\n');
+  const solutionLines = solution.split('\n');
+  const answers: string[] = [];
+  starterLines.forEach((line, i) => {
+    if (!line.includes('____')) return;
+    const pattern = new RegExp(`^${line.split('____').map(escape).join('(.*?)')}$`);
+    const match = pattern.exec(solutionLines[i] ?? '');
+    if (!match) throw new Error(`gap line ${i + 1} doesn't line up with the solution`);
+    answers.push(...match.slice(1));
+  });
+  return answers;
 }
 
 function escape(s: string) {

@@ -343,6 +343,13 @@
                     "kind": {
                       "type": "string",
                       "const": "none"
+                    },
+                    "view": {
+                      "type": "string",
+                      "enum": [
+                        "scroll",
+                        "tapestry"
+                      ]
                     }
                   },
                   "required": [

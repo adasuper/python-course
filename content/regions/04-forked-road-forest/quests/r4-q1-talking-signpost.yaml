@@ -1,0 +1,151 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-q1-talking-signpost
+region: forked-road-forest
+title: The Talking Signpost
+type: investigate
+npc: forky
+learning_outcome: Explain which lines of an if/else run for different values.
+csta: [2-AP-12]
+estimated_minutes: 7
+vocabulary: [if statement, condition, else, branch]
+# Nimbus reports the weather. Students can also type their own answers (on by default).
+inputs: ["rain"]
+interactive_input: true
+
+story_intro: |
+  Forky the signpost sighs. "Travelers ask me which way to go. I used to know! Now I just shrug."
+
+  Byte wrote Forky a new spell. It asks Nimbus about the weather, and then an [[if statement]] picks a path. When the spell asks, type the weather yourself.
+goal: Run the spell with different weather answers. Find out which lines run each time.
+concept_card: |
+  An `if` checks a [[condition]]. When the condition is `True`, Python runs the indented lines under `if`. When it is `False`, Python runs the indented lines under `else`. Lines that are not indented run every time.
+  ```python
+  if weather == "rain":
+      print("Go left.")
+  else:
+      print("Go right.")
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_weather_nimbus, name: Nimbus }
+    - { sprite: npc_signpost_forky, name: Forky }
+
+starter_code: |
+  weather = input("How is the weather? ")
+  if weather == "rain":
+      print("Go left, under the big oak.")
+  else:
+      print("Go right. The view is lovely!")
+  print("Have a nice walk!")
+
+questions:
+  - kind: mcq
+    question: Run the spell and type `rain`. Which path does Forky pick?
+    options:
+      - The left path
+      - The right path
+      - Both paths
+    answer: 0
+    hint: Look at line 2. Is "rain" equal to "rain"? Then the condition is True.
+    explain: The condition `weather == "rain"` is True, so Python runs line 3 and skips the `else` path.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        weather = input("How is the weather? ")
+        if weather == "rain":
+            print("Go left, under the big oak.")
+        else:
+            print("Go right. The view is lovely!")
+        print("Have a nice walk!")
+      output: |
+        How is the weather? rain
+        Go left, under the big oak.
+        Have a nice walk!
+  - kind: mcq
+    question: Run it again and type `sun`. What does Forky say now?
+    options:
+      - Go right. The view is lovely!
+      - Go left, under the big oak.
+      - Nothing at all
+    answer: 0
+    hint: Is "sun" equal to "rain"? No! So the condition is False. Which part runs then?
+    explain: The condition is False, so Python skips line 3 and runs the `else` path on line 5.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        weather = "sun"
+        if weather == "rain":
+            print("Go left, under the big oak.")
+        else:
+            print("Go right. The view is lovely!")
+        print("Have a nice walk!")
+      output: |
+        Go right. The view is lovely!
+        Have a nice walk!
+  - kind: mcq
+    question: Now type `Rain` with a capital R. Which path does Forky pick?
+    options:
+      - The right path
+      - The left path
+      - Python shows an error.
+    answer: 0
+    hint: Python is picky about capital letters. Is "Rain" the same as "rain"?
+    explain: '"Rain" and "rain" are different strings, so the condition is False. Python takes the `else` path.'
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        weather = "Rain"
+        if weather == "rain":
+            print("Go left, under the big oak.")
+        else:
+            print("Go right. The view is lovely!")
+        print("Have a nice walk!")
+      output: |
+        Go right. The view is lovely!
+        Have a nice walk!
+  - kind: mcq
+    question: Line 6 prints `Have a nice walk!`. When does it run?
+    options:
+      - Every time, whatever the weather
+      - Only when it rains
+      - Only when it does not rain
+    answer: 0
+    hint: Line 6 is not indented. Does it belong to the `if`, to the `else`, or to neither?
+    explain: Line 6 isn't indented, so it isn't inside the `if` or the `else`. It runs after them, every time.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        weather = "fog"
+        if weather == "rain":
+            print("Go left, under the big oak.")
+        else:
+            print("Go right. The view is lovely!")
+        print("Have a nice walk!")
+      output: |
+        Go right. The view is lovely!
+        Have a nice walk!
+  - kind: text
+    question: "Finish the sentence with one word: each time the spell runs, Python walks ___ path of the if/else."
+    accept: [one, "1", only one, just one]
+    hint: Did you ever see both paths on the Scroll at the same time?
+    explain: Only one [[branch]] runs each time. Python picks the `if` path or the `else` path, never both.
+
+hints:
+  - Run the spell and type an answer. Then read the Scroll. Which `print` lines showed up?
+  - When the condition on line 2 is `True`, line 3 runs. When it is `False`, line 5 runs. Line 6 runs every time, because it isn't indented.
+  - |
+    Here is how Python reads it when you type `sun`:
+    ```text
+    line 2: is "sun" equal to "rain"? ____
+    so Python skips line 3 and runs line 5
+    line 6 runs, because it isn't indented
+    ```
+
+story_outro: |
+  Forky beams. "Left for rain, right for sun! I'm a real signpost again!" Byte puffs up his feathers. "Of course you are. I wrote the spell."

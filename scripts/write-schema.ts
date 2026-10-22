@@ -4,7 +4,16 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { z } from 'zod';
-import { CourseSchema, GlossarySchema, ItemsSchema, QuestSchema, RegionSchema } from '../src/content/schema';
+import {
+  BadgesSchema,
+  CourseSchema,
+  ErrorsSchema,
+  GlossarySchema,
+  ItemsSchema,
+  QuestSchema,
+  RegionSchema,
+  WorkshopSchema,
+} from '../src/content/schema';
 
 const OUT = join(import.meta.dirname, '..', 'schema');
 
@@ -16,6 +25,9 @@ export function writeSchemas() {
     course: CourseSchema,
     glossary: GlossarySchema,
     items: ItemsSchema,
+    badges: BadgesSchema,
+    errors: ErrorsSchema,
+    workshop: WorkshopSchema,
   };
   for (const [name, schema] of Object.entries(schemas)) {
     const json = z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' });

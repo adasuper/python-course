@@ -15,10 +15,11 @@ PNG files at build time into `public/assets/art/`, which is not committed.
 |---|---|---|---|---|
 | Palette | `src/art/palette.ts` | (used by all art) | Codeweald contributors | CC0 1.0 |
 | Tiles: overworld ground, buildings, props and quest-stage tiles (31 tiles) | `src/art/tiles.ts` | `tiles.png`, `tiles.json` | Codeweald contributors | CC0 1.0 |
-| Avatars: 8 characters × 6 color themes × 4 directions × 2 walk frames | `src/art/characters.ts` | `characters.png`, `characters.json`, `icons/avatar-*.png` | Codeweald contributors | CC0 1.0 |
+| Avatars: 8 characters × 6 color themes × 4 directions × (2 walk frames + a bump frame), plus a celebration frame | `src/art/characters.ts` | `characters.png`, `characters.json`, `icons/avatar-*.png` | Codeweald contributors | CC0 1.0 |
 | Byte the owl (sprite and 32×32 portrait), villagers, Bugs and firefly (sprites and 16×16 portraits) | `src/art/characters.ts` | `characters.png`, `characters.json`, `portraits/*.png` | Codeweald contributors | CC0 1.0 |
 | Item icons (12) | `src/art/items.ts` | `icons/<item>.png` | Codeweald contributors | CC0 1.0 |
 | Art preview page | `scripts/make-art.ts` | `preview.html` | Codeweald contributors | CC0 1.0 |
+| App icons (Byte, 192 and 512 px) | `scripts/make-art.ts` | `app/icon-192.png`, `app/icon-512.png` | Codeweald contributors | CC0 1.0 |
 
 ## Fonts
 
@@ -37,7 +38,7 @@ from a font CDN at runtime.
 |---|---|
 | Phaser 4.2.1 | MIT |
 | Pyodide 314.0.7 (CPython 3.14 and its standard library) | MPL 2.0 (Pyodide); PSF License (CPython) |
-| CodeMirror 6 | MIT |
+| CodeMirror 6 (with its @lezer/highlight tags) | MIT |
 | Preact, @preact/signals | MIT |
 | idb-keyval | Apache 2.0 |
 | Zod (checks imported progress files) | MIT |

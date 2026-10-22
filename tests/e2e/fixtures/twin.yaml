@@ -1,0 +1,28 @@
+# A predict prompt with a twin (F-QST-05, M2.1).
+id: r1-q94-twin-sums
+region: hearthvale-village
+title: Twin Sums
+type: predict
+learning_outcome: Predict the output of adding numbers and adding text.
+csta: [2-AP-11]
+estimated_minutes: 5
+story_intro: Byte adds two things together.
+goal: Predict what the program prints.
+concept_card: Numbers add up; text sticks together.
+starter_code: |
+  print(2 + 3)
+prompts:
+  - kind: mcq
+    question: What does this program print?
+    options: ['5', '23', '2 + 3']
+    answer: 0
+    explain: 2 and 3 are numbers, so `+` adds them.
+    twin:
+      kind: mcq
+      code: print("2" + "3")
+      question: And what does this one print?
+      options: ['5', '23', '2 + 3']
+      answer: 1
+      explain: Now they are text in quotes, so `+` sticks them together.
+hints: [Look at the quotes., Numbers add., '____']
+story_outro: Twins can look alike but act differently.

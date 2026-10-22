@@ -3,7 +3,7 @@
 // version n to n + 1; loading runs the chain up to CURRENT_SCHEMA. Each step has a test.
 import type { Profile } from './profile';
 
-export const CURRENT_SCHEMA = 2;
+export const CURRENT_SCHEMA = 4;
 
 type Raw = Record<string, unknown>;
 export type Migration = (old: Raw) => Raw;
@@ -15,6 +15,25 @@ export const MIGRATIONS: Record<number, Migration> = {
     schemaVersion: 2,
     counters: { realErrorViews: 0 },
     location: { ...(p.location as Raw), quest: null },
+  }),
+  // 3: earned badges (id → date), and counters for the Workshop and Duck badges.
+  2: (p) => ({
+    ...p,
+    schemaVersion: 3,
+    badges: {},
+    counters: { ...(p.counters as Raw), workshopRuns: 0, duckChats: 0 },
+  }),
+  // 4: the full settings screen: code font, shortcut keys, read aloud and sound.
+  3: (p) => ({
+    ...p,
+    schemaVersion: 4,
+    settings: {
+      ...(p.settings as Raw),
+      codeFont: 'atkinson',
+      shortcuts: true,
+      tts: { autoRead: false, voice: '', rate: 1, readCode: false },
+      audio: { master: 0.8, music: 0, effects: 0 },
+    },
   }),
 };
 

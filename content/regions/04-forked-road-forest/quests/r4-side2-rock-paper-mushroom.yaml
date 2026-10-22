@@ -1,0 +1,206 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-side2-rock-paper-mushroom
+region: forked-road-forest
+title: Rock, Paper, Mushroom
+type: make
+side_quest: true
+learning_outcome: Use nested if statements to decide the winner of a two-player hand game.
+csta: [2-AP-12]
+estimated_minutes: 10
+prerequisites: [r4-boss-riddle-gate]
+vocabulary: [if statement, else, elif, indentation]
+# Tilly the referee reads out both players' picks. Students can also type their own.
+inputs: ["rock", "mushroom"]
+interactive_input: true
+
+story_intro: |
+  Toadstool Tilly waves a big mushroom. "Burl and Nimbus want to play Rock, Paper, Mushroom! I'm the referee, but I keep forgetting who wins."
+
+  The rules:
+
+  - **Rock** squashes **mushroom**.
+  - **Mushroom** grows right through **paper**.
+  - **Paper** wraps **rock**.
+  - The same pick is a tie.
+
+  Try putting one `if` *inside* another. That's called nesting. First check what Player 1 picked, then check Player 2.
+goal: Read both picks. Print "Player 1 wins!", "Player 2 wins!" or "It's a tie!". Use an if inside another if.
+concept_card: |
+  An `if` can sit inside another `if`. The inner `if` is indented one more step, and it only runs when the outer condition is `True`.
+  ```python
+  if p1 == "rock":
+      if p2 == "mushroom":
+          print("Player 1 wins!")
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_forager_tilly, name: Toadstool Tilly }
+    - { sprite: npc_woodcutter_burl, name: Woodcutter Burl }
+    - { sprite: npc_weather_nimbus, name: Nimbus }
+
+starter_code: |
+  p1 = input("Player 1 picks: ")
+  p2 = input("Player 2 picks: ")
+  # rock squashes mushroom.
+  # mushroom grows through paper.
+  # paper wraps rock.
+
+solution: |
+  p1 = input("Player 1 picks: ")
+  p2 = input("Player 2 picks: ")
+  if p1 == p2:
+      print("It's a tie!")
+  elif p1 == "rock":
+      if p2 == "mushroom":
+          print("Player 1 wins!")
+      else:
+          print("Player 2 wins!")
+  elif p1 == "mushroom":
+      if p2 == "paper":
+          print("Player 1 wins!")
+      else:
+          print("Player 2 wins!")
+  else:
+      if p2 == "rock":
+          print("Player 1 wins!")
+      else:
+          print("Player 2 wins!")
+
+validators:
+  - id: games
+    type: hidden_tests
+    mode: inputs
+    compare: [output]
+    cases:
+      - { inputs: ["rock", "rock"] }
+      - { inputs: ["rock", "paper"] }
+      - { inputs: ["rock", "mushroom"] }
+      - { inputs: ["paper", "rock"] }
+      - { inputs: ["paper", "paper"] }
+      - { inputs: ["paper", "mushroom"] }
+      - { inputs: ["mushroom", "rock"] }
+      - { inputs: ["mushroom", "paper"] }
+      - { inputs: ["mushroom", "mushroom"] }
+  - id: nested
+    type: custom
+    fail_hint: Put one `if` inside another one, indented one more step.
+    python: |
+      def check(ctx):
+          if ctx.tree is None:
+              return Fail()
+          for node in ast.walk(ctx.tree):
+              if isinstance(node, ast.If):
+                  inside = [n for stmt in node.body for n in ast.walk(stmt) if isinstance(n, ast.If)]
+                  if inside:
+                      return Pass()
+          return Fail("Put one `if` inside another one, indented one more step.")
+
+common_mistakes:
+  - id: no-winner
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            if ctx.error:
+                return False
+            return "wins!" not in ctx.output and "tie!" not in ctx.output
+    feedback: >-
+      Tilly is waiting for an answer! Print who won: "Player 1 wins!", "Player 2 wins!" or
+      "It's a tie!".
+  - id: ties
+    detect: { kind: hidden_case_fails, validator: games, case: 0 }
+    feedback: >-
+      When both players pick rock, it's a tie! Check `if p1 == p2:` first, before anything else.
+  - id: wrong-winner
+    detect: { kind: validator_failed, id: games }
+    feedback: >-
+      Some games have the wrong winner. Check the rules: rock squashes mushroom, mushroom grows through
+      paper, and paper wraps rock. And keep the messages exactly as shown.
+  - id: not-nested
+    detect: { kind: validator_failed, id: nested }
+    feedback: >-
+      Every game is right. Great! Now try nesting: put an `if` inside another `if`. For example, inside
+      `elif p1 == "rock":`, check `if p2 == "mushroom":`.
+
+wrong_solutions:
+  - expect_mistake: no-winner
+    code: |
+      p1 = input("Player 1 picks: ")
+      p2 = input("Player 2 picks: ")
+      print(p1, "against", p2)
+  - expect_mistake: ties
+    note: No check for a tie.
+    code: |
+      p1 = input("Player 1 picks: ")
+      p2 = input("Player 2 picks: ")
+      if p1 == "rock":
+          if p2 == "mushroom":
+              print("Player 1 wins!")
+          else:
+              print("Player 2 wins!")
+      elif p1 == "mushroom":
+          if p2 == "paper":
+              print("Player 1 wins!")
+          else:
+              print("Player 2 wins!")
+      else:
+          if p2 == "rock":
+              print("Player 1 wins!")
+          else:
+              print("Player 2 wins!")
+  - expect_mistake: wrong-winner
+    note: Mushroom beats rock here, which is against the rules.
+    code: |
+      p1 = input("Player 1 picks: ")
+      p2 = input("Player 2 picks: ")
+      if p1 == p2:
+          print("It's a tie!")
+      elif p1 == "mushroom":
+          if p2 == "rock":
+              print("Player 1 wins!")
+          else:
+              print("Player 2 wins!")
+      elif p1 == "rock":
+          if p2 == "paper":
+              print("Player 1 wins!")
+          else:
+              print("Player 2 wins!")
+      else:
+          if p2 == "mushroom":
+              print("Player 1 wins!")
+          else:
+              print("Player 2 wins!")
+  - expect_mistake: not-nested
+    note: Right answers with one long elif chain.
+    code: |
+      p1 = input("Player 1 picks: ")
+      p2 = input("Player 2 picks: ")
+      if p1 == p2:
+          print("It's a tie!")
+      elif p1 == "rock" and p2 == "mushroom":
+          print("Player 1 wins!")
+      elif p1 == "mushroom" and p2 == "paper":
+          print("Player 1 wins!")
+      elif p1 == "paper" and p2 == "rock":
+          print("Player 1 wins!")
+      else:
+          print("Player 2 wins!")
+
+hints:
+  - Start with the easy case. What happens when both players pick the same thing?
+  - "Then check Player 1's pick with `elif p1 == \"rock\":`. Inside it, indented one more step, check Player 2's pick to see who wins."
+  - |
+    ```python
+    if p1 == p2:
+        print("It's a tie!")
+    elif p1 == "rock":
+        if p2 == "mushroom":
+            print("Player 1 wins!")
+        else:
+            ____
+    ```
+
+story_outro: |
+  "Rock squashes mushroom! Player 1 wins!" Tilly blows her whistle. Burl and Nimbus shake hands. Then they ask for a rematch. Then another. Then another.

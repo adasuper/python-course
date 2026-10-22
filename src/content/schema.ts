@@ -38,7 +38,8 @@ export const StageSchema = z.discriminatedUnion('kind', [
     kind: z.literal('npc'),
     cast: z.array(z.strictObject({ sprite: z.string(), name: z.string() })).default([]),
   }),
-  z.strictObject({ kind: z.literal('none') }),
+  // `view: tapestry` shows the output as a woven pattern, for drawing with loops (Region 6).
+  z.strictObject({ kind: z.literal('none'), view: z.enum(['scroll', 'tapestry']).optional() }),
 ]);
 
 const Common = { id: z.string().optional(), fail_hint: z.string().optional() };
@@ -122,6 +123,27 @@ const HiddenTestsValidator = z.strictObject({
 
 const CustomValidator = z.strictObject({ ...Common, type: z.literal('custom'), python: z.string() });
 
+// Session validators look across all of the student's runs in a quest, not just the last
+// one (docs/specs.md §9.3).
+const Session = { scope: z.literal('session').default('session') };
+
+const BranchCoverageValidator = z.strictObject({
+  ...Common,
+  ...Session,
+  type: z.literal('branch_coverage'),
+  min: z.union([z.literal('all'), z.number().int().min(1)]).default('all'),
+});
+
+const RunsOkValidator = z.strictObject({
+  ...Common,
+  ...Session,
+  type: z.literal('runs_ok'),
+  min_runs: z.number().int().min(1).default(3),
+  distinct_inputs: z.boolean().default(false),
+});
+
+export const SESSION_VALIDATOR_TYPES: readonly string[] = ['branch_coverage', 'runs_ok'];
+
 export const ValidatorSchema = z.discriminatedUnion('type', [
   OutputValidator,
   StateValidator,
@@ -130,6 +152,8 @@ export const ValidatorSchema = z.discriminatedUnion('type', [
   StyleValidator,
   HiddenTestsValidator,
   CustomValidator,
+  BranchCoverageValidator,
+  RunsOkValidator,
 ]);
 
 export const DETECTOR_NAMES = [
@@ -142,6 +166,12 @@ export const DETECTOR_NAMES = [
   'loop_var_not_updated',
   'function_not_called',
   'hardcoded_output',
+  'range_off_by_one',
+  'infinite_while_true_without_break',
+  'function_prints_not_returns',
+  'return_inside_loop_too_early',
+  'unused_variable',
+  'shadowed_builtin',
 ] as const;
 
 const Detect = z.discriminatedUnion('kind', [
@@ -171,6 +201,9 @@ const Detect = z.discriminatedUnion('kind', [
     text: z.string().optional(),
     names: z.array(z.string()).optional(),
     function: z.string().optional(),
+    // range_off_by_one: the first and last values the loop should reach.
+    first: z.number().int().optional(),
+    last: z.number().int().optional(),
   }),
   z.strictObject({ kind: z.literal('custom'), python: z.string() }),
 ]);
@@ -197,6 +230,26 @@ const Verify = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('none') }),
 ]);
 
+/** A second, similar program to try after a wrong prediction (F-QST-05). Its answer is
+ *  checked against what the program really prints. */
+const Twin = z.discriminatedUnion('kind', [
+  z.strictObject({
+    kind: z.literal('mcq'),
+    code: z.string(),
+    question: z.string(),
+    options: z.array(z.string()).min(3, 'Give at least 2 wrong options'),
+    answer: z.number().int().min(0),
+    explain: z.string(),
+  }),
+  z.strictObject({
+    kind: z.literal('text'),
+    code: z.string(),
+    question: z.string(),
+    answer: z.string(),
+    explain: z.string(),
+  }),
+]);
+
 const PredictPrompt = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal('mcq'),
@@ -205,8 +258,15 @@ const PredictPrompt = z.discriminatedUnion('kind', [
     answer: z.number().int().min(0),
     explain: z.string(),
     verify: Verify.default({ kind: 'output' }),
+    twin: Twin.optional(),
   }),
-  z.strictObject({ kind: z.literal('text'), question: z.string(), answer: z.string(), explain: z.string() }),
+  z.strictObject({
+    kind: z.literal('text'),
+    question: z.string(),
+    answer: z.string(),
+    explain: z.string(),
+    twin: Twin.optional(),
+  }),
 ]);
 
 /** How validate-content proves an investigate answer against the real program (F-QA-04). */
@@ -261,6 +321,25 @@ const Parsons = z.strictObject({
 
 const Hints = z.array(z.string()).length(3, 'Every quest has exactly 3 hints: nudge, explanation, near-complete example');
 
+// The rubber duck asks "What should this line do?" for each line (§9.8a). Answers are not
+// graded and stay on this device.
+const Duck = z.strictObject({
+  intro: z.string().optional(),
+  closing: z.string().default('Did you spot anything odd?'),
+});
+
+// Starting programs the student picks from, such as the capstone's three game ideas.
+const Starter = z.strictObject({
+  id: Slug,
+  title: z.string().max(40),
+  description: z.string(),
+  code: z.string().min(1),
+});
+
+// More programs that must pass, for open quests with many right answers (the capstone's free
+// part). `validate-content` runs each one; the answer key lists them.
+const SampleSolution = z.strictObject({ name: z.string(), code: z.string().min(1) });
+
 const QUEST_TYPES = ['predict', 'investigate', 'fix', 'fill', 'parsons', 'modify', 'make'] as const;
 export const QuestTypeSchema = z.enum([...QUEST_TYPES, 'boss']);
 
@@ -274,17 +353,26 @@ const QuestBody = {
   goal: z.string(),
   stage: StageSchema.default({ kind: 'none' }),
   starter_code: z.string().default(''),
+  // fill: only the lines with a ____ gap can be edited.
+  locked: z.boolean().default(false),
   solution: z.string().optional(),
   validators: z.array(ValidatorSchema).default([]),
   common_mistakes: z.array(MistakeSchema).default([]),
   wrong_solutions: z.array(WrongSolution).default([]),
   hints: Hints,
   inputs: z.array(z.coerce.string()).default([]),
+  // Ask the player when the input queue runs out (Mode B, §6.5).
+  interactive_input: z.boolean().default(false),
+  // Record line coverage for branch_coverage (on by default when that validator is used).
+  track_coverage: z.boolean().default(false),
   seed: z.number().int().optional(),
   prompts: z.array(PredictPrompt).optional(),
   questions: z.array(InvestigateQuestion).optional(),
   parsons: Parsons.optional(),
   jar_shelf: z.boolean().optional(),
+  duck: Duck.optional(),
+  starters: z.array(Starter).min(2).max(4).optional(),
+  sample_solutions: z.array(SampleSolution).default([]),
   bonus: z
     .array(z.strictObject({ id: Slug, description: z.string(), check: ValidatorSchema, xp: z.number().int() }))
     .default([]),
@@ -409,10 +497,14 @@ export const CourseSchema = z.strictObject({
   id: Slug,
   title: z.string(),
   opening: z.array(DialogueLine).min(1),
+  finale: z.array(DialogueLine).min(1),
   regions: z
     .array(z.strictObject({ id: Slug, enabled: z.boolean().default(true), lessons: z.number().int().min(1).default(2) }))
     .min(1),
   side_quests: z.boolean().default(true),
+  // The course grows region by region: while more are on the way, the last region's boss
+  // doesn't play the finale, and the world map says more regions are coming.
+  more_regions_coming: z.boolean().default(false),
 });
 
 export const GlossarySchema = z.array(
@@ -436,6 +528,67 @@ export const ItemsSchema = z.array(
   }),
 );
 
+/** What earns a badge (docs/specs.md §11.6). None of them reward speed. */
+const BadgeTrigger = z.discriminatedUnion('kind', [
+  // The first completed quest of this type (First Bug Squashed: fix).
+  z.strictObject({ kind: z.literal('quest_type_completed'), type: z.enum([...QUEST_TYPES, 'boss']) }),
+  // Any quest completed without opening a hint (Clean Cast).
+  z.strictObject({ kind: z.literal('completed_without_hints') }),
+  // This many different programs run in one quest (Tinkerer).
+  z.strictObject({ kind: z.literal('distinct_attempts'), count: z.number().int().min(1) }),
+  // A quest completed after at least this many attempts that didn't pass (Never Give Up).
+  z.strictObject({ kind: z.literal('passed_after_failures'), count: z.number().int().min(1) }),
+  // A profile counter reaches a number (Error Reader, Workshop Inventor, Duck Whisperer).
+  z.strictObject({
+    kind: z.literal('counter'),
+    counter: z.enum(['realErrorViews', 'workshopRuns', 'duckChats']),
+    count: z.number().int().min(1),
+  }),
+  // The region's boss is defeated (Region Restorer).
+  z.strictObject({ kind: z.literal('boss_defeated'), region: Slug }),
+  // Every secret corner of the region found (Explorer).
+  z.strictObject({ kind: z.literal('pois_visited'), region: Slug }),
+  // This many side quests completed (Side Questor).
+  z.strictObject({ kind: z.literal('side_quests'), count: z.number().int().min(1) }),
+  // This many knowledge checks done (Review Riddler).
+  z.strictObject({ kind: z.literal('checks_completed'), count: z.number().int().min(1) }),
+  // One particular quest completed (Great Scriptwright: the capstone).
+  z.strictObject({ kind: z.literal('quest_completed'), quest: QuestId }),
+]);
+
+export const BadgesSchema = z.array(
+  z.strictObject({
+    id: Slug,
+    name: z.string().max(40),
+    emoji: z.string().max(8),
+    description: z.string(),
+    trigger: BadgeTrigger,
+  }),
+);
+
+/** The Workshop's sandbox maps and API reference (docs/specs.md §11.7). */
+export const WorkshopSchema = z.strictObject({
+  maps: z
+    .array(
+      z.strictObject({
+        id: Slug,
+        name: z.string().max(40),
+        description: z.string(),
+        stage: StageSchema,
+      }),
+    )
+    .min(1),
+  api: z.array(
+    z.strictObject({
+      call: z.string(),
+      summary: z.string(),
+      example: z.string(),
+      // The region whose quests teach it.
+      region: z.number().int().min(1).max(11),
+    }),
+  ),
+});
+
 export const ErrorsSchema = z.record(
   z.string(),
   z.strictObject({ title: z.string(), message: z.string(), tip: z.string().optional() }),
@@ -449,6 +602,8 @@ export type RegionFile = z.infer<typeof RegionSchema>;
 export type CourseFile = z.infer<typeof CourseSchema>;
 export type GlossaryFile = z.infer<typeof GlossarySchema>;
 export type ItemsFile = z.infer<typeof ItemsSchema>;
+export type BadgesFile = z.infer<typeof BadgesSchema>;
+export type WorkshopFile = z.infer<typeof WorkshopSchema>;
 export type ErrorsFile = z.infer<typeof ErrorsSchema>;
 export type Validator = z.infer<typeof ValidatorSchema>;
 export type Stage = z.infer<typeof StageSchema>;

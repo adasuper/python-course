@@ -1,8 +1,11 @@
 """Run one student program in the sandbox and collect everything the UI needs."""
 
 import ast
+import io
+import re
 import reprlib
 import sys
+import tokenize
 import types
 
 from . import _world
@@ -15,7 +18,7 @@ from ._common import (
     OutputBudgetExceeded,
     ProgramExit,
 )
-from ._errors import classify, loop_line
+from ._errors import classify, loop_line, stuck_while
 from ._sandbox import Env, RedirectOutput, find_locked, make_builtins
 
 DEFAULT_LIMITS = {
@@ -72,11 +75,20 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
         world = _world.World(stage, limits["maxActions"])
     except ValueError as exc:  # a broken quest map: validate-content reports it with file and line
         outcome.status = "error"
-        outcome.error = _limit_error("stage.invalid", None, problem=str(exc)) | {"type": "StageError", "raw": str(exc)}
+        outcome.error = _game_error("stage.invalid", None, problem=str(exc)) | {"type": "StageError", "raw": str(exc)}
         return outcome
     env = Env(world, inputs, interactive, seed, limits["maxOutputChars"])
     outcome.world = world
     outcome.env = env
+
+    # A fill-quest gap left as it was. Checked before compiling: a gap where an operator
+    # belongs (`if gold ____ 10:`) is not even valid Python yet.
+    gap = find_gap(source)
+    if gap:
+        line, col, end_col = gap
+        outcome.status = "error"
+        outcome.error = _game_error("fill.gap_left", line) | {"type": "GapLeft", "col": col, "endCol": end_col}
+        return outcome
 
     try:
         code = compile(source, SPELLBOOK, "exec")
@@ -89,7 +101,7 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
     if locked:
         name, line = locked
         outcome.status = "error"
-        outcome.error = _limit_error("sandbox.locked", line, name=name) | {
+        outcome.error = _game_error("sandbox.locked", line, name=name) | {
             "type": "LockedName",
             "raw": f'  File "{SPELLBOOK}", line {line}\nLockedName: {name} is locked in Codeweald',
         }
@@ -114,13 +126,24 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
     except LoopBudgetExceeded as signal:
         outcome.status = "loop-budget"
         line = loop_line(source, signal.line)
-        outcome.error = _limit_error("limits.loop", line, budget=limits["loopBudget"])
-    except ActionBudgetExceeded:
+        # A runaway while loop gets its own words, naming what never changes (Region 5).
+        is_while, unchanged = stuck_while(source, line)
+        if is_while and unchanged:
+            outcome.error = _game_error(
+                "limits.loop_while_unchanged", line, budget=limits["loopBudget"], name=unchanged[0]
+            )
+        elif is_while:
+            outcome.error = _game_error("limits.loop_while", line, budget=limits["loopBudget"])
+        else:
+            outcome.error = _game_error("limits.loop", line, budget=limits["loopBudget"])
+    except ActionBudgetExceeded as exc:
         outcome.status = "action-budget"
-        outcome.error = _limit_error("limits.actions", None, budget=limits["maxActions"])
-    except OutputBudgetExceeded:
+        outcome.error = _busy_while(source, exc) or _game_error("limits.actions", None, budget=limits["maxActions"])
+    except OutputBudgetExceeded as exc:
         outcome.status = "output-budget"
-        outcome.error = _limit_error("limits.output", None, budget=limits["maxOutputChars"])
+        outcome.error = _busy_while(source, exc) or _game_error(
+            "limits.output", None, budget=limits["maxOutputChars"]
+        )
     except (ProgramExit, SystemExit):
         pass
     except BaseException as exc:  # noqa: BLE001 - every student error is reported, never raised
@@ -134,7 +157,41 @@ def execute(source, stage=None, inputs=None, interactive=False, seed=0, limits=N
     return outcome
 
 
-def _limit_error(key, line, **params):
+def _busy_while(source, exc):
+    """A runaway `while` loop that moves or prints wears out the hero (or the scroll) before
+    its loop budget: if the loop never changes what its condition checks, say so."""
+    line = None
+    tb = exc.__traceback__
+    while tb is not None:
+        if tb.tb_frame.f_code.co_filename == SPELLBOOK:
+            line = tb.tb_lineno
+        tb = tb.tb_next
+    if line is None:
+        return None
+    is_while, unchanged = stuck_while(source, loop_line(source, line))
+    if not (is_while and unchanged):
+        return None
+    return _game_error("limits.busy_while_unchanged", loop_line(source, line), name=unchanged[0])
+
+
+GAP = re.compile(r"_{3,}")
+
+
+def find_gap(source):
+    """The first `____` gap left in the code, as (line, col, end_col) (1-based), or None.
+
+    Gaps are found as name tokens, so a `____` inside a string or a comment is fine.
+    """
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type == tokenize.NAME and GAP.fullmatch(tok.string):
+                return tok.start[0], tok.start[1] + 1, tok.end[1] + 1
+    except (tokenize.TokenError, SyntaxError):  # compile() reports these with a better message
+        pass
+    return None
+
+
+def _game_error(key, line, **params):
     return {
         "type": "LimitReached",
         "key": key,

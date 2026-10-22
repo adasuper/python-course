@@ -1,0 +1,29 @@
+# Typed input (Mode B) with session validators: light every lamp, two different runs (M2.1).
+id: r1-q92-two-doors
+region: hearthvale-village
+title: Two Doors
+type: make
+interactive_input: true
+learning_outcome: Use input() and if/else, then test every branch by running the program with different answers.
+csta: [2-AP-12]
+estimated_minutes: 5
+story_intro: Two doors. Try both!
+goal: Run the program twice, once for each door.
+concept_card: Test every branch of your program.
+starter_code: |
+  answer = input("Pick a door (1 or 2): ")
+  if answer == "1":
+      print("Gold!")
+  else:
+      print("A dragon!")
+solution: |
+  answer = input("Pick a door (1 or 2): ")
+  if answer == "1":
+      print("Gold!")
+  else:
+      print("A dragon!")
+validators:
+  - { type: branch_coverage, id: doors }
+  - { type: runs_ok, min_runs: 2, distinct_inputs: true }
+hints: [Try door 1., Now try door 2., 'Type ____ and press Enter.']
+story_outro: Both doors opened.

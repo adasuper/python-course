@@ -1,0 +1,193 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-side2-times-table-tower
+region: clocktower-peaks
+title: The Times-Table Tower
+type: make
+side_quest: true
+learning_outcome: Use nested loops to print a multiplication grid.
+csta: [2-AP-12]
+estimated_minutes: 10
+prerequisites: [r6-boss-broken-clock]
+retrieval: [r2]
+vocabulary: [nested loop, for loop]
+
+story_intro: |
+  Granny Hourglass taps the Quest Board with her cane. "The school at the bottom of the mountain needs a times table. Weave one on the loom, dear. Big enough for any class."
+
+  Each row is one number times 1, times 2, and so on. With a `size` of 4, the tower looks like this:
+  ```text
+  1 2 3 4
+  2 4 6 8
+  3 6 9 12
+  4 8 12 16
+  ```
+  Build each cell with an f-string, like `f"{a * b} "`. You learned those in the Whispering Library!
+goal: Use a loop inside a loop to print a times table, `size` rows by `size` columns. Build each cell with an f-string. It must work for any size.
+concept_card: |
+  In a times table, the outer loop picks the row number and the inner loop picks the column. Each cell is the two numbers multiplied.
+  ```python
+  for a in range(1, size + 1):
+      row = ""
+      for b in range(1, size + 1):
+          row = row + f"{a * b} "
+      print(row)
+  ```
+
+stage: { kind: none, view: tapestry }
+
+starter_code: |
+  size = 4
+  # One row for each number from 1 to size.
+  # Each row: that number times 1, 2, 3...
+  # all the way up to times size.
+
+solution: |
+  size = 4
+  # One row for each number from 1 to size.
+  # Each row: that number times 1, 2, 3...
+  # all the way up to times size.
+  for a in range(1, size + 1):
+      row = ""
+      for b in range(1, size + 1):
+          row = row + f"{a * b} "
+      print(row)
+
+validators:
+  - id: tower
+    type: output
+    normalize: [spaces]
+    expect: |
+      1 2 3 4
+      2 4 6 8
+      3 6 9 12
+      4 8 12 16
+    fail_hint: With a size of 4, the tower has 4 rows of 4 numbers. Compare it with the example.
+  - id: nested
+    type: custom
+    fail_hint: Put one for loop inside another.
+    python: |
+      def check(ctx):
+          tree = ctx.tree
+          if tree is not None:
+              for outer in ast.walk(tree):
+                  if isinstance(outer, ast.For):
+                      for inner in ast.walk(outer):
+                          if inner is not outer and isinstance(inner, ast.For):
+                              return Pass()
+          return Fail("Put one for loop inside another.")
+  - id: any-size
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - { vars: { size: 2 } }
+      - { vars: { size: 3 } }
+      - { vars: { size: 6 } }
+    fail_hint: The tower must work for any size. Use `size` in both loops.
+  - id: uses-fstring
+    type: ast
+    require: [JoinedStr]
+    fail_hint: Build each cell with an f-string, like `f"{a * b} "`.
+
+common_mistakes:
+  - id: text-plus-number
+    detect: { kind: error, type: TypeError }
+    feedback: >-
+      `row` is text, but `a * b` is a number, and Python can't join them. Turn the number
+      into text with an f-string: `row = row + f"{a * b} "`.
+  - id: one-loop
+    detect: { kind: validator_failed, id: nested }
+    feedback: >-
+      Build the tower with a loop inside a loop. The outer loop makes the rows. The inner
+      loop adds one cell at a time.
+  - id: zero-row
+    detect: { kind: output_regex, pattern: "^0( |$)" }
+    feedback: >-
+      A row of zeros! With one number, `range` starts at 0. The times table starts at 1, so
+      use `range(1, size + 1)`.
+  - id: too-many-rows
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            n = ctx.vars.get("size")
+            rows = [r for r in ctx.lines if r.strip()]
+            return isinstance(n, int) and len(rows) > n
+    feedback: >-
+      The tower printed too many rows! Is `print(row)` inside the inner loop? Move it out one
+      step, so each row prints once.
+  - id: one-short
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            n = ctx.vars.get("size")
+            rows = [r for r in ctx.lines if r.strip()]
+            return isinstance(n, int) and len(rows) == n - 1
+    feedback: >-
+      The tower is one row short. `range` stops just before its stop number, so use
+      `size + 1` as the stop.
+  - id: no-fstring
+    detect: { kind: validator_failed, id: uses-fstring }
+    feedback: >-
+      The tower is right! Now build each cell with an f-string, like `f"{a * b} "`. It's
+      neater, and it turns the number into text for you.
+  - id: fixed-size
+    detect: { kind: validator_failed, id: any-size }
+    feedback: >-
+      This tower works for 4, but not for other sizes. Use `size` in both `range` calls
+      instead of typing a number.
+  - id: wrong-tower
+    detect: { kind: validator_failed, id: tower }
+    feedback: >-
+      Compare your tower with the example, row by row. Each cell is the row number times
+      the column number.
+
+wrong_solutions:
+  - expect_mistake: text-plus-number
+    code: |
+      size = 4
+      for a in range(1, size + 1):
+          row = ""
+          for b in range(1, size + 1):
+              row = row + a * b
+          print(row)
+  - expect_mistake: zero-row
+    code: |
+      size = 4
+      for a in range(size):
+          row = ""
+          for b in range(size):
+              row = row + f"{a * b} "
+          print(row)
+  - expect_mistake: one-short
+    code: |
+      size = 4
+      for a in range(1, size):
+          row = ""
+          for b in range(1, size + 1):
+              row = row + f"{a * b} "
+          print(row)
+  - expect_mistake: no-fstring
+    code: |
+      size = 4
+      for a in range(1, size + 1):
+          row = ""
+          for b in range(1, size + 1):
+              row = row + str(a * b) + " "
+          print(row)
+
+hints:
+  - Look at the example. What does the row number times the column number give you?
+  - "The outer loop counts `a` from 1 to `size`. Inside it, start `row = \"\"`, then loop `b` from 1 to `size` and add `f\"{a * b} \"` to the row."
+  - |
+    ```python
+    for a in range(1, size + 1):
+        row = ""
+        for b in range(1, size + 1):
+            row = row + ____
+        print(row)
+    ```
+
+story_outro: |
+  The times-table tower rolls off the loom, neat as a pin. Granny Hourglass nods. "Lovely. And not a grain of sand wasted."

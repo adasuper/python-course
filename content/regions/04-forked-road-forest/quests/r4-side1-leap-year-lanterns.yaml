@@ -1,0 +1,151 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-side1-leap-year-lanterns
+region: forked-road-forest
+title: The Leap-Year Lantern Festival
+type: make
+side_quest: true
+learning_outcome: Use and, or, and % to decide if a year is a leap year.
+csta: [2-AP-12]
+estimated_minutes: 10
+prerequisites: [r4-boss-riddle-gate]
+vocabulary: [compound condition, condition]
+# Spaced retrieval: % (the remainder) from Merchant's Crossing.
+retrieval: [r3]
+inputs: ["2024"]
+interactive_input: true
+
+story_intro: |
+  A note on the Quest Board says: *"The Leap-Year Lantern Festival! We light the big lanterns only in leap years. Can someone teach the lanterns to tell?"*
+
+  Ranger Hazel explains the rules:
+
+  1. A year that divides evenly by **4** is a leap year...
+  2. ...but **not** if it divides evenly by **100**...
+  3. ...unless it also divides evenly by **400**. Then it is!
+
+  Remember `%` from Merchant's Crossing? It gives the leftover. `year % 4 == 0` means "4 divides the year evenly".
+goal: Print "Leap year! Lanterns on!" for a leap year, or "Not a leap year." for any other year.
+concept_card: |
+  `%` gives the remainder, so `year % 4 == 0` is True when 4 divides the year evenly. You can store a True/False answer in a variable, then join them with `and`, `or` and `not`:
+  ```python
+  by_4 = year % 4 == 0
+  by_100 = year % 100 == 0
+  by_400 = year % 400 == 0
+  if by_4 and (not by_100 or by_400):
+      print("Leap year! Lanterns on!")
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_ranger_hazel, name: Ranger Hazel }
+
+starter_code: |
+  year = int(input("Which year? "))
+  by_4 = year % 4 == 0
+  # Rule 1: it divides evenly by 4.
+  # Rule 2: but not if it divides by 100...
+  # Rule 3: ...unless it divides by 400!
+
+solution: |
+  year = int(input("Which year? "))
+  by_4 = year % 4 == 0
+  by_100 = year % 100 == 0
+  by_400 = year % 400 == 0
+  if by_4 and (not by_100 or by_400):
+      print("Leap year! Lanterns on!")
+  else:
+      print("Not a leap year.")
+
+validators:
+  - id: years
+    type: hidden_tests
+    mode: inputs
+    compare: [output]
+    cases:
+      - { inputs: ["2024"] }
+      - { inputs: ["2023"] }
+      - { inputs: ["1900"] }
+      - { inputs: ["2000"] }
+      - { inputs: ["2100"] }
+      - { inputs: ["1996"] }
+  - id: if-else
+    type: ast
+    require: [If]
+    require_else: true
+    fail_hint: Use `if` and `else`, so every year gets one of the two messages.
+  - id: uses-remainder
+    type: ast
+    require: [Mod]
+    fail_hint: Use `%` to check if a number divides the year evenly.
+
+common_mistakes:
+  - id: year-is-text
+    detect: { kind: error, type: TypeError }
+    feedback: >-
+      `input()` always hands back text, and `%` can't do maths with text. Wrap it in `int(...)`:
+      `year = int(input("Which year? "))`.
+  - id: no-if
+    detect: { kind: validator_failed, id: if-else }
+    feedback: >-
+      Use `if` and `else`, so every year gets one message: "Leap year! Lanterns on!" or
+      "Not a leap year."
+  - id: every-fourth
+    detect: { kind: hidden_case_fails, validator: years, case: 2 }
+    feedback: >-
+      1900 divides evenly by 4, but it was NOT a leap year! Years that divide by 100 skip the lanterns,
+      unless they also divide by 400.
+  - id: forgot-400
+    detect: { kind: hidden_case_fails, validator: years, case: 3 }
+    feedback: >-
+      2000 divides evenly by 100, but it IS a leap year, because it also divides by 400. Add
+      `or by_400` (or `or year % 400 == 0`) to the rule.
+  - id: check-years
+    detect: { kind: validator_failed, id: years }
+    feedback: >-
+      Some years got the wrong answer. Check the rules again with 2024 (leap), 2023 (not), 1900 (not)
+      and 2000 (leap). And keep the messages exactly as shown.
+
+wrong_solutions:
+  - expect_mistake: no-if
+    code: |
+      year = int(input("Which year? "))
+      print("Leap year! Lanterns on!")
+  - expect_mistake: every-fourth
+    code: |
+      year = int(input("Which year? "))
+      if year % 4 == 0:
+          print("Leap year! Lanterns on!")
+      else:
+          print("Not a leap year.")
+  - expect_mistake: forgot-400
+    code: |
+      year = int(input("Which year? "))
+      if year % 4 == 0 and not year % 100 == 0:
+          print("Leap year! Lanterns on!")
+      else:
+          print("Not a leap year.")
+  - expect_mistake: year-is-text
+    code: |
+      year = input("Which year? ")
+      by_4 = year % 4 == 0
+      if by_4:
+          print("Leap year! Lanterns on!")
+      else:
+          print("Not a leap year.")
+
+hints:
+  - Try the rules by hand first. Is 2024 a leap year? What about 1900 and 2000?
+  - "Make `by_100` and `by_400` like `by_4`. The year needs `by_4` *and* one more thing: `not by_100`, *or* `by_400`. Put that second part in brackets."
+  - |
+    ```python
+    by_100 = year % 100 == 0
+    by_400 = year % 400 == 0
+    if by_4 and (not by_100 or ____):
+        print("Leap year! Lanterns on!")
+    else:
+        print("Not a leap year.")
+    ```
+
+story_outro: |
+  The big lanterns flicker on, one by one. "2024? Lanterns on! 1900? Nope. 2000? LANTERNS ON!" Ranger Hazel cheers. Even Forky the signpost glows a little.

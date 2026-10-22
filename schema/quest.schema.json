@@ -263,6 +263,13 @@
                 "kind": {
                   "type": "string",
                   "const": "none"
+                },
+                "view": {
+                  "type": "string",
+                  "enum": [
+                    "scroll",
+                    "tapestry"
+                  ]
                 }
               },
               "required": [
@@ -275,6 +282,10 @@
         "starter_code": {
           "default": "",
           "type": "string"
+        },
+        "locked": {
+          "default": false,
+          "type": "boolean"
         },
         "solution": {
           "type": "string"
@@ -829,6 +840,13 @@
                                 "kind": {
                                   "type": "string",
                                   "const": "none"
+                                },
+                                "view": {
+                                  "type": "string",
+                                  "enum": [
+                                    "scroll",
+                                    "tapestry"
+                                  ]
                                 }
                               },
                               "required": [
@@ -881,6 +899,78 @@
                 "required": [
                   "type",
                   "python"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "fail_hint": {
+                    "type": "string"
+                  },
+                  "scope": {
+                    "default": "session",
+                    "type": "string",
+                    "const": "session"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "branch_coverage"
+                  },
+                  "min": {
+                    "default": "all",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "all"
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "fail_hint": {
+                    "type": "string"
+                  },
+                  "scope": {
+                    "default": "session",
+                    "type": "string",
+                    "const": "session"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "runs_ok"
+                  },
+                  "min_runs": {
+                    "default": 3,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "distinct_inputs": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
                 ],
                 "additionalProperties": false
               }
@@ -1059,7 +1149,13 @@
                           "assign_in_condition",
                           "loop_var_not_updated",
                           "function_not_called",
-                          "hardcoded_output"
+                          "hardcoded_output",
+                          "range_off_by_one",
+                          "infinite_while_true_without_break",
+                          "function_prints_not_returns",
+                          "return_inside_loop_too_early",
+                          "unused_variable",
+                          "shadowed_builtin"
                         ]
                       },
                       "var": {
@@ -1076,6 +1172,16 @@
                       },
                       "function": {
                         "type": "string"
+                      },
+                      "first": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "last": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
                       }
                     },
                     "required": [
@@ -1159,6 +1265,14 @@
           "items": {
             "type": "string"
           }
+        },
+        "interactive_input": {
+          "default": false,
+          "type": "boolean"
+        },
+        "track_coverage": {
+          "default": false,
+          "type": "boolean"
         },
         "seed": {
           "type": "integer",
@@ -1258,6 +1372,78 @@
                         "additionalProperties": false
                       }
                     ]
+                  },
+                  "twin": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "mcq"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "question": {
+                            "type": "string"
+                          },
+                          "options": {
+                            "minItems": 3,
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "answer": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "explain": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "code",
+                          "question",
+                          "options",
+                          "answer",
+                          "explain"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "text"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "question": {
+                            "type": "string"
+                          },
+                          "answer": {
+                            "type": "string"
+                          },
+                          "explain": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "code",
+                          "question",
+                          "answer",
+                          "explain"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -1284,6 +1470,78 @@
                   },
                   "explain": {
                     "type": "string"
+                  },
+                  "twin": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "mcq"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "question": {
+                            "type": "string"
+                          },
+                          "options": {
+                            "minItems": 3,
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "answer": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "explain": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "code",
+                          "question",
+                          "options",
+                          "answer",
+                          "explain"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "text"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "question": {
+                            "type": "string"
+                          },
+                          "answer": {
+                            "type": "string"
+                          },
+                          "explain": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "code",
+                          "question",
+                          "answer",
+                          "explain"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -1593,6 +1851,72 @@
         },
         "jar_shelf": {
           "type": "boolean"
+        },
+        "duck": {
+          "type": "object",
+          "properties": {
+            "intro": {
+              "type": "string"
+            },
+            "closing": {
+              "default": "Did you spot anything odd?",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "starters": {
+          "minItems": 2,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "description": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "description",
+              "code"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "sample_solutions": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "additionalProperties": false
+          }
         },
         "bonus": {
           "default": [],
@@ -2154,6 +2478,13 @@
                                     "kind": {
                                       "type": "string",
                                       "const": "none"
+                                    },
+                                    "view": {
+                                      "type": "string",
+                                      "enum": [
+                                        "scroll",
+                                        "tapestry"
+                                      ]
                                     }
                                   },
                                   "required": [
@@ -2206,6 +2537,78 @@
                     "required": [
                       "type",
                       "python"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "fail_hint": {
+                        "type": "string"
+                      },
+                      "scope": {
+                        "default": "session",
+                        "type": "string",
+                        "const": "session"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "branch_coverage"
+                      },
+                      "min": {
+                        "default": "all",
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "const": "all"
+                          },
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "fail_hint": {
+                        "type": "string"
+                      },
+                      "scope": {
+                        "default": "session",
+                        "type": "string",
+                        "const": "session"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "runs_ok"
+                      },
+                      "min_runs": {
+                        "default": 3,
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      "distinct_inputs": {
+                        "default": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "type"
                     ],
                     "additionalProperties": false
                   }
@@ -2565,6 +2968,13 @@
                       "kind": {
                         "type": "string",
                         "const": "none"
+                      },
+                      "view": {
+                        "type": "string",
+                        "enum": [
+                          "scroll",
+                          "tapestry"
+                        ]
                       }
                     },
                     "required": [
@@ -2577,6 +2987,10 @@
               "starter_code": {
                 "default": "",
                 "type": "string"
+              },
+              "locked": {
+                "default": false,
+                "type": "boolean"
               },
               "solution": {
                 "type": "string"
@@ -3131,6 +3545,13 @@
                                       "kind": {
                                         "type": "string",
                                         "const": "none"
+                                      },
+                                      "view": {
+                                        "type": "string",
+                                        "enum": [
+                                          "scroll",
+                                          "tapestry"
+                                        ]
                                       }
                                     },
                                     "required": [
@@ -3183,6 +3604,78 @@
                       "required": [
                         "type",
                         "python"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "fail_hint": {
+                          "type": "string"
+                        },
+                        "scope": {
+                          "default": "session",
+                          "type": "string",
+                          "const": "session"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "branch_coverage"
+                        },
+                        "min": {
+                          "default": "all",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "all"
+                            },
+                            {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "fail_hint": {
+                          "type": "string"
+                        },
+                        "scope": {
+                          "default": "session",
+                          "type": "string",
+                          "const": "session"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "runs_ok"
+                        },
+                        "min_runs": {
+                          "default": 3,
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "distinct_inputs": {
+                          "default": false,
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type"
                       ],
                       "additionalProperties": false
                     }
@@ -3361,7 +3854,13 @@
                                 "assign_in_condition",
                                 "loop_var_not_updated",
                                 "function_not_called",
-                                "hardcoded_output"
+                                "hardcoded_output",
+                                "range_off_by_one",
+                                "infinite_while_true_without_break",
+                                "function_prints_not_returns",
+                                "return_inside_loop_too_early",
+                                "unused_variable",
+                                "shadowed_builtin"
                               ]
                             },
                             "var": {
@@ -3378,6 +3877,16 @@
                             },
                             "function": {
                               "type": "string"
+                            },
+                            "first": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "last": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [
@@ -3461,6 +3970,14 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "interactive_input": {
+                "default": false,
+                "type": "boolean"
+              },
+              "track_coverage": {
+                "default": false,
+                "type": "boolean"
               },
               "seed": {
                 "type": "integer",
@@ -3560,6 +4077,78 @@
                               "additionalProperties": false
                             }
                           ]
+                        },
+                        "twin": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "mcq"
+                                },
+                                "code": {
+                                  "type": "string"
+                                },
+                                "question": {
+                                  "type": "string"
+                                },
+                                "options": {
+                                  "minItems": 3,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "answer": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "explain": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "code",
+                                "question",
+                                "options",
+                                "answer",
+                                "explain"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "text"
+                                },
+                                "code": {
+                                  "type": "string"
+                                },
+                                "question": {
+                                  "type": "string"
+                                },
+                                "answer": {
+                                  "type": "string"
+                                },
+                                "explain": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "code",
+                                "question",
+                                "answer",
+                                "explain"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -3586,6 +4175,78 @@
                         },
                         "explain": {
                           "type": "string"
+                        },
+                        "twin": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "mcq"
+                                },
+                                "code": {
+                                  "type": "string"
+                                },
+                                "question": {
+                                  "type": "string"
+                                },
+                                "options": {
+                                  "minItems": 3,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "answer": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "explain": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "code",
+                                "question",
+                                "options",
+                                "answer",
+                                "explain"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "const": "text"
+                                },
+                                "code": {
+                                  "type": "string"
+                                },
+                                "question": {
+                                  "type": "string"
+                                },
+                                "answer": {
+                                  "type": "string"
+                                },
+                                "explain": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "code",
+                                "question",
+                                "answer",
+                                "explain"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -3895,6 +4556,72 @@
               },
               "jar_shelf": {
                 "type": "boolean"
+              },
+              "duck": {
+                "type": "object",
+                "properties": {
+                  "intro": {
+                    "type": "string"
+                  },
+                  "closing": {
+                    "default": "Did you spot anything odd?",
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "starters": {
+                "minItems": 2,
+                "maxItems": 4,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9-]*$"
+                    },
+                    "title": {
+                      "type": "string",
+                      "maxLength": 40
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "description",
+                    "code"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "sample_solutions": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "code"
+                  ],
+                  "additionalProperties": false
+                }
               },
               "bonus": {
                 "default": [],
@@ -4456,6 +5183,13 @@
                                           "kind": {
                                             "type": "string",
                                             "const": "none"
+                                          },
+                                          "view": {
+                                            "type": "string",
+                                            "enum": [
+                                              "scroll",
+                                              "tapestry"
+                                            ]
                                           }
                                         },
                                         "required": [
@@ -4508,6 +5242,78 @@
                           "required": [
                             "type",
                             "python"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "fail_hint": {
+                              "type": "string"
+                            },
+                            "scope": {
+                              "default": "session",
+                              "type": "string",
+                              "const": "session"
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "branch_coverage"
+                            },
+                            "min": {
+                              "default": "all",
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "const": "all"
+                                },
+                                {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "fail_hint": {
+                              "type": "string"
+                            },
+                            "scope": {
+                              "default": "session",
+                              "type": "string",
+                              "const": "session"
+                            },
+                            "type": {
+                              "type": "string",
+                              "const": "runs_ok"
+                            },
+                            "min_runs": {
+                              "default": 3,
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            },
+                            "distinct_inputs": {
+                              "default": false,
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "type"
                           ],
                           "additionalProperties": false
                         }

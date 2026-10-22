@@ -18,7 +18,8 @@ export interface ReplayCallbacks {
   onLine?(line: number | null): void;
   onOutput?(action: Extract<Action, { t: 'out' } | { t: 'input' }>): void;
   onReset?(): void;
-  onNarrate?(sentences: Action[]): void;
+  /** `allAtOnce`: these actions were shown instantly (Instant speed or Skip to end). */
+  onNarrate?(actions: Action[], allAtOnce: boolean): void;
 }
 
 /** How long each action takes at 1× speed. */
@@ -54,6 +55,7 @@ export class ReplayEngine {
   private index = 0;
   private token = 0;
   private narrateBuffer: Action[] = [];
+  private narrateAllAtOnce = false;
   state: ReplayState = 'idle';
   speed: Speed = 1;
 
@@ -142,13 +144,20 @@ export class ReplayEngine {
     this.callbacks.onAction?.(at, action);
     this.callbacks.onLine?.(action.ln);
     const ms = speed === 'instant' ? 0 : baseDuration(action) / speed;
-    if (action.t === 'out' || action.t === 'input') {
+    if (action.t === 'out') {
       this.callbacks.onOutput?.(action);
-      if (action.t === 'input') this.narrateBuffer.push(action);
       if (ms) await sleep(ms);
       return;
     }
+    if (action.t === 'input') {
+      // The answer shows on the Scroll, and on stage the character hands it over.
+      this.callbacks.onOutput?.(action);
+      this.narrateBuffer.push(action);
+      await Promise.all([this.view.apply(action, ms), ms ? sleep(ms) : null]);
+      return;
+    }
     this.narrateBuffer.push(action);
+    if (speed === 'instant') this.narrateAllAtOnce = true;
     if (speed !== 'instant' && this.narrateBuffer.length > 1 && this.narrateBuffer.at(-2)!.t !== action.t) {
       const last = this.narrateBuffer.pop()!;
       this.flushNarration();
@@ -158,8 +167,9 @@ export class ReplayEngine {
   }
 
   private flushNarration() {
-    if (this.narrateBuffer.length) this.callbacks.onNarrate?.(this.narrateBuffer);
+    if (this.narrateBuffer.length) this.callbacks.onNarrate?.(this.narrateBuffer, this.narrateAllAtOnce);
     this.narrateBuffer = [];
+    this.narrateAllAtOnce = false;
   }
 
   private finish() {

@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-q5-the-magic-ink
+region: whispering-library
+title: The Magic Ink
+type: modify
+npc: inka
+learning_outcome: Use an f-string to place variable values inside a sentence.
+csta: [2-AP-11]
+estimated_minutes: 8
+prerequisites: [r2-q4-catalog-card]
+vocabulary: [f-string, variable, concatenate]
+rewards: { item: ink-of-formatting }
+
+story_intro: |
+  Inka Blot uncorks a tiny bottle. It glows. "Magic ink! Write a jar's name in curly braces, and the ink fills in its value by itself."
+
+  The magic ink is an [[f-string]]: a string with an `f` right before the first quote. Inside it, `{name}` is replaced by the value in the jar `name`. No more `+` signs and lost spaces!
+goal: Rewrite the print line with one f-string. The Scroll must show exactly the same sentence as before.
+concept_card: |
+  An **f-string** puts values inside text:
+  ```python
+  name = "Ada"
+  print(f"Hi {name}!")   # Hi Ada!
+  ```
+  Don't forget the `f` before the quote. Without it, Python prints the braces as they are: `Hi {name}!`
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_inkmaker, name: Inka Blot }
+
+starter_code: |
+  name = "Ada"
+  book = "The Owl Who Coded"
+  print("Dear " + name + ", " + book + " is ready for you.")
+
+solution: |
+  name = "Ada"
+  book = "The Owl Who Coded"
+  print(f"Dear {name}, {book} is ready for you.")
+
+validators:
+  - id: same-note
+    type: output
+    expect: Dear Ada, The Owl Who Coded is ready for you.
+    fail_hint: The note must say exactly the same thing as before. Check the comma and the spaces.
+  - id: magic-ink
+    type: ast
+    require: [JoinedStr]
+    forbid: [BinOp]
+    fail_hint: Use one f-string, like f"Dear {name}, ...", instead of joining with +.
+  - id: other-readers
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - vars: { name: Bo, book: Moonlight Maps }
+    fail_hint: Put the jars `name` and `book` inside the braces, so the note works for every reader.
+
+common_mistakes:
+  - id: missing-f
+    detect: { kind: detector, name: missing_fstring_prefix }
+    feedback: >-
+      Your note shows the braces, like `{name}`. The magic needs an `f` right before the first quote:
+      `f"Dear {name}, ..."`.
+  - id: still-plus
+    detect: { kind: validator_failed, id: magic-ink }
+    feedback: >-
+      The note is right, but it still uses `+`. Rewrite the whole sentence as one f-string, with
+      `{name}` and `{book}` inside it.
+  - id: typed-values
+    detect: { kind: hidden_case_fails, validator: other-readers, case: 0 }
+    feedback: >-
+      You typed Ada's name into the text. Use `{name}` and `{book}` so the ink fills in whoever the
+      reader is.
+
+wrong_solutions:
+  - expect_mistake: missing-f
+    code: |
+      name = "Ada"
+      book = "The Owl Who Coded"
+      print("Dear {name}, {book} is ready for you.")
+  - expect_mistake: still-plus
+    code: |
+      name = "Ada"
+      book = "The Owl Who Coded"
+      print("Dear " + name + ", " + book + " is ready for you.")
+  - expect_mistake: typed-values
+    code: |
+      name = "Ada"
+      book = "The Owl Who Coded"
+      print(f"Dear Ada, The Owl Who Coded is ready for you.")
+
+hints:
+  - Where do the two jars go in the sentence? Those spots become `{name}` and `{book}`.
+  - "Start with `print(f\"Dear ` and type the rest of the sentence. Put `{name}` and `{book}` where the jars go. No `+` signs!"
+  - |
+    ```python
+    print(f"Dear {name}, ____ is ready for you.")
+    ```
+
+story_outro: |
+  The ink sparkles across the page and spells out the note all by itself. "Magic!" laughs Inka. She hands you a bottle: the **Ink of Formatting**. An f-string puts a variable's value inside text.

@@ -3,10 +3,19 @@ import { useEffect, useState } from 'preact/hooks';
 import type { BossQuest, NormalQuest } from '../../content/types';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
-import { completePhase, completeQuest, record } from '../../state/progress';
+import {
+  completePhase,
+  completeQuest,
+  courseComplete,
+  finaleReady,
+  playableRegions,
+  record,
+} from '../../state/progress';
 import { course, getStorage, go, loadRegion, profile, regions, update } from '../../state/store';
+import { playFinale } from '../flow';
 import { Hud } from '../screens/Overworld';
 import { QuestPlay } from './QuestPlay';
+import { questTab, type QuestTab } from './questTabs';
 
 export function QuestScreen({ questId }: { questId: string }) {
   const c = course.value!;
@@ -38,22 +47,30 @@ export function QuestScreen({ questId }: { questId: string }) {
 
 /** Skip links (F-A11-06). The editor may be a Parsons puzzle instead. */
 function SkipLinks() {
-  const jump = (e: Event, ...selectors: string[]) => {
-    const target = selectors.map((s) => document.querySelector<HTMLElement>(s)).find(Boolean);
-    if (!target) return;
+  const jump = (e: Event, tab: QuestTab | null, ...selectors: string[]) => {
     e.preventDefault();
-    if (!target.hasAttribute('tabindex') && !target.isContentEditable) target.tabIndex = -1;
-    target.focus();
+    // On a narrow screen the target may be on another tab: show it first.
+    if (tab) questTab.value = tab;
+    requestAnimationFrame(() => {
+      const target = selectors.map((s) => document.querySelector<HTMLElement>(s)).find(Boolean);
+      if (!target) return;
+      if (!target.hasAttribute('tabindex') && !target.isContentEditable) target.tabIndex = -1;
+      target.focus();
+    });
   };
   return (
     <>
-      <a class="skip-link" href="#main" onClick={(e) => jump(e, '#main')}>
+      <a class="skip-link" href="#main" onClick={(e) => jump(e, null, '#main')}>
         {t.skipToMain}
       </a>
-      <a class="skip-link" href="#code-editor" onClick={(e) => jump(e, '#code-editor', '.parsons button')}>
+      <a
+        class="skip-link"
+        href="#code-editor"
+        onClick={(e) => jump(e, 'work', '#code-editor', '.parsons button')}
+      >
         {t.quest.skipToEditor}
       </a>
-      <a class="skip-link" href="#output-body" onClick={(e) => jump(e, '#output-body')}>
+      <a class="skip-link" href="#output-body" onClick={(e) => jump(e, 'stage', '#output-body')}>
         {t.quest.skipToOutput}
       </a>
     </>
@@ -207,9 +224,26 @@ function BossScreen({ quest, regionName }: { quest: BossQuest; regionName: strin
                   {t.quest.nextPhase} ▸
                 </button>
               ) : (
-                <button type="button" class="primary" onClick={() => go({ name: 'overworld' })}>
-                  {t.quest.continue} ▸
-                </button>
+                <div class="row">
+                  {/* The last region's boss: the Great Script is whole again (the finale). */}
+                  {finaleReady(profile.value!, course.value!) && (
+                    <button type="button" class="primary" onClick={() => playFinale()}>
+                      🌟 {t.finale.restore}
+                    </button>
+                  )}
+                  {course.value!.moreRegionsComing && courseComplete(profile.value!, course.value!) && (
+                    <p>🛤️ {t.worldMap.allSoFar}</p>
+                  )}
+                  <button type="button" class="primary" onClick={() => go({ name: 'overworld' })}>
+                    {t.quest.continue} ▸
+                  </button>
+                  {/* The road to the next region is open now (F-WLD-08). */}
+                  {playableRegions(course.value!).length > 1 && (
+                    <button type="button" onClick={() => go({ name: 'worldmap' })}>
+                      🗺️ {t.worldMap.open}
+                    </button>
+                  )}
+                </div>
               )
             }
           />

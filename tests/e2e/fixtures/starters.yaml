@@ -1,0 +1,42 @@
+# Pick a starter, then the capstone's light rules (R11 boss phase 4): a loop, an if, a function
+# and random, and 3 runs without a crash.
+id: r1-q98-make-a-game
+region: hearthvale-village
+title: Make a Game
+type: make
+learning_outcome: Use a loop, an if, a function and random to build a small game that runs without errors.
+csta: [2-AP-15]
+estimated_minutes: 5
+story_intro: Pick a game to start from and make it yours.
+goal: Use a loop, an `if`, a function and `random`, then run it 3 times without a crash.
+concept_card: Good games mix chance with rules.
+starters:
+  - id: dice
+    title: Dice duel
+    description: Roll dice against the Glitch.
+    code: |
+      import random
+      roll = random.randint(1, 6)
+      print(roll)
+  - id: story
+    title: Choose a path
+    description: A short story with choices.
+    code: |
+      print("You stand at a fork in the road.")
+solution: |
+  import random
+  def roll():
+      return random.randint(1, 6)
+  for turn in range(3):
+      if roll() == 6:
+          print("Six!")
+      else:
+          print("Roll again.")
+validators:
+  - { type: ast, id: loop, require: [Loop], fail_hint: Add a loop (for or while). }
+  - { type: ast, id: if, require: [If], fail_hint: Add an if. }
+  - { type: ast, id: function, require: [FunctionDef], fail_hint: Add a function with def. }
+  - { type: ast, id: random, require_calls: [random.*], fail_hint: Use random. }
+  - { type: runs_ok, min_runs: 3 }
+hints: [Start small., Add one rule at a time., Look at the dice starter.]
+story_outro: What a game!

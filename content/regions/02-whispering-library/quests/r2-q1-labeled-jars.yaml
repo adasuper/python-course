@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-q1-labeled-jars
+region: whispering-library
+title: The Labeled Jars
+type: predict
+npc: byte
+learning_outcome: Predict what a program prints when it stores text in a variable and then prints the variable.
+csta: [2-AP-11]
+estimated_minutes: 6
+vocabulary: [variable, value, assignment]
+
+story_intro: |
+  Byte lands on a shelf full of jars. "In this library, we keep words in labeled jars. A jar with a label is called a [[variable]]."
+
+  `book = "The Owl Who Coded"` makes a jar named `book` and puts the text inside. Read it out loud as "book gets The Owl Who Coded."
+goal: Read the program and predict what each print line shows. Then run it to check.
+concept_card: |
+  A **variable** is a name for a value. `book = "Owls"` stores the text in a jar named `book`.
+  - `print(book)` shows what is **inside** the jar: `Owls`
+  - `print("book")` shows the **word** book, because it is in quotes.
+
+stage: { kind: none }
+
+starter_code: |
+  book = "The Owl Who Coded"
+  print(book)
+  print("book")
+
+prompts:
+  - kind: mcq
+    question: Line 2 is `print(book)`, with no quotes. What does it show?
+    options:
+      - The Owl Who Coded
+      - book
+      - Python shows an error.
+    answer: 0
+    verify: { kind: none }
+    explain: No quotes, so Python looks inside the jar named `book` and shows what it holds.
+    twin:
+      kind: mcq
+      code: |
+        pet = "owl"
+        print(pet)
+      question: What does this program print?
+      options:
+        - owl
+        - pet
+        - Python shows an error.
+      answer: 0
+      explain: "`pet` has no quotes, so Python shows what is in the jar: owl."
+  - kind: mcq
+    question: Line 3 is `print("book")`, with quotes. What does it show?
+    options:
+      - book
+      - The Owl Who Coded
+      - Python shows an error.
+    answer: 0
+    verify: { kind: none }
+    explain: With quotes, `"book"` is just a string. Python shows the word book, not the jar's value.
+  - kind: text
+    question: Now type exactly what the whole program prints, one line at a time.
+    answer: |
+      The Owl Who Coded
+      book
+    explain: First the jar's value, then the word book.
+
+hints:
+  - Look for quotes. Text in quotes is shown as it is. A name without quotes is a jar.
+  - "`print(book)` opens the jar called `book`. `print(\"book\")` just shows the word."
+  - |
+    The Scroll will show two lines:
+    ```text
+    The Owl Who ____
+    book
+    ```
+
+story_outro: |
+  "Exactly!" Byte puffs up proudly. "Quotes mean the word itself. No quotes means look inside the jar. Remember that, and half the library is yours."

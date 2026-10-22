@@ -18,7 +18,31 @@ opening:
     text: Don't worry. Mistakes are fine here. Nothing explodes. Well, almost nothing.
   - speaker: byte
     text: Our first stop is Hearthvale Village. Follow me, apprentice!
+# Shown when every region is restored.
+finale:
+  - speaker: narrator
+    text: The last Script Fragment clicked into place. Light ran along every line of the Great Script.
+  - speaker: narrator
+    text: All over Codeweald, rivers flowed the right way again. Bread rose on time. The chickens stayed loud. Some things never change.
+  - speaker: byte
+    text: Hoo! Look at it, apprentice. The Great Script is whole again, and part of it is code that YOU wrote.
+  - speaker: byte
+    text: Every Bug you fixed is a firefly now. They seem to like you. I can't imagine why. (I can. You were very patient with them.)
+  - speaker: byte
+    text: You are not an apprentice anymore. You are a true Scriptwright. Keep writing Python. There's a whole world of it out there.
 regions:
   - id: hearthvale-village
     lessons: 2
+  - id: whispering-library
+    lessons: 2
+  - id: merchants-crossing
+    lessons: 2
+  - id: forked-road-forest
+    lessons: 2
+  - id: the-endless-mines
+    lessons: 2
+  - id: clocktower-peaks
+    lessons: 2
 side_quests: true
+# Regions 7–11 are still being written: no finale yet, and the world map says more are coming.
+more_regions_coming: true

@@ -4,12 +4,21 @@ import { copySaveCode, saveProgressFile } from '../state/saving';
 import { announce, route, saveDialogOpen, unsaved } from '../state/store';
 import { LiveRegion, Toasts } from './components/Common';
 import { SaveDialog } from './components/SaveDialogs';
+import { stopSpeaking } from './speech';
 import { QuestScreen } from './quest/QuestScreen';
 import { CheckScreen } from './screens/Check';
 import { CreditsScreen } from './screens/Credits';
+import { FinaleScreen } from './screens/Finale';
 import { ConceptScreen } from './screens/Concept';
 import { CreatorScreen } from './screens/Creator';
-import { InventoryScreen } from './screens/Inventory';
+import { InventoryScreen, ItemScreen } from './screens/Inventory';
+import { SpellbookScreen } from './screens/Spellbook';
+import { WorkshopScreen } from './screens/Workshop';
+import { SettingsScreen } from './screens/Settings';
+import { SystemCheckScreen } from './screens/SystemCheck';
+import { WorldMapScreen } from './screens/WorldMap';
+import { reloadForUpdate, updateReady } from './pwa';
+import { flushSave } from '../state/store';
 import { OverworldScreen } from './screens/Overworld';
 import { StoryScreen } from './screens/Story';
 import { TitleScreen } from './screens/Title';
@@ -29,6 +38,8 @@ export function App() {
   }, []);
   useEffect(() => {
     document.title = r.name === 'quest' ? `${t.appName} — quest` : t.appName;
+    // Reading aloud stops when the student moves on (§14.5).
+    stopSpeaking();
   }, [r]);
 
   let screen;
@@ -64,12 +75,34 @@ export function App() {
     case 'inventory':
       screen = <InventoryScreen />;
       break;
+    case 'item':
+      screen = <ItemScreen key={r.id} id={r.id} />;
+      break;
+    case 'settings':
+      screen = <SettingsScreen />;
+      break;
+    case 'workshop':
+      screen = <WorkshopScreen />;
+      break;
+    case 'spellbook':
+      screen = <SpellbookScreen key={r.tab} tab={r.tab} />;
+      break;
     case 'credits':
-      screen = <CreditsScreen />;
+      screen = <CreditsScreen back={r.back} />;
+      break;
+    case 'finale':
+      screen = <FinaleScreen />;
+      break;
+    case 'system':
+      screen = <SystemCheckScreen />;
+      break;
+    case 'worldmap':
+      screen = <WorldMapScreen />;
       break;
   }
   return (
     <>
+      {updateReady.value && <UpdateBanner />}
       {screen}
       <Toasts
         onCopyCode={() => void copySaveCode()}
@@ -78,5 +111,24 @@ export function App() {
       {saveDialogOpen.value && <SaveDialog onClose={() => (saveDialogOpen.value = false)} />}
       <LiveRegion />
     </>
+  );
+}
+
+/** A new version never reloads by itself mid-quest (F-OFF-04): the student chooses when. */
+function UpdateBanner() {
+  return (
+    <div class="banner info update-banner" role="status">
+      <span>🆕 {t.offline.update}</span>
+      <button
+        type="button"
+        class="small"
+        onClick={async () => {
+          await flushSave();
+          await reloadForUpdate();
+        }}
+      >
+        ↻ {t.offline.reload}
+      </button>
+    </div>
   );
 }

@@ -61,6 +61,8 @@ test('play the first quest using only the keyboard', async ({ page }) => {
   await page.keyboard.press('Enter'); // Run to check
   await expect(page.locator('#feedback')).toBeFocused({ timeout: 30_000 });
   await expect(page.locator('#feedback')).toContainText('Quest complete!');
+  // XP and the new item also pop up as a toast (F-PRG-08).
+  await expect(page.locator('.toast-reward')).toContainText('+20 XP');
 });
 
 test('the editor never traps the keyboard: Esc, then Tab, leaves it', async ({ page }) => {

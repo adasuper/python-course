@@ -1,4 +1,7 @@
 // Where the game goes next: opening story → region intro → concept scene → overworld.
+import { t } from '../i18n/en';
+import { applyAudio } from './audio';
+import { loadQuick } from './quickPrefs';
 import { questState } from '../state/progress';
 import { newProfile, type Profile } from '../state/profile';
 import {
@@ -25,6 +28,8 @@ export async function createProfile(nickname: string, avatarId: string, themeId:
   const c = course.value!;
   // Deploy-time defaults from codeweald.config.json (F-DEP-02).
   const p = newProfile(nickname.trim(), avatarId, themeId, c.regions[0]!.id, config.value.defaults);
+  // What was picked on the title screen carries over.
+  Object.assign(p.settings, loadQuick());
   await getStorage().saveProfile(p);
   profiles.value = [...profiles.value, p];
   await selectProfile(p);
@@ -47,6 +52,12 @@ export async function continueAdventure() {
     return;
   }
   go(regionStart);
+}
+
+/** The finale story, then the finale screen with the credits. */
+export function playFinale() {
+  const c = course.value!;
+  go({ name: 'story', title: t.finale.heading, lines: c.finale, next: { name: 'finale' } });
 }
 
 export async function enterRegion(regionId: string) {
@@ -72,15 +83,19 @@ async function regionRoute(regionId: string): Promise<Route> {
 export async function switchProfile() {
   await flushSave();
   profile.value = null;
+  applySettings(null);
   go({ name: 'title' });
 }
 
 export function applySettings(p: Profile | null) {
   const root = document.documentElement;
   const s = p?.settings;
-  root.style.setProperty('--text-scale', String(s?.textScale ?? 1));
+  const quick = p ? {} : loadQuick();
+  root.style.setProperty('--text-scale', String(s?.textScale ?? quick.textScale ?? 1));
   root.dataset.font = s?.font ?? 'atkinson';
-  root.dataset.contrast = s?.highContrast ? 'high' : 'normal';
+  root.dataset.codeFont = s?.codeFont ?? 'atkinson';
+  if (s) applyAudio(s.audio);
+  root.dataset.contrast = (s?.highContrast ?? quick.highContrast) ? 'high' : 'normal';
   const reduce =
     s?.reducedMotion === 'on' ||
     (s?.reducedMotion !== 'off' && matchMedia('(prefers-reduced-motion: reduce)').matches);

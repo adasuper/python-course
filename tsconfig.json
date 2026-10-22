@@ -17,7 +17,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "vite-plugin-pwa/client", "node"]
   },
   "include": ["src", "scripts", "tests", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"]
 }

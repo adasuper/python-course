@@ -12,7 +12,8 @@ export function Hints({
   hints: Rich[];
   revealed: number;
   onReveal(tier: 1 | 2 | 3): void;
-  onCopy(code: string): void;
+  /** Absent where copying would break the quest (a locked fill quest). */
+  onCopy?: (code: string) => void;
 }) {
   // Deploy setting defaults.hints: all three tiers, only the nudge, or none (F-DEP-02).
   const mode = config.value.defaults.hints;

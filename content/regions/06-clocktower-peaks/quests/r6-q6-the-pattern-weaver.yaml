@@ -1,0 +1,192 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-q6-the-pattern-weaver
+region: clocktower-peaks
+title: The Pattern Weaver
+type: make
+npc: wren_warpwell
+learning_outcome: Use nested for loops to print a rectangle of symbols.
+csta: [2-AP-12]
+estimated_minutes: 10
+prerequisites: [r6-q5-the-skipping-clock]
+retrieval: [r2]
+vocabulary: [nested loop, for loop, loop variable]
+rewards: { item: weavers-loom }
+
+story_intro: |
+  Wren Warpwell's loom clacks to life. "I weave whatever your code prints. Today I need a rug for the bell loft: a rectangle of stars, `width` stars wide and `height` rows tall."
+
+  Weave it with a [[nested loop]], a loop inside a loop. The inner loop builds one row, a star at a time, with `row = row + "*"`. That's the string joining you learned in the Whispering Library! The outer loop prints a row on each pass.
+goal: Use a loop inside a loop to print a rectangle of `*` stars, `width` wide and `height` tall. It must work for any size.
+concept_card: |
+  In a **nested loop**, the inner loop runs all the way through on *every* pass of the outer loop.
+  ```python
+  for line in range(height):
+      row = ""
+      for stitch in range(width):
+          row = row + "*"
+      print(row)
+  ```
+  Start each row empty, add the stars, then print the row once.
+
+stage: { kind: none, view: tapestry }
+
+starter_code: |
+  width = 6
+  height = 3
+  # Weave a rug of * stars: height rows,
+  # and each row is width stars wide.
+
+solution: |
+  width = 6
+  height = 3
+  # Weave a rug of * stars: height rows,
+  # and each row is width stars wide.
+  for line in range(height):
+      row = ""
+      for stitch in range(width):
+          row = row + "*"
+      print(row)
+
+validators:
+  - id: rectangle
+    type: output
+    expect: |
+      ******
+      ******
+      ******
+    fail_hint: Wren wants 3 rows of 6 stars. Compare the loom with that rug.
+  - id: nested
+    type: custom
+    fail_hint: Put one for loop inside another.
+    python: |
+      def check(ctx):
+          tree = ctx.tree
+          if tree is not None:
+              for outer in ast.walk(tree):
+                  if isinstance(outer, ast.For):
+                      for inner in ast.walk(outer):
+                          if inner is not outer and isinstance(inner, ast.For):
+                              return Pass()
+          return Fail("Put one for loop inside another.")
+  - id: any-size
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - { vars: { width: 4, height: 2 } }
+      - { vars: { width: 1, height: 5 } }
+      - { vars: { width: 9, height: 4 } }
+    fail_hint: The loom must weave rugs of any size. Use `width` and `height` in your loops.
+  - id: uses-sizes
+    type: ast
+    uses_names: [width, height]
+    fail_hint: Use `width` and `height` in your loops, so the loom can weave any size.
+
+common_mistakes:
+  - id: one-loop
+    detect: { kind: validator_failed, id: nested }
+    feedback: >-
+      That's a lovely rug, but Wren wants it woven with a loop inside a loop. Make an inner
+      loop that adds one star at a time: `row = row + "*"`.
+  - id: swapped
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            w, h = ctx.vars.get("width"), ctx.vars.get("height")
+            rows = [r for r in ctx.lines if r.strip()]
+            if not isinstance(w, int) or not isinstance(h, int) or w == h:
+                return False
+            return len(rows) == w and all(len(r.strip()) == h for r in rows)
+    feedback: >-
+      Your rug is turned on its side! The outer loop makes the rows, so it should use
+      `range(height)`. The inner loop makes the stars in a row, so it uses `range(width)`.
+  - id: too-many-rows
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            h = ctx.vars.get("height")
+            rows = [r for r in ctx.lines if r.strip()]
+            return isinstance(h, int) and len(rows) > h
+    feedback: >-
+      The loom printed far too many rows! Is `print(row)` inside the inner loop? Move it
+      out one step, so it runs once, after the row is finished.
+  - id: growing-rows
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            rows = [r for r in ctx.lines if r.strip()]
+            return len(rows) > 1 and len(rows[-1]) > len(rows[0])
+    feedback: >-
+      Your rows keep getting longer! Each row needs to start empty. Put `row = ""` inside
+      the outer loop, just before the inner loop.
+  - id: fixed-size
+    detect: { kind: validator_failed, id: any-size }
+    feedback: >-
+      This rug works, but the loom must weave other sizes too. Use `range(height)` and
+      `range(width)` instead of typing the numbers.
+  - id: wrong-rug
+    detect: { kind: validator_failed, id: rectangle }
+    feedback: >-
+      The rug doesn't match yet. Wren wants `height` rows, and each row has `width` stars.
+
+wrong_solutions:
+  - expect_mistake: one-loop
+    code: |
+      width = 6
+      height = 3
+      for line in range(height):
+          print("*" * width)
+  - expect_mistake: growing-rows
+    code: |
+      width = 6
+      height = 3
+      row = ""
+      for line in range(height):
+          for stitch in range(width):
+              row = row + "*"
+          print(row)
+  - expect_mistake: too-many-rows
+    code: |
+      width = 6
+      height = 3
+      for line in range(height):
+          row = ""
+          for stitch in range(width):
+              row = row + "*"
+              print(row)
+  - expect_mistake: swapped
+    code: |
+      width = 6
+      height = 3
+      for line in range(width):
+          row = ""
+          for stitch in range(height):
+              row = row + "*"
+          print(row)
+  - expect_mistake: fixed-size
+    code: |
+      width = 6
+      height = 3
+      for line in range(3):
+          row = ""
+          for stitch in range(6):
+              row = row + "*"
+          print(row)
+
+hints:
+  - Start small. Can you print just one row of `width` stars, with a loop that adds one star at a time?
+  - "Put your row-making loop inside a loop that runs `height` times. Start each row with `row = \"\"`, and print it after the inner loop ends."
+  - |
+    ```python
+    for line in range(height):
+        row = ""
+        for stitch in range(width):
+            row = ____
+        print(row)
+    ```
+
+story_outro: |
+  Clack, clack, clack! A perfect star rug rolls off the loom. "Three rows, six stars each, and not one stitch out of place," says Wren. You earned the **Weaver's Loom**. A loop inside a loop can weave any pattern.

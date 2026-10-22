@@ -17,16 +17,83 @@ export function configureRules(features: { knowledgeCheckGates: boolean; sideQue
   sideQuestsOn = features.sideQuests;
 }
 
+/** The regions in this course, in order: `enabled: false` in course.yaml leaves one out (F-AUT-11). */
+export function playableRegions(course: Course) {
+  return course.regions.filter((r) => r.enabled !== false);
+}
+
+/** A region opens when the boss of the region before it (skipping left-out ones) is beaten. */
 export function regionUnlocked(p: Profile, course: Course, regionId: string, unlockedThrough = 0): boolean {
-  const index = course.regions.findIndex((r) => r.id === regionId);
+  const regions = playableRegions(course);
+  const index = regions.findIndex((r) => r.id === regionId);
   if (index <= 0) return index === 0;
   if (index < unlockedThrough) return true;
-  const previous = course.regions[index - 1]!;
+  const previous = regions[index - 1]!;
   const bossId = course.questOrder.find(
     (q) => course.questInfo[q]?.region === previous.id && course.questInfo[q]?.type === 'boss',
   );
   const bossBeaten = Boolean(bossId && p.quests[bossId]?.status === 'completed');
   return bossBeaten && (!checkGates || Boolean(p.checks[previous.id]));
+}
+
+/** The Workshop opens when the first region's boss is defeated (§11.7), if the deploy has it. */
+export function workshopUnlocked(p: Profile, course: Course, enabled = true): boolean {
+  if (!enabled) return false;
+  const first = course.regions[0]?.id;
+  return course.questOrder.some(
+    (q) =>
+      course.questInfo[q]?.region === first &&
+      course.questInfo[q]?.type === 'boss' &&
+      p.quests[q]?.status === 'completed',
+  );
+}
+
+/** A region's core quests: everything but its side quests and its boss. */
+export function coreQuests(course: Course, regionId: string): string[] {
+  return course.questOrder.filter((q) => {
+    const info = course.questInfo[q];
+    return info?.region === regionId && !info.sideQuest && info.type !== 'boss';
+  });
+}
+
+/** Quests still to finish before this one opens: its prerequisites and, for a side quest,
+ *  the region's core quests (side quests appear once those are done, §9.9). */
+export function missingFor(p: Profile, course: Course, questId: string): string[] {
+  const info = course.questInfo[questId];
+  if (!info) return [];
+  const needed = info.sideQuest
+    ? [...coreQuests(course, info.region), ...info.prerequisites]
+    : info.prerequisites;
+  return [...new Set(needed)].filter((q) => p.quests[q]?.status !== 'completed');
+}
+
+/** What the region's Quest Board offers: side quests, and quests no map NPC hands out
+ *  (F-WLD-07), so adding a quest never needs a map edit. */
+export function boardQuests(course: Course, regionId: string): string[] {
+  return course.questOrder.filter((q) => {
+    const info = course.questInfo[q];
+    return info?.region === regionId && (info.sideQuest || !info.npc);
+  });
+}
+
+/** A region is restored when its boss is defeated. */
+/** Every region in the course is restored. */
+export function courseComplete(p: Profile, course: Course): boolean {
+  return playableRegions(course).every((r) => regionRestored(p, course, r.id));
+}
+
+/** The Great Script is whole: the finale plays (not while more regions are on the way). */
+export function finaleReady(p: Profile, course: Course): boolean {
+  return !course.moreRegionsComing && courseComplete(p, course);
+}
+
+export function regionRestored(p: Profile, course: Course, regionId: string): boolean {
+  return course.questOrder.some(
+    (q) =>
+      course.questInfo[q]?.region === regionId &&
+      course.questInfo[q]?.type === 'boss' &&
+      p.quests[q]?.status === 'completed',
+  );
 }
 
 export function questState(p: Profile, course: Course, questId: string, unlockedThrough = 0): Marker {
@@ -36,7 +103,7 @@ export function questState(p: Profile, course: Course, questId: string, unlocked
   const rec = p.quests[questId];
   if (rec?.status === 'completed') return 'completed';
   if (info.sideQuest && !(course.sideQuests && sideQuestsOn)) return 'locked';
-  if (!info.prerequisites.every((pre) => p.quests[pre]?.status === 'completed')) return 'locked';
+  if (missingFor(p, course, questId).length) return 'locked';
   return rec ? 'in_progress' : 'available';
 }
 
@@ -72,6 +139,16 @@ export function recordAttempt(p: Profile, questId: string, code: string, passed:
   const h = hashText(code.trim());
   if (!rec.codeHashes.includes(h) && rec.codeHashes.length < 12) rec.codeHashes.push(h);
   if (!passed && rec.status !== 'completed') rec.failedBeforePass++;
+}
+
+/** A predict quest's run: only the first try's predictions count toward accuracy (§9.2). */
+export function recordPredictions(p: Profile, questId: string, correct: boolean[]) {
+  const rec = record(p, questId);
+  rec.attempts++;
+  if (rec.predictionsTotal === undefined) {
+    rec.predictionsTotal = correct.length;
+    rec.predictionsCorrectFirstTry = correct.filter(Boolean).length;
+  }
 }
 
 /** Hints unlock in order, per quest, or per phase of a boss (F-FBK-11). */
@@ -147,6 +224,31 @@ export function completePhase(
     return { ...reward, xp: reward.xp + xp, levelUp: levelFor(p.xp) > before ? levelFor(p.xp) : null };
   }
   return { xp, item: null, levelUp: levelFor(p.xp) > before ? levelFor(p.xp) : null, bossDefeated: false };
+}
+
+/** Bonus challenges (§9.4): extra XP once per challenge, never taken away. In a boss, each
+ *  phase's challenges are kept apart. Returns the XP gained now and which challenges were
+ *  new. */
+export function awardBonus(
+  p: Profile,
+  questId: string,
+  earned: { id: string; xp: number }[],
+  phaseId?: string,
+): { xp: number; ids: string[]; levelUp: number | null } {
+  const rec = record(p, questId);
+  rec.bonus ??= [];
+  const before = levelFor(p.xp);
+  const fresh = earned.filter((b) => !rec.bonus!.includes(bonusKey(b.id, phaseId)));
+  for (const b of fresh) rec.bonus.push(bonusKey(b.id, phaseId));
+  const xp = fresh.reduce((sum, b) => sum + b.xp, 0);
+  p.xp += xp;
+  return { xp, ids: fresh.map((b) => b.id), levelUp: levelFor(p.xp) > before ? levelFor(p.xp) : null };
+}
+
+export const bonusKey = (id: string, phaseId?: string) => (phaseId ? `${phaseId}/${id}` : id);
+
+export function bonusDone(p: Profile, questId: string, id: string, phaseId?: string): boolean {
+  return Boolean(p.quests[questId]?.bonus?.includes(bonusKey(id, phaseId)));
 }
 
 export function completeCheck(p: Profile, regionId: string, score: number, total: number): number {

@@ -1,0 +1,187 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-q3-the-gem-tally
+region: the-endless-mines
+title: The Gem Tally
+type: fill
+locked: true
+npc: gemma-glint
+learning_outcome: Use a counter variable in a while loop to count the gems the hero picks up.
+csta: [2-AP-11, 2-AP-12]
+estimated_minutes: 8
+prerequisites: [r5-q2-lantern-down-the-tunnel]
+vocabulary: [counter, while loop]
+rewards: { item: tally-stones }
+
+story_intro: |
+  Gemma Glint points down a glittering tunnel. "A whole vein of gems! I need a tally of how many we pick up. But every tunnel has a different number, and I always lose count."
+
+  A [[counter]] keeps the count for you. It starts at 0. Each time something happens, it goes up by 1: `gems = gems + 1`. When a gem is in front of the hero, `world.look()` says `"gem"`.
+goal: Fill the three gaps. The hero walks along the vein, picks up every gem, and counts them. Then the program prints the tally.
+concept_card: |
+  A **counter** is a variable that counts. Start it at 0 before the loop. Inside the loop, add 1 each time something happens.
+  ```python
+  gems = 0
+  while world.look() == "gem":
+      hero.move("right")
+      hero.pick_up()
+      gems = gems + 1
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    ###########
+    #Hgggg...N#
+    ###########
+  facing: right
+  legend:
+    "#": { tile: mine_wall, solid: true, look: wall }
+    ".": { tile: mine_floor, look: floor }
+    H: { tile: mine_floor, hero: true, look: floor }
+    g: { tile: mine_floor, item: gem }
+    N: { tile: mine_floor, object: npc }
+  npcs:
+    N: { name: Gemma Glint, sprite: npc_miner_gemma }
+
+starter_code: |
+  from codeweald import hero, world
+  gems = ____
+  while world.look() == ____:
+      hero.move("right")
+      hero.pick_up()
+      gems = ____
+  print("Gems in the tally:", gems)
+
+solution: |
+  from codeweald import hero, world
+  gems = 0
+  while world.look() == "gem":
+      hero.move("right")
+      hero.pick_up()
+      gems = gems + 1
+  print("Gems in the tally:", gems)
+
+validators:
+  - id: all-gems
+    type: state
+    items_count: { gem: 4 }
+    fail_hint: The hero must pick up every gem in the tunnel.
+  - id: tally
+    type: output
+    expect: "Gems in the tally: 4"
+    fail_hint: The tally should say 4. Count one gem each time around the loop.
+  # Gemma's other tunnels: more gems, one gem, and no gems at all.
+  - id: other-tunnels
+    type: hidden_tests
+    mode: stages
+    compare: [output]
+    cases:
+      - stage:
+          kind: grid
+          grid: |
+            ############
+            #Hggggggg..#
+            ############
+      - stage:
+          kind: grid
+          grid: |
+            #######
+            #Hg...#
+            #######
+      - stage:
+          kind: grid
+          grid: |
+            #######
+            #H....#
+            #######
+    fail_hint: Your tally works here, but not in Gemma's other tunnels. Let the counter do the counting.
+
+common_mistakes:
+  - id: wrong-word
+    detect: { kind: validator_failed, id: all-gems }
+    feedback: >-
+      The hero didn't pick up the gems. What does `world.look()` say when a gem is in front of
+      the hero? It says `"gem"`, in quotes, with no s.
+  - id: never-counted
+    detect: { kind: output_regex, pattern: '^Gems in the tally: 0$' }
+    feedback: >-
+      The tally says 0, but the hero picked up gems! Each time around the loop, add 1 to the
+      old count: `gems = gems + 1`.
+  - id: stuck-at-one
+    detect: { kind: output_regex, pattern: '^Gems in the tally: 1$' }
+    feedback: >-
+      The tally is stuck at 1. `gems = 1` puts 1 in the jar every time. Add 1 to what is
+      already there: `gems = gems + 1`.
+  - id: start-at-zero
+    detect: { kind: validator_failed, id: tally }
+    feedback: >-
+      So close! Check where the tally starts. Before the hero picks up any gems, the count
+      should be 0.
+  - id: other-tunnels
+    detect: { kind: validator_failed, id: other-tunnels }
+    feedback: >-
+      It works in this tunnel. But Gemma's other tunnels have a different number of gems. Let
+      the counter count them. Don't type the number yourself.
+
+wrong_solutions:
+  - expect_mistake: stuck-at-one
+    code: |
+      from codeweald import hero, world
+      gems = 0
+      while world.look() == "gem":
+          hero.move("right")
+          hero.pick_up()
+          gems = 1
+      print("Gems in the tally:", gems)
+  - expect_mistake: never-counted
+    code: |
+      from codeweald import hero, world
+      gems = 0
+      while world.look() == "gem":
+          hero.move("right")
+          hero.pick_up()
+          gems = gems
+      print("Gems in the tally:", gems)
+  - expect_mistake: wrong-word
+    code: |
+      from codeweald import hero, world
+      gems = 0
+      while world.look() == "gems":
+          hero.move("right")
+          hero.pick_up()
+          gems = gems + 1
+      print("Gems in the tally:", gems)
+  - expect_mistake: start-at-zero
+    code: |
+      from codeweald import hero, world
+      gems = 1
+      while world.look() == "gem":
+          hero.move("right")
+          hero.pick_up()
+          gems = gems + 1
+      print("Gems in the tally:", gems)
+  - expect_mistake: other-tunnels
+    note: Counts right here, but types the number instead of counting.
+    code: |
+      from codeweald import hero, world
+      gems = 0
+      while world.look() == "gem":
+          hero.move("right")
+          hero.pick_up()
+          gems = 4
+      print("Gems in the tally:", gems)
+
+hints:
+  - There are three gaps. What number should a tally start at? What does `world.look()` say when a gem is ahead?
+  - Start with `gems = 0`. The loop keeps going while the look says `"gem"`. Inside the loop, add 1 to the old count with `gems = gems + 1`.
+  - |
+    ```python
+    gems = 0
+    while world.look() == "gem":
+        hero.move("right")
+        hero.pick_up()
+        gems = ____
+    ```
+
+story_outro: |
+  Gemma claps. "Four gems, four tally stones! And it counts right in every tunnel." You earned the **Tally Stones**. A counter goes up by 1 each time something happens.

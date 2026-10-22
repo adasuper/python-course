@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 // The CI/CD pipeline tests the same build it deploys, which may live under a sub-path
 // (CODEWEALD_BASE, e.g. /python-course/ on GitHub Pages). Tests use relative URLs ('./').
-const baseURL = `http://localhost:4173${process.env.CODEWEALD_BASE ?? '/'}`;
+// CODEWEALD_PORT lets several checkouts run their E2E tests at the same time.
+const port = Number(process.env.CODEWEALD_PORT ?? 4173);
+const baseURL = `http://localhost:${port}${process.env.CODEWEALD_BASE ?? '/'}`;
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -23,7 +25,9 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
   ],
   webServer: {
-    command: 'npx vite preview --port 4173 --strictPort',
+    command: `npx vite preview --port ${port} --strictPort`,
+    // Test hooks for tests/e2e/offline.spec.ts (see vite.config.ts).
+    env: { CODEWEALD_TEST_SERVER: '1' },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

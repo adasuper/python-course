@@ -9,9 +9,14 @@ export interface DialogueLine {
   text: Rich;
 }
 
+/** A second, similar program to try after a wrong prediction (F-QST-05). */
+export type PredictTwin =
+  | { kind: 'mcq'; code: string; question: Rich; options: string[]; answer: number; explain: Rich }
+  | { kind: 'text'; code: string; question: Rich; answer: string; explain: Rich };
+
 export type PredictPrompt =
-  | { kind: 'mcq'; question: Rich; options: string[]; answer: number; explain: Rich }
-  | { kind: 'text'; question: Rich; answer: string; explain: Rich };
+  | { kind: 'mcq'; question: Rich; options: string[]; answer: number; explain: Rich; twin: PredictTwin | null }
+  | { kind: 'text'; question: Rich; answer: string; explain: Rich; twin: PredictTwin | null };
 
 export type InvestigateQuestion =
   | { kind: 'mcq'; question: Rich; options: string[]; answer: number; hint: Rich; explain: Rich | null }
@@ -27,6 +32,13 @@ export interface ParsonsSpec {
   alternatives: number[][];
 }
 
+export interface Starter {
+  id: string;
+  title: string;
+  description: Rich;
+  code: string;
+}
+
 /** The playable part of a quest or a boss phase. */
 export interface QuestBody {
   type: Exclude<QuestType, 'boss'>;
@@ -37,16 +49,27 @@ export interface QuestBody {
   goal: Rich;
   stage: StageSpec;
   starterCode: string;
+  /** fill: only the lines with a ____ gap in the starter can be edited. */
+  locked: boolean;
   validators: ValidatorSpec[];
   mistakes: MistakeSpec[];
   hints: Rich[];
   inputs: string[];
-  seed: number;
+  /** Ask the player when the input queue runs out (Mode B, §6.5). */
+  interactiveInput: boolean;
+  /** Record line coverage, for branch_coverage. */
+  trackCoverage: boolean;
+  /** A fixed seed for `random` and the virtual clock, or null for a new one every run (§6.7). */
+  seed: number | null;
   prompts: PredictPrompt[] | null;
   questions: InvestigateQuestion[] | null;
   parsons: ParsonsSpec | null;
   jarShelf: boolean;
   bonus: BonusSpec[];
+  /** The rubber-duck talk-through (§9.8a), or null. */
+  duck: { intro: Rich | null; closing: Rich } | null;
+  /** Programs the student picks one of to start (the capstone's game ideas), or null. */
+  starters: Starter[] | null;
   // Reference solutions never ship in the game (owner decision Q13); instructors read
   // them in docs/solutions.md.
 }
@@ -135,6 +158,38 @@ export interface QuestInfo {
   phases: string[];
   sideQuest: boolean;
   prerequisites: string[];
+  /** The map NPC who offers it; without one, it is on the Quest Board (F-WLD-07). */
+  npc: string | null;
+  /** A badge this quest awards directly (`rewards.badge`). */
+  badge: string | null;
+  /** Its bonus challenges, as the quest record stores them ("phase/id" in a boss). */
+  bonus: string[];
+}
+
+export type BadgeTrigger =
+  | { kind: 'quest_type_completed'; type: QuestType }
+  | { kind: 'completed_without_hints' }
+  | { kind: 'distinct_attempts'; count: number }
+  | { kind: 'passed_after_failures'; count: number }
+  | { kind: 'counter'; counter: 'realErrorViews' | 'workshopRuns' | 'duckChats'; count: number }
+  | { kind: 'boss_defeated'; region: string }
+  | { kind: 'pois_visited'; region: string }
+  | { kind: 'side_quests'; count: number }
+  | { kind: 'checks_completed'; count: number }
+  | { kind: 'quest_completed'; quest: string };
+
+export interface Workshop {
+  maps: { id: string; name: string; description: Rich; stage: StageSpec }[];
+  /** The API reference; `region` is the region number whose quests teach the call. */
+  api: { call: string; summary: Rich; example: string; region: number }[];
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  emoji: string;
+  description: Rich;
+  trigger: BadgeTrigger;
 }
 
 export interface GlossaryEntry {
@@ -164,7 +219,25 @@ export interface Course {
   title: string;
   contentVersion: string;
   opening: DialogueLine[];
-  regions: { id: string; number: number; name: string; enabled: boolean; lessons: number }[];
+  /** Shown when every region is restored (the Great Script is whole again). */
+  finale: DialogueLine[];
+  /** More regions are on the way: no finale yet. */
+  moreRegionsComing: boolean;
+  /**
+   * `pois`: the region's secret corners (for the Explorer badge). `fragment`, `cast` and `bugs`
+   * are names for the finale's credits.
+   */
+  regions: {
+    id: string;
+    number: number;
+    name: string;
+    enabled: boolean;
+    lessons: number;
+    pois: string[];
+    fragment: string;
+    cast: string[];
+    bugs: string[];
+  }[];
   /** Every quest id in a stable order; save codes depend on it. */
   questOrder: string[];
   /** Small facts about every quest, so progress can be read without loading regions. */
@@ -172,6 +245,9 @@ export interface Course {
   sideQuests: boolean;
   glossary: Record<string, GlossaryEntry>;
   items: Record<string, Item>;
+  /** In badges.yaml order; save codes depend on it. */
+  badges: Badge[];
+  workshop: Workshop;
   errors: Record<string, ErrorTemplate>;
 }
 

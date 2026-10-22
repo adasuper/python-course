@@ -2,6 +2,7 @@
 // IndexedDB first, then localStorage, then memory (with a "can't save" banner).
 import { createStore, del, get, keys, set, type UseStore } from 'idb-keyval';
 import { migrateProfile } from './migrations';
+import type { SessionRun } from '../runtime/protocol';
 import type { Profile } from './profile';
 
 export type StorageMode = 'indexeddb' | 'localstorage' | 'memory';
@@ -96,15 +97,39 @@ export class Storage {
 
   async deleteProfile(id: string) {
     await this.kv.del(`profile:${id}`);
-    for (const k of await this.kv.keys()) if (k.startsWith(`draft:${id}:`)) await this.kv.del(k);
+    await this.kv.del(`programs:${id}`);
+    for (const k of await this.kv.keys())
+      if (k.startsWith(`draft:${id}:`) || k.startsWith(`duck:${id}:`)) await this.kv.del(k);
+  }
+
+  /** Saved Workshop programs (§11.7), newest first. */
+  async programs(profileId: string): Promise<Program[]> {
+    const list = await this.kv.get<unknown>(`programs:${profileId}`);
+    return Array.isArray(list) ? (list as Program[]) : [];
+  }
+
+  savePrograms(profileId: string, programs: Program[]) {
+    return this.kv.set(`programs:${profileId}`, programs.slice(0, MAX_PROGRAMS));
   }
 
   async draft(profileId: string, key: string): Promise<string | undefined> {
     return draftCode(await this.kv.get<unknown>(`draft:${profileId}:${key}`));
   }
 
-  saveDraft(profileId: string, key: string, code: string) {
-    const record: DraftRecord = { schemaVersion: 1, code };
+  /** The draft and the quest session's run history (for session validators, §9.3). */
+  async draftWithSession(
+    profileId: string,
+    key: string,
+  ): Promise<{ code: string; session: SessionRun[] } | undefined> {
+    const value = await this.kv.get<unknown>(`draft:${profileId}:${key}`);
+    const code = draftCode(value);
+    if (code === undefined) return undefined;
+    const session = (value as Partial<DraftRecord>).session;
+    return { code, session: Array.isArray(session) ? session : [] };
+  }
+
+  saveDraft(profileId: string, key: string, code: string, session?: SessionRun[]) {
+    const record: DraftRecord = { schemaVersion: 1, code, ...(session?.length ? { session } : {}) };
     return this.kv.set(`draft:${profileId}:${key}`, record);
   }
 
@@ -119,6 +144,22 @@ export class Storage {
     return out;
   }
 
+  /**
+   * A rubber-duck talk-through (§9.8a): the student's answer for each line and whether they
+   * finished. Free text stays on this device: it is never put in a save file or save code.
+   */
+  async duck(profileId: string, key: string): Promise<DuckTalk> {
+    const value = await this.kv.get<Partial<DuckTalk>>(`duck:${profileId}:${key}`);
+    return {
+      answers: Array.isArray(value?.answers) ? value.answers.map(String) : [],
+      finished: value?.finished === true,
+    };
+  }
+
+  saveDuck(profileId: string, key: string, talk: DuckTalk) {
+    return this.kv.set(`duck:${profileId}:${key}`, talk);
+  }
+
   lastProfileId() {
     return this.kv.get<string>('meta:lastProfile');
   }
@@ -128,10 +169,29 @@ export class Storage {
   }
 }
 
+/** A saved Workshop program. */
+export interface Program {
+  id: string;
+  name: string;
+  code: string;
+  mapId: string;
+  savedOn: string;
+}
+
+export interface DuckTalk {
+  answers: string[];
+  finished: boolean;
+}
+
+/** Students keep up to this many Workshop programs (§11.7). */
+export const MAX_PROGRAMS = 20;
+
 /** A saved draft. Version 1 drafts were stored as bare strings. */
 interface DraftRecord {
   schemaVersion: 1;
   code: string;
+  /** Recent runs in this quest session, newest last (only quests with session validators). */
+  session?: SessionRun[];
 }
 
 export function draftCode(value: unknown): string | undefined {

@@ -23,3 +23,140 @@
   example: |
     print("Hi)
     # SyntaxError on line 1: the quote never closed.
+# Region 2: Whispering Library
+- id: jar-of-labels
+  name: Jar of Labels
+  icon: jar
+  region: whispering-library
+  description: "A [[variable]] is a name for a value. `=` puts a value in the jar, and a new value replaces the old one."
+  example: |
+    shelf = "Mysteries"
+    shelf = "Dragons"
+    print(shelf)   # Dragons
+- id: ink-of-formatting
+  name: Ink of Formatting
+  icon: inkwell
+  region: whispering-library
+  description: "An [[f-string]], like `f\"Hi {name}\"`, puts a variable's value inside text."
+  example: |
+    name = "Ada"
+    print(f"Hi {name}!")
+# Region 3: Merchant's Crossing
+- id: abacus-of-reckoning
+  name: Abacus of Reckoning
+  icon: abacus
+  region: merchants-crossing
+  description: "Python does math with `+ - * /`, plus `//` for whole shares and `%` for leftovers."
+  example: |
+    print(17 // 5)   # 3 each
+    print(17 % 5)    # 2 left over
+- id: ear-trumpet-of-asking
+  name: Ear Trumpet of Asking
+  icon: ear_trumpet
+  region: merchants-crossing
+  description: "`input()` asks a question and always hands back text."
+  example: |
+    answer = "4"            # input() hands back text like this
+    print(answer * 2)       # 44: the text just repeats
+    print(int(answer) * 2)  # 8: now it's a real number
+- id: scales-of-conversion
+  name: Scales of Conversion
+  icon: balance_scales
+  region: merchants-crossing
+  description: "`int()` turns text like `\"7\"` into the number 7, and `str()` turns a number back into text."
+  example: |
+    coins = int("7")
+    print("Total: " + str(coins * 2))
+# Region 4: Forked Road Forest
+- id: tuning-fork-of-truth
+  name: Tuning Fork of Truth
+  icon: tuning_fork
+  region: forked-road-forest
+  description: "A [[comparison]] like `gold >= 10` rings out `True` or `False`."
+  example: |
+    gold = 12
+    print(gold >= 10)   # True
+    print(gold == 5)    # False
+- id: compass-of-conditions
+  name: Compass of Conditions
+  icon: condition_compass
+  region: forked-road-forest
+  description: "An `if` runs its indented lines only when its [[condition]] is True, and `else` covers every other case."
+  example: |
+    gold = 7
+    if gold >= 10:
+        print("Welcome through the gate!")
+    else:
+        print("Come back with more gold.")
+- id: twin-keys-of-and-or
+  name: Twin Keys of And & Or
+  icon: twin_keys
+  region: forked-road-forest
+  description: "`and` needs both sides True, `or` needs at least one, and `not` flips True and False."
+  example: |
+    age = 11
+    gold = 5
+    print(age >= 10 and gold >= 3)   # True
+    print(age >= 70 or gold >= 10)   # False
+    print(not True)                  # False
+# Region 5: The Endless Mines
+- id: miners-lantern
+  name: Miner's Lantern
+  icon: miner_lantern
+  region: the-endless-mines
+  description: "A `while` loop repeats its indented lines as long as its condition stays True."
+  example: |
+    torches = 3
+    while torches > 0:
+        print("Dig!")
+        torches = torches - 1
+- id: tally-stones
+  name: Tally Stones
+  icon: tally_stones
+  region: the-endless-mines
+  description: "A [[counter]] is a variable that goes up by 1 each time something happens: `count = count + 1`."
+  example: |
+    gems = 0
+    gems = gems + 1
+    gems = gems + 1
+    print(gems)
+- id: escape-rope
+  name: Escape Rope
+  icon: escape_rope
+  region: the-endless-mines
+  description: "`break` jumps out of a loop right away."
+  example: |
+    while True:
+        print("Dig!")
+        break
+    print("Out of the loop!")
+# Region 6: Clocktower Peaks
+- id: boots-of-looping
+  name: Boots of Looping
+  icon: boots_of_looping
+  region: clocktower-peaks
+  description: "A [[for loop]] runs once for each value. `range(start, stop, step)` makes the values and stops before `stop`."
+  example: |
+    for step in range(1, 10, 2):
+        print(step)
+- id: bucket-of-totals
+  name: Bucket of Totals
+  icon: bucket_of_totals
+  region: clocktower-peaks
+  description: "An [[accumulator]] starts at 0 and adds a little more each time the loop runs."
+  example: |
+    total = 0
+    for coins in range(1, 5):
+        total = total + coins
+    print(total)
+- id: weavers-loom
+  name: Weaver's Loom
+  icon: weavers_loom
+  region: clocktower-peaks
+  description: "A loop inside a loop runs the inner loop all the way through for every pass of the outer loop. That's a [[nested loop]]."
+  example: |
+    for line in range(2):
+        row = ""
+        for stitch in range(3):
+            row = row + "*"
+        print(row)

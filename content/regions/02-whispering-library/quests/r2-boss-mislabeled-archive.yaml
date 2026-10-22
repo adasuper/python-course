@@ -1,0 +1,291 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-boss-mislabeled-archive
+region: whispering-library
+title: The Mislabeled Archive
+type: boss
+npc: swapsy
+learning_outcome: Use variables, reassignment and f-strings to repair the archive's records.
+csta: [2-AP-11, 2-AP-17]
+estimated_minutes: 15
+prerequisites:
+  - r2-q1-labeled-jars
+  - r2-q2-the-shelf-swap
+  - r2-q3-rules-for-names
+  - r2-q4-catalog-card
+  - r2-q5-the-magic-ink
+  - r2-q6-library-card
+vocabulary: [variable, reassign, f-string, bug]
+
+boss:
+  name: The Mislabeled Archive
+  bug: Swapsy the Label Moth
+  sprite: bug_swapsy
+
+story_intro: |
+  A moth made of paper labels flutters out of the archive. "I'm Swapsy! I swapped every label! The title jar holds the author, and the author jar holds the shelf! Hee hee!"
+
+  Put the archive right in three phases. Then Swapsy turns into a friendly firefly.
+goal: Fix the jars, update a record, and print the archive card. Each phase is saved on its own.
+concept_card: |
+  Jars, new values and f-strings, all at once. Fix one thing, run it, and read what the Scroll says.
+
+phases:
+  - id: unswap-the-jars
+    title: Unswap the jars
+    type: fix
+    learning_outcome: Identify and fix variables that hold the wrong values.
+    csta: [2-AP-11, 2-AP-17]
+    estimated_minutes: 5
+    story_intro: |
+      Swapsy swapped what is inside the jars. There are **3 bugs**: each jar holds the wrong value. The card should say:
+      ```text
+      Title: The Owl Who Coded
+      Author: Professor Hoot
+      Shelf: Mysteries
+      ```
+    goal: Fix the three jars so each one holds the right value. Don't change the print lines.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_swapsy, name: Swapsy }
+        - { sprite: npc_librarian, name: Madame Quill }
+    starter_code: |
+      title = "Professor Hoot"
+      author = "Mysteries"
+      shelf = "The Owl Who Coded"
+      print("Title: " + title)
+      print("Author: " + author)
+      print("Shelf: " + shelf)
+    solution: |
+      title = "The Owl Who Coded"
+      author = "Professor Hoot"
+      shelf = "Mysteries"
+      print("Title: " + title)
+      print("Author: " + author)
+      print("Shelf: " + shelf)
+    validators:
+      - id: card
+        type: output
+        expect: |
+          Title: The Owl Who Coded
+          Author: Professor Hoot
+          Shelf: Mysteries
+        fail_hint: Compare the Scroll with the card Swapsy scrambled.
+      - id: title-jar
+        type: variable
+        name: title
+        equals: The Owl Who Coded
+        fail_hint: The jar `title` should hold "The Owl Who Coded".
+      - id: author-jar
+        type: variable
+        name: author
+        equals: Professor Hoot
+        fail_hint: The jar `author` should hold "Professor Hoot".
+      - id: shelf-jar
+        type: variable
+        name: shelf
+        equals: Mysteries
+        fail_hint: The jar `shelf` should hold "Mysteries".
+    common_mistakes:
+      - id: moved-the-labels
+        detect: { kind: code_regex, pattern: 'print\("Title: " \+ (author|shelf)\)' }
+        feedback: >-
+          The Scroll might look right, but you moved the print labels, not the values. The jars still
+          hold the wrong things. Fix lines 1 to 3 instead.
+      - id: some-jars-wrong
+        detect: { kind: validator_failed, id: card }
+        feedback: Some jars still hold the wrong value. Check each line of the Scroll against the card.
+    wrong_solutions:
+      - expect_mistake: some-jars-wrong
+        note: Only the title is fixed.
+        code: |
+          title = "The Owl Who Coded"
+          author = "Mysteries"
+          shelf = "Professor Hoot"
+          print("Title: " + title)
+          print("Author: " + author)
+          print("Shelf: " + shelf)
+      - expect_mistake: moved-the-labels
+        code: |
+          title = "Professor Hoot"
+          author = "Mysteries"
+          shelf = "The Owl Who Coded"
+          print("Title: " + shelf)
+          print("Author: " + title)
+          print("Shelf: " + author)
+    hints:
+      - Read the card Swapsy scrambled. Which value belongs in the `title` jar?
+      - Change only the values in lines 1 to 3. The title is "The Owl Who Coded".
+      - |
+        ```python
+        title = "The Owl Who Coded"
+        author = "Professor Hoot"
+        shelf = ____
+        ```
+    story_outro: |
+      The jars rattle and settle. Swapsy's wings droop. "Hey! Those were MY labels!"
+
+  - id: found-it
+    title: Found it!
+    type: modify
+    learning_outcome: Use reassignment to update a stored value.
+    csta: [2-AP-11]
+    estimated_minutes: 5
+    story_intro: |
+      Swapsy hid the book's record under "missing". But Madame Quill just found the book! Update the record: print it once, store the new value in the **same** jar, and print it again.
+      ```text
+      The Owl Who Coded is missing
+      The Owl Who Coded is found
+      ```
+    goal: After the first print, put "found" in the jar `status`, then print the same line again.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_swapsy, name: Swapsy }
+        - { sprite: npc_librarian, name: Madame Quill }
+    starter_code: |
+      title = "The Owl Who Coded"
+      status = "missing"
+      print(title + " is " + status)
+    solution: |
+      title = "The Owl Who Coded"
+      status = "missing"
+      print(title + " is " + status)
+      status = "found"
+      print(title + " is " + status)
+    validators:
+      - id: record
+        type: output
+        expect: |
+          The Owl Who Coded is missing
+          The Owl Who Coded is found
+        fail_hint: The Scroll should show the record twice, first missing and then found.
+      - id: same-jar
+        type: variable
+        name: status
+        equals: found
+        fail_hint: At the end, the jar `status` itself should hold "found".
+    common_mistakes:
+      - id: new-jar
+        detect: { kind: code_regex, pattern: 'status_?2|new_status|status_new' }
+        feedback: >-
+          You made a new jar. Use the same jar instead: `status = "found"` pours out "missing" and
+          puts in "found".
+      - id: typed-found
+        detect: { kind: validator_failed, id: same-jar }
+        feedback: >-
+          The Scroll says found, but the jar `status` still holds "missing". Store the new value in
+          the jar with `status = "found"`, then print the jar.
+    wrong_solutions:
+      - expect_mistake: typed-found
+        code: |
+          title = "The Owl Who Coded"
+          status = "missing"
+          print(title + " is " + status)
+          print(title + " is found")
+      - expect_mistake: new-jar
+        code: |
+          title = "The Owl Who Coded"
+          status = "missing"
+          print(title + " is " + status)
+          status2 = "found"
+          print(title + " is " + status2)
+    hints:
+      - The jar `status` needs a new value between the two prints.
+      - "Add `status = \"found\"` after the first print, then copy the print line below it."
+      - |
+        ```python
+        print(title + " is " + status)
+        status = ____
+        print(title + " is " + status)
+        ```
+    story_outro: |
+      Madame Quill crosses out "missing" with a flourish. Swapsy flutters in circles. "No fair!"
+
+  - id: the-display-card
+    title: The display card
+    type: make
+    learning_outcome: Use an f-string to display stored values in a required format.
+    csta: [2-AP-11]
+    estimated_minutes: 5
+    story_intro: |
+      Last step: the archive's display card. Print it with **one** f-string, exactly in this format:
+      ```text
+      The Owl Who Coded by Professor Hoot (shelf: Mysteries)
+      ```
+    goal: Print the display card with one print and one f-string that uses all three jars.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: bug_swapsy, name: Swapsy }
+        - { sprite: npc_librarian, name: Madame Quill }
+    starter_code: |
+      title = "The Owl Who Coded"
+      author = "Professor Hoot"
+      shelf = "Mysteries"
+      # Print the display card with one f-string:
+    solution: |
+      title = "The Owl Who Coded"
+      author = "Professor Hoot"
+      shelf = "Mysteries"
+      # Print the display card with one f-string:
+      print(f"{title} by {author} (shelf: {shelf})")
+    validators:
+      - id: display
+        type: output
+        expect: "The Owl Who Coded by Professor Hoot (shelf: Mysteries)"
+        fail_hint: Check the words, the brackets and the colon against the card.
+      - id: one-fstring
+        type: ast
+        require: [JoinedStr]
+        fail_hint: Use an f-string, with `{title}`, `{author}` and `{shelf}` inside it.
+      - id: any-book
+        type: hidden_tests
+        mode: vars
+        compare: [output]
+        cases:
+          - vars: { title: Moonlight Maps, author: Wren Wise, shelf: Atlases }
+        fail_hint: Use the three jars inside the f-string, so it works for any book.
+    common_mistakes:
+      - id: missing-f
+        detect: { kind: detector, name: missing_fstring_prefix }
+        feedback: The card shows the braces. Put an `f` right before the first quote.
+      - id: not-fstring
+        detect: { kind: validator_failed, id: one-fstring }
+        feedback: The card looks right, but it is not an f-string yet. Use `f"{title} by ..."`.
+      - id: typed-values
+        detect: { kind: hidden_case_fails, validator: any-book, case: 0 }
+        feedback: You typed the book's facts into the text. Use `{title}`, `{author}` and `{shelf}` instead.
+    wrong_solutions:
+      - expect_mistake: missing-f
+        code: |
+          title = "The Owl Who Coded"
+          author = "Professor Hoot"
+          shelf = "Mysteries"
+          print("{title} by {author} (shelf: {shelf})")
+      - expect_mistake: not-fstring
+        code: |
+          title = "The Owl Who Coded"
+          author = "Professor Hoot"
+          shelf = "Mysteries"
+          print(title + " by " + author + " (shelf: " + shelf + ")")
+      - expect_mistake: typed-values
+        code: |
+          title = "The Owl Who Coded"
+          author = "Professor Hoot"
+          shelf = "Mysteries"
+          print(f"The Owl Who Coded by Professor Hoot (shelf: Mysteries)")
+    hints:
+      - Which three jars does the card use? Each one becomes a `{jar}` inside the f-string.
+      - "Start with `print(f\"{title} by ` and keep going. The brackets and the colon are just text."
+      - |
+        ```python
+        print(f"{title} by {author} (shelf: ____)")
+        ```
+    story_outro: |
+      The display card glows. Every label is back where it belongs.
+
+story_outro: |
+  Swapsy's paper wings flutter, glow, and fold into a friendly little firefly. "Ooh. Everything has the right name now. That's... actually very relaxing."
+
+  You found **Script Fragment: Names**! Madame Quill dusts off a shelf just for it. "Remember, apprentice: a good name is half the work."

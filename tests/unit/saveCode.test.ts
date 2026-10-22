@@ -23,6 +23,8 @@ const course = {
       phases: [],
       sideQuest: false,
       prerequisites: [],
+      badge: null,
+      bonus: [],
     },
     b: {
       region: 'r-one',
@@ -33,6 +35,8 @@ const course = {
       phases: [],
       sideQuest: false,
       prerequisites: ['a'],
+      badge: null,
+      bonus: ['tidy', 'fast-thinking'],
     },
     boss: {
       region: 'r-one',
@@ -43,6 +47,8 @@ const course = {
       phases: ['p1', 'p2', 'p3'],
       sideQuest: false,
       prerequisites: [],
+      badge: null,
+      bonus: [],
     },
     c: {
       region: 'r-two',
@@ -53,11 +59,29 @@ const course = {
       phases: [],
       sideQuest: false,
       prerequisites: [],
+      badge: null,
+      bonus: [],
     },
   },
   sideQuests: true,
   glossary: {},
   items: {},
+  badges: [
+    {
+      id: 'first-bug',
+      name: 'First Bug Squashed',
+      emoji: '🐞',
+      description: [],
+      trigger: { kind: 'quest_type_completed', type: 'fix' },
+    },
+    {
+      id: 'tinkerer',
+      name: 'Tinkerer',
+      emoji: '🔧',
+      description: [],
+      trigger: { kind: 'distinct_attempts', count: 5 },
+    },
+  ],
   errors: {},
 } as unknown as Course;
 const choices = { avatars: ['avatar-1', 'avatar-2', 'avatar-3'], themes: ['ember', 'moss'] };
@@ -82,7 +106,7 @@ describe('save codes', () => {
   it('round-trips progress (with bucketed attempts and time)', () => {
     const p = sample();
     const code = encodeSaveCode(p, course, choices);
-    expect(code).toMatch(/^CW1-[0-9A-HJKMNP-TV-Z]{1,5}(-[0-9A-HJKMNP-TV-Z]{1,5})*$/);
+    expect(code).toMatch(/^CW2-[0-9A-HJKMNP-TV-Z]{1,5}(-[0-9A-HJKMNP-TV-Z]{1,5})*$/);
     const r = decodeSaveCode(code, course, choices);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -110,6 +134,35 @@ describe('save codes', () => {
     expect(q.location.region).toBe('r-two');
     expect(sameProfile(q.id, p.id)).toBe(true);
     expect(r.sameContent).toBe(true);
+  });
+
+  it("keeps bonus challenges and badges, even ones the quests alone can't show (version 2)", () => {
+    const p = sample();
+    p.quests.b = { ...emptyRecord(), status: 'completed', bonus: ['fast-thinking'] };
+    // Tinkerer can't be worked out again from a save code (it needs the code hashes).
+    p.badges = { tinkerer: '2026-10-01' };
+    const r = decodeSaveCode(encodeSaveCode(p, course, choices), course, choices);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.profile.quests.b?.bonus).toEqual(['fast-thinking']);
+    expect(Object.keys(r.profile.badges).sort()).toEqual(['first-bug', 'tinkerer']);
+  });
+
+  it('still restores a version 1 code, working out its badges again', () => {
+    // Made by the version 1 encoder (Phase 1), for a profile that completed "a" and "b".
+    const v1 = 'CW1-3AYD2-8TAQK-81248-4A1C7-YKH2S-603R0-J22D0-00007-W0RCP-0';
+    const r = decodeSaveCode(v1, course, choices);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.profile).toMatchObject({
+      nickname: 'Old Newt',
+      avatarId: 'avatar-2',
+      themeId: 'ember',
+      xp: 120,
+    });
+    expect(r.profile.quests.b).toMatchObject({ status: 'completed', hintsUsed: 1 });
+    expect(r.profile.badges).toEqual({ 'first-bug': '2026-10-01' });
+    expect(sameProfile(r.profile.id, '1234abcd-0000-4000-8000-000000000000')).toBe(true);
   });
 
   it('accepts lowercase, spaces and look-alike letters', () => {

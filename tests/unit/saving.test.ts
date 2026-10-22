@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { Course } from '../../src/content/types';
 import { CURRENT_SCHEMA, FutureSaveError, MIGRATIONS, migrateProfile } from '../../src/state/migrations';
 import { emptyRecord, newProfile, type Profile } from '../../src/state/profile';
-import { makeProgressFile, parseProgressFile } from '../../src/state/progressFile';
+import { fileChecksum, makeProgressFile, parseProgressFile } from '../../src/state/progressFile';
 import { decodeSaveCode, encodeSaveCode } from '../../src/state/saveCode';
 import { draftCode, Storage } from '../../src/state/storage';
 
@@ -25,6 +25,29 @@ describe('migrations (F-SAV-03)', () => {
     expect(p.counters).toEqual({ realErrorViews: 0 });
     expect(p.location).toEqual({ region: 'one', at: [3, 4], quest: null });
     expect(p.nickname).toBe('Old Newt');
+  });
+
+  it('2 → 3 adds badges and the Workshop and Duck counters, keeping the error counter', () => {
+    const v2 = MIGRATIONS[1]!(v1Profile());
+    (v2.counters as Record<string, number>).realErrorViews = 4;
+    const p = MIGRATIONS[2]!(v2) as unknown as Profile;
+    expect(p.schemaVersion).toBe(3);
+    expect(p.badges).toEqual({});
+    expect(p.counters).toEqual({ realErrorViews: 4, workshopRuns: 0, duckChats: 0 });
+  });
+
+  it('3 → 4 adds the new settings with their defaults, keeping the old ones', () => {
+    const v3 = MIGRATIONS[2]!(MIGRATIONS[1]!(v1Profile()));
+    (v3.settings as Record<string, unknown>).textScale = 1.5;
+    const p = MIGRATIONS[3]!(v3) as unknown as Profile;
+    expect(p.schemaVersion).toBe(4);
+    expect(p.settings).toMatchObject({
+      textScale: 1.5,
+      codeFont: 'atkinson',
+      shortcuts: true,
+      tts: { autoRead: false, rate: 1 },
+      audio: { music: 0, effects: 0 },
+    });
   });
 
   it('runs the whole chain up to the current schema', () => {
@@ -48,8 +71,9 @@ describe('migrations (F-SAV-03)', () => {
     const old = v1Profile();
     await set(`profile:${old.id as string}`, old, createStore('codeweald', 'kv'));
     const loaded = (await storage.profiles()).find((p) => p.id === old.id);
-    expect(loaded?.schemaVersion).toBe(2);
-    expect(loaded?.counters.realErrorViews).toBe(0);
+    expect(loaded?.schemaVersion).toBe(CURRENT_SCHEMA);
+    expect(loaded?.counters).toEqual({ realErrorViews: 0, workshopRuns: 0, duckChats: 0 });
+    expect(loaded?.badges).toEqual({});
 
     const file = makeProgressFile(old as unknown as Profile, {}, { id: 'c', contentVersion: 'v' } as Course);
     const parsed = parseProgressFile(JSON.stringify(file));
@@ -90,10 +114,19 @@ const course = {
         phases: q === 'boss' ? ['p1', 'p2', 'p3'] : [],
         sideQuest: false,
         prerequisites: [],
+        badge: null,
+        bonus: q === 'c' ? ['one', 'two', 'three'] : q === 'boss' ? ['p2/extra'] : [],
       },
     ]),
   ),
   sideQuests: true,
+  badges: ['first', 'second', 'third', 'fourth'].map((id) => ({
+    id,
+    name: id,
+    emoji: '⭐',
+    description: [],
+    trigger: { kind: 'counter', counter: 'duckChats', count: 99 },
+  })),
 } as unknown as Course;
 const choices = { avatars: ['avatar-1', 'avatar-2', 'avatar-3'], themes: ['ember', 'moss', 'tide'] };
 
@@ -123,6 +156,12 @@ function randomProfile(r: (n: number) => number): Profile {
     if (q === 'boss') p.quests[q]!.phasesDone = ['p1', 'p2', 'p3'].filter(() => r(2) === 1);
   }
   if (r(2)) p.checks.one = { best: r(5), latest: 0, total: 5, attempts: 1 };
+  for (const [q, keys] of [
+    ['c', ['one', 'two', 'three']],
+    ['boss', ['p2/extra']],
+  ] as const)
+    if (p.quests[q]) p.quests[q]!.bonus = keys.filter(() => r(2) === 1);
+  for (const b of ['first', 'second', 'third', 'fourth']) if (r(2)) p.badges[b] = '2026-10-01';
   p.location.region = r(2) ? 'one' : 'two';
   return p;
 }
@@ -148,6 +187,8 @@ describe('save codes under fuzzing (F-SAV-07)', () => {
         expect(q.quests[id]?.hintsUsed).toBe(p.quests[id]?.hintsUsed);
       }
       expect(q.checks.one?.best).toBe(p.checks.one?.best);
+      expect(Object.keys(q.badges).sort()).toEqual(Object.keys(p.badges).sort());
+      for (const id of ['c', 'boss']) expect(q.quests[id]?.bonus ?? []).toEqual(p.quests[id]?.bonus ?? []);
     }
   });
 
@@ -169,6 +210,110 @@ describe('save codes under fuzzing (F-SAV-07)', () => {
           expect(decodeSaveCode(swap.join(''), course, choices).ok).toBe(false);
         }
       }
+    }
+  });
+});
+
+// ----- progress files: version 2, checksums, untrusted input (F-OFF-07) -------------------
+
+describe('progress files', () => {
+  const fileCourse = { id: 'c', contentVersion: 'v' } as Course;
+  const program = { id: 'p1', name: 'Greeter', code: 'print("hi")', mapId: 'meadow', savedOn: '2026-10-20' };
+  const sample = () => {
+    const p = newProfile('File Fox', 'avatar-1', 'moss', 'one');
+    p.quests.a = { ...emptyRecord(), status: 'completed', solution: 'print(1)' };
+    return makeProgressFile(p, { a: 'print(1)' }, fileCourse, [program]);
+  };
+
+  it('keeps Workshop programs and checks its checksum', () => {
+    const text = JSON.stringify(sample());
+    const parsed = parseProgressFile(text);
+    expect(parsed.ok && parsed.file.programs).toEqual([program]);
+    const edited = text.replace('"xp":0', '"xp":99999');
+    expect(parseProgressFile(edited)).toEqual({ ok: false, reason: 'changed' });
+  });
+
+  it('still reads version 1 files (no programs, no checksum)', () => {
+    const { programs: _p, checksum: _c, ...v1 } = { ...sample(), version: 1 };
+    const parsed = parseProgressFile(JSON.stringify(v1));
+    expect(parsed.ok && parsed.file.programs).toEqual([]);
+  });
+
+  it('refuses a nickname that the nickname rules would refuse', () => {
+    const file = sample();
+    file.profile.nickname = 'me@school.org';
+    file.checksum = fileChecksum(file.profile, file.drafts, file.programs);
+    expect(parseProgressFile(JSON.stringify(file))).toEqual({ ok: false, reason: 'invalid' });
+  });
+
+  it('never throws on damaged files, whatever is changed (fuzzing)', () => {
+    const r = rng(42);
+    const base = JSON.stringify(sample());
+    for (let n = 0; n < 500; n++) {
+      const chars = base.split('');
+      for (let k = 0; k < 1 + r(4); k++) {
+        const at = r(chars.length);
+        const op = r(3);
+        if (op === 0) chars.splice(at, 1);
+        else if (op === 1) chars.splice(at, 0, '{}[]":,0a\\'[r(10)]!);
+        else chars[at] = String.fromCharCode(32 + r(90));
+      }
+      const result = parseProgressFile(chars.join(''));
+      if (result.ok) expect(result.file.profile.nickname.length).toBeGreaterThan(0);
+    }
+    expect(parseProgressFile('x'.repeat(6 * 1024 * 1024))).toEqual({ ok: false, reason: 'too-big' });
+  });
+});
+
+describe('save codes across content versions (F-SAV-07)', () => {
+  it('a later version of the course (new badges, new bonus challenges) still restores the code', () => {
+    const r = rng(99);
+    const later = {
+      ...course,
+      contentVersion: 'ffff00000000',
+      questInfo: {
+        ...course.questInfo,
+        a: { ...course.questInfo.a!, bonus: ['brand-new'] },
+        c: { ...course.questInfo.c!, bonus: ['one', 'two', 'three', 'four'] },
+      },
+      badges: [
+        ...course.badges,
+        {
+          id: 'fifth',
+          name: 'Fifth',
+          emoji: '⭐',
+          description: [],
+          trigger: { kind: 'counter', counter: 'duckChats', count: 99 },
+        },
+      ],
+    } as unknown as Course;
+    for (let n = 0; n < 100; n++) {
+      const p = randomProfile(r);
+      const decoded = decodeSaveCode(encodeSaveCode(p, course, choices), later, choices);
+      expect(decoded.ok).toBe(true);
+      if (!decoded.ok) return;
+      expect(decoded.sameContent).toBe(false);
+      expect(decoded.profile.xp).toBe(p.xp);
+      expect(Object.keys(decoded.profile.badges).sort()).toEqual(Object.keys(p.badges).sort());
+      for (const id of QUESTS) expect(decoded.profile.quests[id]?.status).toBe(p.quests[id]?.status);
+      // Bonus challenges keep their places; a challenge added at the end of a list is new.
+      for (const id of ['c', 'boss'])
+        expect(decoded.profile.quests[id]?.bonus ?? []).toEqual(p.quests[id]?.bonus ?? []);
+    }
+  });
+
+  it('a code from a course with other quests is refused, not misread', () => {
+    const other = { ...course, questOrder: [...QUESTS, 'extra'] } as unknown as Course;
+    const code = encodeSaveCode(randomProfile(rng(5)), course, choices);
+    expect(decodeSaveCode(code, other, choices)).toEqual({ ok: false, reason: 'course' });
+  });
+
+  it('random text never throws', () => {
+    const r = rng(1234);
+    const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ-';
+    for (let n = 0; n < 500; n++) {
+      const text = `CW2-${Array.from({ length: 10 + r(80) }, () => ALPHABET[r(ALPHABET.length)]).join('')}`;
+      expect(() => decodeSaveCode(text, course, choices)).not.toThrow();
     }
   });
 });

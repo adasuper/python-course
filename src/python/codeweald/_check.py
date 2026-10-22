@@ -6,6 +6,7 @@ hint ("You printed the answer, but the quest needs you to store it…").
 """
 
 import ast
+import hashlib
 import io
 import json
 import re
@@ -31,6 +32,8 @@ class Ctx:
         self.error = outcome.error
         self.world = outcome.world.snapshot() if outcome.world else {}
         self.namespace = outcome.namespace
+        # Earlier runs in this quest session plus this one, for session validators (§9.3).
+        self.session = []
         self._tree = None
         self._parsed = False
 
@@ -65,6 +68,20 @@ class Ctx:
                 req.get("limits"),
             ),
         )
+
+
+    def call(self, name, *args):
+        """Call one of the student's functions in a fresh run of the program.
+
+        Returns {"returns", "output", "error"}: the return value (as JSON-friendly data), what
+        the call printed, and a friendly-error key (or "missing_function") when it failed.
+        """
+        run = self.run()
+        if run.error:
+            return {"returns": None, "output": "", "error": run.error["key"]}
+        if not callable(run.vars.get(name)):
+            return {"returns": None, "output": "", "error": "missing_function"}
+        return execute_call(run, name, list(args))
 
 
 class MissingVariable(Exception):
@@ -212,12 +229,31 @@ def _call_name(call):
     return ""
 
 
+def _imported_from(tree, module):
+    """Names brought in with `from module import a, b` (so a() counts as module.a())."""
+    names = set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ImportFrom) and n.module == module:
+            names.update(alias.asname or alias.name for alias in n.names)
+    return names
+
+
 def count_calls(tree, name):
-    return sum(1 for n in ast.walk(tree) if isinstance(n, ast.Call) and _call_name(n) == name)
+    """Calls of `name`. "random.*" counts any call into the random module."""
+    calls = [_call_name(n) for n in ast.walk(tree) if isinstance(n, ast.Call)]
+    if name.endswith(".*"):
+        module = name[:-2]
+        local = _imported_from(tree, module)
+        return sum(1 for c in calls if c.startswith(module + ".") or c in local)
+    return sum(1 for c in calls if c == name)
+
+
+# Words for groups of nodes: "Loop" is any for or while loop.
+NODE_GROUPS = {"Loop": (ast.For, ast.While)}
 
 
 def count_nodes(tree, node_name):
-    cls = getattr(ast, node_name, None)
+    cls = NODE_GROUPS.get(node_name) or getattr(ast, node_name, None)
     if cls is None:
         raise ValueError(f"unknown ast node {node_name!r}")
     return sum(1 for n in ast.walk(tree) if isinstance(n, cls))
@@ -443,6 +479,106 @@ def v_custom(spec, ctx):
     return passed, {"hint": hint} if hint else {}
 
 
+# ----- session validators ------------------------------------------------------
+# They look across all of the student's runs in a quest session, not just the last one
+# (docs/specs.md §9.3). The main thread keeps the history (one summary per run, saved with
+# the draft) and sends it with each run.
+
+SESSION_VALIDATORS = frozenset({"branch_coverage", "runs_ok"})
+
+
+def branch_arms(tree, source):
+    """Every if/elif/else body (a "door") in the program, in source order.
+
+    Each arm is {id, kind, line, first}: `line` is where the door is written and `first` is
+    the first line of its body, which is the line coverage sees run.
+    """
+    if tree is None:
+        return []
+    lines = source.split("\n")
+
+    def is_elif(node):
+        return lines[node.lineno - 1].lstrip().startswith("elif")
+
+    elifs = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.If) and len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
+            if is_elif(node.orelse[0]):
+                elifs.add(id(node.orelse[0]))
+    heads = sorted(
+        (n for n in ast.walk(tree) if isinstance(n, ast.If) and id(n) not in elifs),
+        key=lambda n: (n.lineno, n.col_offset),
+    )
+    arms = []
+    for chain, head in enumerate(heads, start=1):
+        doors = []
+        node, kind = head, "if"
+        while True:
+            doors.append((kind, node.lineno, node.body[0].lineno))
+            orelse = node.orelse
+            if len(orelse) == 1 and id(orelse[0]) in elifs:
+                node, kind = orelse[0], "elif"
+                continue
+            if orelse:
+                first = orelse[0].lineno
+                # The AST has no line for `else:` itself; find it above the body.
+                written = range(first, node.body[-1].end_lineno, -1)
+                line = next((n for n in written if re.match(r"\s*else\s*:", lines[n - 1])), first)
+                doors.append(("else", line, first))
+            break
+        for n, (kind, line, first) in enumerate(doors, start=1):
+            arms.append({"id": f"{chain}.{n}", "kind": kind, "line": line, "first": first})
+    return arms
+
+
+def program_key(ctx):
+    """Two runs are "the same program" when their code has the same structure (comments and
+    spacing don't count)."""
+    text = ast.dump(ctx.tree) if ctx.tree is not None else ctx.source
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def session_summary(ctx):
+    """What the session history keeps about one run."""
+    arms = branch_arms(ctx.tree, ctx.source)
+    covered = ctx.outcome.lines or set()
+    return {
+        "program": program_key(ctx),
+        "ok": ctx.outcome.status == "ok",
+        "inputs": [str(v) for v in ctx.request.get("inputs") or []],
+        "shape": ",".join(f"{a['id']}{a['kind']}" for a in arms),
+        "lines": [a["line"] for a in arms],
+        "lit": [a["id"] for a in arms if a["first"] in covered],
+    }
+
+
+def v_branch_coverage(spec, ctx):
+    """Every door has run in at least one run of a program with the same doors."""
+    arms = branch_arms(ctx.tree, ctx.source)
+    shape = ",".join(f"{a['id']}{a['kind']}" for a in arms)
+    lit = set()
+    for run in ctx.session:
+        if run.get("shape") == shape:
+            lit.update(run.get("lit", []))
+    lamps = [{"id": a["id"], "kind": a["kind"], "line": a["line"], "lit": a["id"] in lit} for a in arms]
+    count = sum(1 for lamp in lamps if lamp["lit"])
+    want = spec.get("min", "all")
+    need = len(arms) if want == "all" else int(want)
+    return bool(arms) and count >= need, {"lamps": lamps, "lit": count, "need": need}
+
+
+def v_runs_ok(spec, ctx):
+    """This program finished without an error in enough of the student's runs."""
+    key = program_key(ctx)
+    runs = [r for r in ctx.session if r.get("program") == key and r.get("ok")]
+    if spec.get("distinct_inputs"):
+        count = len({tuple(r.get("inputs", [])) for r in runs})
+    else:
+        count = len(runs)
+    need = int(spec.get("min_runs", 3))
+    return count >= need, {"ok_runs": count, "need": need}
+
+
 VALIDATORS = {
     "output": v_output,
     "state": v_state,
@@ -451,6 +587,8 @@ VALIDATORS = {
     "style": v_style,
     "hidden_tests": v_hidden_tests,
     "custom": v_custom,
+    "branch_coverage": v_branch_coverage,
+    "runs_ok": v_runs_ok,
 }
 
 
@@ -492,7 +630,11 @@ def detect(rule, ctx, results):
         return re.search(rule["pattern"], source, re.MULTILINE) is not None
     if kind == "output_regex":
         found = re.search(rule["pattern"], ctx.output, re.MULTILINE) is not None
-        return found if rule.get("expect", "present") == "present" else not found
+        if rule.get("expect", "present") == "present":
+            return found
+        # Output that is missing because the program crashed is the error's story, not this
+        # mistake's: the translated error explains it better.
+        return not found and not error
     if kind == "validator_failed":
         return any(r["id"] == rule["id"] and not r["passed"] for r in results)
     if kind == "hidden_case_fails":
@@ -520,6 +662,10 @@ def detect(rule, ctx, results):
 
 def evaluate(request, outcome):
     ctx = Ctx(request, outcome)
+    session = any(v["type"] in SESSION_VALIDATORS for v in request.get("validators", []))
+    summary = session_summary(ctx) if session else None
+    if session:
+        ctx.session = [*(request.get("session") or []), summary]
     ran_ok = outcome.status == "ok"
     results = [run_validator(spec, ctx) for spec in request.get("validators", [])] if ran_ok else []
     passed = ran_ok and all(r["passed"] for r in results)
@@ -545,4 +691,7 @@ def evaluate(request, outcome):
             ok = run_validator({"id": b["id"], **b["check"]}, ctx)["passed"]
             if ok:
                 bonus.append(b["id"])
-    return {"passed": passed, "results": results, "feedback": feedback, "bonus": bonus}
+    report = {"passed": passed, "results": results, "feedback": feedback, "bonus": bonus}
+    if summary is not None:
+        report["session"] = summary
+    return report

@@ -1,0 +1,159 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r5-q4-the-endless-tunnel
+region: the-endless-mines
+title: The Tunnel That Never Ends
+type: fix
+npc: digby-burrows
+learning_outcome: Fix an infinite loop by making sure its condition can become False.
+csta: [2-AP-17]
+estimated_minutes: 8
+prerequisites: [r5-q3-the-gem-tally]
+vocabulary: [infinite loop, while loop, counter]
+
+story_intro: |
+  Digby Burrows waves his helmet. "My digging machine should dig 6 steps of tunnel. Each step fills 3 buckets with dirt. Then my helper walks the new tunnel to me. But the machine never stops!"
+
+  A loop that never stops is an [[infinite loop]]. Byte will stop it for you and tell you which line to look at. This spell has **1 bug**.
+goal: Fix the loop so it stops after 6 steps. The program prints the report, and the hero walks the new tunnel to Digby.
+concept_card: |
+  A `while` loop stops only when its condition turns False. So something **inside** the loop must change the variable that the condition checks. If nothing changes it, the loop runs forever. That's an **infinite loop**.
+  ```python
+  steps = 0
+  while steps < 6:
+      steps = steps + 1
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    ##########
+    #H......N#
+    ##########
+  facing: right
+  legend:
+    "#": { tile: mine_wall, solid: true, look: wall }
+    ".": { tile: mine_floor, look: floor }
+    H: { tile: mine_floor, hero: true, look: floor }
+    N: { tile: mine_floor, object: npc }
+  npcs:
+    N: { name: Digby Burrows, sprite: npc_miner_digby }
+
+starter_code: |
+  from codeweald import hero
+  steps = 0
+  buckets = 0
+  while steps < 6:
+      buckets = buckets + 3
+  print("Dug", steps, "steps of tunnel.")
+  print("Filled", buckets, "buckets with dirt.")
+  hero.move("right", steps)
+
+solution: |
+  from codeweald import hero
+  steps = 0
+  buckets = 0
+  while steps < 6:
+      buckets = buckets + 3
+      steps = steps + 1
+  print("Dug", steps, "steps of tunnel.")
+  print("Filled", buckets, "buckets with dirt.")
+  hero.move("right", steps)
+
+validators:
+  - id: report
+    type: output
+    expect: |
+      Dug 6 steps of tunnel.
+      Filled 18 buckets with dirt.
+    fail_hint: The report should say 6 steps and 18 buckets.
+  - id: walked
+    type: state
+    hero_at: [7, 1]
+    fail_hint: The hero should walk the 6 new steps of tunnel and stop right next to Digby.
+
+common_mistakes:
+  - id: still-forever
+    detect: { kind: error, key: limits.loop_while_unchanged }
+    feedback: >-
+      The loop still runs forever! The `while` line checks `steps`, but nothing *inside* the
+      loop changes `steps`. Add `steps = steps + 1` inside the loop, indented under
+      `buckets = buckets + 3`.
+  - id: wrong-way
+    detect: { kind: error, key: limits.loop_while }
+    feedback: >-
+      Now `steps` changes, but it never reaches 6, so `steps < 6` stays True. Make it go up by
+      1 each time: `steps = steps + 1`.
+  - id: one-too-many
+    detect: { kind: output_regex, pattern: '^Dug 7 steps' }
+    feedback: >-
+      One step too many! The machine dug 7 steps. Check the `while` line. `steps < 6` stops at
+      6, but `steps <= 6` keeps going one more time.
+  - id: wrong-report
+    detect: { kind: validator_failed, id: report }
+    feedback: >-
+      The loop stops now. Great! But the report doesn't match. It should say 6 steps and 18
+      buckets. Only add the missing line. Don't change the others.
+  - id: not-there
+    detect: { kind: validator_failed, id: walked }
+    feedback: The report is right, but the hero didn't walk all 6 steps to Digby. Keep the last line as it was.
+
+wrong_solutions:
+  - expect_mistake: still-forever
+    note: The new line is after the loop, not inside it.
+    code: |
+      from codeweald import hero
+      steps = 0
+      buckets = 0
+      while steps < 6:
+          buckets = buckets + 3
+      steps = steps + 1
+      print("Dug", steps, "steps of tunnel.")
+      print("Filled", buckets, "buckets with dirt.")
+      hero.move("right", steps)
+  - expect_mistake: still-forever
+    note: Adds 1 but never stores the result.
+    code: |
+      from codeweald import hero
+      steps = 0
+      buckets = 0
+      while steps < 6:
+          buckets = buckets + 3
+          steps + 1
+      print("Dug", steps, "steps of tunnel.")
+      print("Filled", buckets, "buckets with dirt.")
+      hero.move("right", steps)
+  - expect_mistake: wrong-way
+    code: |
+      from codeweald import hero
+      steps = 0
+      buckets = 0
+      while steps < 6:
+          buckets = buckets + 3
+          steps = steps - 1
+      print("Dug", steps, "steps of tunnel.")
+      print("Filled", buckets, "buckets with dirt.")
+      hero.move("right", steps)
+  - expect_mistake: one-too-many
+    code: |
+      from codeweald import hero
+      steps = 0
+      buckets = 0
+      while steps <= 6:
+          buckets = buckets + 3
+          steps = steps + 1
+      print("Dug", steps, "steps of tunnel.")
+      print("Filled", buckets, "buckets with dirt.")
+      hero.move("right", steps)
+
+hints:
+  - Run it and read Byte's message. Which variable does the `while` line check? Does anything inside the loop change it?
+  - The loop checks `steps < 6`, but `steps` stays 0 forever. Add a line *inside* the loop (indented) that adds 1 to `steps`.
+  - |
+    ```python
+    while steps < 6:
+        buckets = buckets + 3
+        ____
+    ```
+
+story_outro: |
+  The machine stops with a happy *clunk*. "Six steps! Eighteen buckets! And it STOPPED!" Digby wipes his helmet. "Finally, a tunnel with an end."

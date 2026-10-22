@@ -41,6 +41,19 @@ DEFAULT_LEGEND = {
 MAX_SAY = 200
 
 
+def _giver(stage):
+    """The first named character on stage: the cast of an npc stage, or a map's NPCs."""
+    if not stage:
+        return None
+    for member in stage.get("cast") or []:
+        if member.get("name"):
+            return member["name"]
+    for spec in (stage.get("npcs") or {}).values():
+        if isinstance(spec, dict) and spec.get("name"):
+            return spec["name"]
+    return None
+
+
 class World:
     """State of one program run: the map, the hero, and the action log."""
 
@@ -63,6 +76,8 @@ class World:
         self.picked = []
         self.chests_opened = []
         self.visited = set()
+        # Who hands over the quest's input() answers in the replay (F-EXE-12).
+        self.giver = _giver(stage)
         if stage and stage.get("kind") == "grid":
             self._load_grid(stage)
 

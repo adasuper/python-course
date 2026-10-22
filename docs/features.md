@@ -679,8 +679,9 @@ Priority: Must · Phase: 1 · Spec: §9.2 · Brief: §3.3, §4
 ### F-QST-08 — Fill-the-gap quests
 As a Student, I want to fill in missing pieces of a spell, so that I can focus on the new idea.
 **Acceptance criteria**
-- `____` gaps render as highlighted, labelled widgets in the editor.
-- With `locked: true`, non-gap lines are read-only (CodeMirror read-only ranges) and say so to screen readers.
+- `____` gaps are highlighted in the editor, and a "Next gap" button selects the next one.
+- With `locked: true`, lines without a gap can't be changed (a CodeMirror change filter). The editor's description says so to screen readers, and typing on a locked line shows and announces "That line is locked".
+- Running with a gap left explains it kindly (`fill.gap_left`), with its line.
 - The quest completes when all validators pass.
 
 Priority: Must · Phase: 2 · Spec: §9.2 · Brief: §3.3
@@ -699,8 +700,9 @@ Priority: Must · Phase: 2 · Spec: §9.2, §14.3 · Brief: §3.3
 ### F-QST-10 — Parsons puzzles with only a keyboard
 As a Student who can't drag with a mouse, I want keys and buttons to move and indent lines, so that I can solve Parsons puzzles too.
 **Acceptance criteria**
-- ↑/↓ moves focus; Space picks up ("Picked up `print(x)`, position 2 of 5, indent 0"); ↑/↓ moves the held line; ←/→ (or Shift+Tab/Tab) changes indent; Space drops; Esc cancels; M moves between lists.
-- Each line also has visible ▲ ▼ ◀ ▶ ⇄ buttons.
+- ↑/↓ moves focus; Space picks up ("Picked up `print(x)`. Position 2 of 5, indent 0"); ↑/↓ moves the held line; ←/→ (or, while holding, Shift+Tab/Tab) changes indent; Space drops; Esc puts the line back; M moves between lists.
+- Each line also has visible ▲ ▼ ◀ ▶ ⇄ buttons, and the same buttons act on the selected line below the lists (for switch and voice-control users).
+- Lines can also be dragged with a mouse or a finger, including the indent.
 - Covered by an E2E test (F-QA-09).
 
 Priority: Must · Phase: 2 · Spec: §14.3 · Brief: §3.3, §1
@@ -828,7 +830,7 @@ As a Student in Region 10, I want Byte to label the parts of a real traceback, s
 **Acceptance criteria**
 - From Region 10 on, the real-error view annotates the file, line, error type and message.
 
-Priority: Should · Phase: 4 · Spec: §6.8 · Brief: §4
+Priority: Should · Phase: 4 (delivered early, in M2.3) · Spec: §6.8 · Brief: §4
 
 ### F-FBK-11 — Three hints when I'm stuck
 As a Student, I want up to three hints that get more helpful, so that I can get unstuck without being given the answer.
@@ -1223,7 +1225,7 @@ Priority: Must · Phase: 2 · Spec: §14.2 (2.1.4), §14.4 · Brief: §1
 ### F-A11-13 — One settings screen
 As a Student, I want all my comfort settings in one place, saved to my profile, so that the game always fits me.
 **Acceptance criteria**
-- Settings includes text size, fonts, reduced motion, high contrast, audio (master, music, effects; effects off by default), TTS (on/off, voice, rate), shortcut keys, replay default speed, class code and save/export.
+- Settings includes text size, fonts, reduced motion, high contrast, audio (master, music, effects; effects off by default), TTS (on/off, voice, rate), shortcut keys, replay default speed and save/export.
 - Settings are stored per profile; the title screen has quick text-size and contrast toggles before any profile exists.
 
 Priority: Must · Phase: 2 · Spec: §14.4 · Brief: §1
@@ -1259,7 +1261,7 @@ Priority: Must · Phase: 2 · Spec: §16 · Brief: §1
 As a School IT admin, I want Pyodide downloaded once and cached, so that the school network isn't hit twice.
 **Acceptance criteria**
 - Pyodide core files are runtime-cached (CacheFirst, cache `pyodide-<version>`), not precached.
-- The SW uses `skipWaiting` + `clientsClaim`; the worker starts after the SW controls the page (3 s fallback), so its fetches land in the cache.
+- The SW uses `clientsClaim` (and `skipWaiting` once the student accepts an update, F-OFF-04); the worker starts after the SW controls the page (3 s fallback), so its fetches land in the cache.
 - On a first visit, each Pyodide file is downloaded exactly once (E2E request count).
 
 Priority: Must · Phase: 2 · Spec: §16 · Brief: §1, §7
@@ -1309,7 +1311,7 @@ As a School IT admin, I want a built-in system check, so that I can see quickly 
 **Acceptance criteria**
 - A page reports: service worker active, IndexedDB available, WebAssembly works, `.wasm` served as `application/wasm`, storage quota, local TTS voices and offline readiness, each with pass/fail text and a fix tip.
 
-Priority: Should · Phase: 6 · Spec: §21 · Brief: §1, §8
+Priority: Should · Phase: 6 (delivered early, in M2.10) · Spec: §16, §21 · Brief: §1, §8
 
 ### F-OFF-09 — Honest about limits
 As an Instructor, I want the dashboard and guide to say progress is self-reported, so that I use it for formative feedback, not grading.

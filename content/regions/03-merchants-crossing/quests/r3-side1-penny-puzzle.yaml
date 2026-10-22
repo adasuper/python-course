@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-side1-penny-puzzle
+region: merchants-crossing
+title: The Penny Puzzle
+type: investigate
+side_quest: true
+learning_outcome: Explain why 0.1 + 0.2 shows 0.30000000000000004, and use round() to show money neatly.
+csta: [2-DA-07]
+estimated_minutes: 8
+prerequisites: [r3-boss-haggling-bug]
+vocabulary: [float]
+
+story_intro: |
+  A note on the Quest Board says: *"HELP! My scales say 0.1 + 0.2 is 0.30000000000000004. Are my scales haunted? — Tally"*
+
+  A [[float]] is stored as a very close guess, not always the exact number. Let's find out what that means, and how `round()` can tidy up money.
+goal: Run the program and answer Tally's questions. Try each change the questions ask for.
+concept_card: |
+  A **float** is stored as a very close guess, so tiny errors can show up, like `0.30000000000000004`. `round(number, 2)` rounds to 2 places after the dot, which looks neat for money.
+  ```python
+  print(round(0.1 + 0.2, 2))   # 0.3
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_moneychanger, name: Tally Brightcoin }
+
+starter_code: |
+  apple = 0.1
+  pear = 0.2
+  total = apple + pear
+  print(total)
+  print(round(total, 2))
+
+questions:
+  - kind: mcq
+    question: Run it. What does line 4 print?
+    options:
+      - "0.30000000000000004"
+      - "0.3"
+      - "0.30"
+    answer: 0
+    hint: Look at the first line on the Scroll of Output.
+    explain: That's not a haunting. It's how floats work!
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        apple = 0.1
+        pear = 0.2
+        total = apple + pear
+        print(total)
+        print(round(total, 2))
+      output: |
+        0.30000000000000004
+        0.3
+  - kind: mcq
+    question: Why isn't the answer exactly 0.3?
+    options:
+      - The computer stores 0.1 and 0.2 as very close guesses, not exact numbers.
+      - Python forgot how to add.
+      - Tally's scales really are haunted.
+    answer: 0
+    hint: Read the story again. How does Python store a float?
+    explain: Computers store floats in a special way. Most decimal numbers become very, very close guesses, and the tiny errors can add up.
+  - kind: mcq
+    question: What does `round(total, 2)` print on line 5?
+    options:
+      - "0.3"
+      - "0.30000000000000004"
+      - "30"
+    answer: 0
+    hint: Look at the second line on the Scroll. `round(x, 2)` keeps at most 2 places after the dot.
+    explain: "`round(total, 2)` rounds to 2 places after the dot. Python drops the extra 0, so it shows `0.3`."
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        apple = 0.1
+        pear = 0.2
+        total = apple + pear
+        print(total)
+        print(round(total, 2))
+      output: |
+        0.30000000000000004
+        0.3
+  - kind: number
+    question: Change line 5 to `print(round(4.567, 2))` and run it. What does it print now?
+    answer: 4.57
+    hint: Keep 2 places after the dot. Does the 7 at the end round the 6 up?
+    explain: "`4.567` rounded to 2 places is `4.57`, because the 7 rounds the 6 up."
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        apple = 0.1
+        pear = 0.2
+        total = apple + pear
+        print(total)
+        print(round(4.567, 2))
+      output: |
+        0.30000000000000004
+        4.57
+
+hints:
+  - Run it first, then compare lines 4 and 5 on the Scroll.
+  - Computers store most decimal numbers as very close guesses. `round(x, 2)` rounds `x` to 2 places after the dot.
+  - |
+    ```text
+    0.1 + 0.2             ->  0.30000000000000004
+    round(0.1 + 0.2, 2)   ->  ____
+    ```
+
+story_outro: |
+  "Not haunted, just a float!" Tally laughs with relief. "From now on, I'll round my money to 2 places. Neat and tidy, like a stack of coins."

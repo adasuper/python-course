@@ -2,9 +2,10 @@
 import { useState } from 'preact/hooks';
 import { fillRich, parseRich } from '../../content/richtext';
 import { t } from '../../i18n/en';
-import type { PyErrorInfo, RunResult } from '../../runtime/protocol';
+import type { BonusSpec, PyErrorInfo, RunResult } from '../../runtime/protocol';
 import { course, update } from '../../state/store';
 import { RichText } from '../components/RichText';
+import { annotateTraceback } from '../traceback';
 
 export function errorTemplate(error: PyErrorInfo) {
   const templates = course.value!.errors;
@@ -17,7 +18,8 @@ export function errorTemplate(error: PyErrorInfo) {
   };
 }
 
-export function ErrorExplanation({ error }: { error: PyErrorInfo }) {
+/** `annotate`: Byte labels each part of the real error (from Region 10, F-FBK-10). */
+export function ErrorExplanation({ error, annotate = false }: { error: PyErrorInfo; annotate?: boolean }) {
   const [real, setReal] = useState(false);
   const tpl = errorTemplate(error);
   return (
@@ -46,10 +48,22 @@ export function ErrorExplanation({ error }: { error: PyErrorInfo }) {
           >
             {real ? t.quest.hideRealError : t.quest.showRealError}
           </button>
-          {real && (
+          {real && !annotate && (
             <pre class="real-error" lang="zxx">
               {error.raw}
             </pre>
+          )}
+          {real && annotate && (
+            <ol class="real-error trace-annotated" aria-label={t.trace.heading}>
+              {annotateTraceback(error.raw).map((part, i) => (
+                <li key={i} class={`trace-${part.kind}`}>
+                  <code class="trace-line" lang="zxx">
+                    {part.line}
+                  </code>
+                  <span class="trace-note">{part.note}</span>
+                </li>
+              ))}
+            </ol>
           )}
         </>
       )}
@@ -61,6 +75,34 @@ export interface RewardView {
   xp: number;
   itemName: string | null;
   levelUp: number | null;
+  /** "Bonus challenge complete! +15 XP", when one was earned on this run. */
+  bonusText: string;
+}
+
+/** Optional extra challenges, shown once the quest is passed (§9.4). */
+export function BonusList({ bonus, done }: { bonus: BonusSpec[]; done(id: string): boolean }) {
+  return (
+    <section class="bonus" aria-labelledby="bonus-h">
+      <h2 id="bonus-h" class="panel-title">
+        ⭐ {t.quest.bonusHeading}
+      </h2>
+      <p class="muted small-text">{t.quest.bonusHelp}</p>
+      <ul class="bonus-list">
+        {bonus.map((b) => {
+          const ok = done(b.id);
+          return (
+            <li key={b.id} class={ok ? 'done' : ''}>
+              <span class={`bonus-status ${ok ? 'ok' : ''}`}>
+                {ok ? `✓ ${t.quest.bonusEarned}` : `○ ${t.quest.bonusOpen}`}
+              </span>{' '}
+              <RichText rich={parseRich(b.description)} inline />{' '}
+              <span class="xp-tag">{t.quest.bonusXp(b.xp)}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
 }
 
 export function Feedback({
@@ -68,12 +110,18 @@ export function Feedback({
   passed,
   outro,
   reward,
+  note,
+  annotate = false,
   children,
 }: {
   result: RunResult | null;
   passed: boolean;
   outro?: import('../../content/richtext').Rich | null;
   reward?: RewardView | null;
+  /** Shown instead of the generic "not quite" (e.g. progress on session validators). */
+  note?: string | null;
+  /** Label the parts of the real error (Region 10 on). */
+  annotate?: boolean;
   children?: preact.ComponentChildren;
 }) {
   if (!result) return null;
@@ -89,6 +137,7 @@ export function Feedback({
             {reward.xp > 0 && <li>✨ {t.quest.xpGained(reward.xp)}</li>}
             {reward.itemName && <li>🎒 {t.quest.itemGained(reward.itemName)}</li>}
             {reward.levelUp && <li>⭐ {t.quest.levelUp(reward.levelUp)}</li>}
+            {reward.bonusText && <li>🌟 {reward.bonusText}</li>}
           </ul>
         )}
         {children}
@@ -104,9 +153,11 @@ export function Feedback({
         {result.status === 'timeout' || result.status === 'crashed' ? t.quest.timeout : t.quest.notYet}
       </h2>
       {fb?.text && <RichText rich={parseRich(fb.text)} />}
-      {fb?.source === 'mistake' && result.error && <ErrorExplanation error={result.error} />}
-      {showError && <ErrorExplanation error={result.error!} />}
-      {!fb?.text && !result.error && <p>{t.quest.generic}</p>}
+      {fb?.source === 'mistake' && result.error && (
+        <ErrorExplanation error={result.error} annotate={annotate} />
+      )}
+      {showError && <ErrorExplanation error={result.error!} annotate={annotate} />}
+      {!fb?.text && !result.error && <p>{note ?? t.quest.generic}</p>}
       <p class="muted">{t.quest.tryAgain}</p>
       {children}
     </section>

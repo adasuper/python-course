@@ -1,0 +1,148 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-q2-the-clockmakers-loop
+region: clocktower-peaks
+title: The Clockmaker's Loop
+type: investigate
+npc: gerta_gearwright
+learning_outcome: Explain how a for loop's variable changes on each pass.
+csta: [2-AP-12]
+estimated_minutes: 7
+prerequisites: [r6-q1-counting-the-bells]
+vocabulary: [for loop, loop variable, range]
+rewards: { item: boots-of-looping }
+
+story_intro: |
+  Gerta Gearwright points up a steep stone staircase. "My spare gears are in the bell loft. Four steps up. Climb them with a loop, and watch the loop closely."
+
+  In `for step in range(4):`, the name `step` is the [[loop variable]]. Each time the loop goes around, `step` holds the next number. Print it and see!
+goal: Run the program, watch the hero climb, and answer Gerta's questions. Try the change one question asks for.
+concept_card: |
+  In `for step in range(4):`, the **loop variable** `step` gets a new value on every pass: 0, then 1, then 2, then 3. You never change it yourself. The loop does that for you.
+  ```python
+  for step in range(4):
+      print(step)
+  ```
+
+stage:
+  kind: grid
+  grid: |
+    ^^^^^^^^
+    ^^^^^/Q^
+    ^^^^//^^
+    ^^^//^^^
+    ^^//^^^^
+    ^H/^^^^^
+    ^^^^^^^^
+  facing: right
+  legend:
+    "^": { tile: peak_cliff, solid: true }
+    "/": { tile: peak_stairs }
+    H: { tile: peak_ground, hero: true }
+    Q: { tile: peak_ground, object: clock_bell, look: bell }
+
+starter_code: |
+  from codeweald import hero
+  for step in range(4):
+      print(step)
+      hero.move("right")
+      hero.move("up")
+  hero.say("Made it to the bell loft!")
+
+questions:
+  - kind: number
+    question: Press Run. How many numbers appear on the Scroll of Output?
+    answer: 4
+    hint: The loop prints `step` once on every pass. Count the lines on the Scroll.
+    explain: "`range(4)` makes four numbers, so the loop goes around four times."
+    verify: { kind: output_lines }
+  - kind: mcq
+    question: What is the value of `step` on the very first pass?
+    options:
+      - "0"
+      - "1"
+      - "4"
+    answer: 0
+    hint: Look at the first line on the Scroll.
+    explain: "With one number, `range` starts at 0. So `step` is 0 the first time."
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        from codeweald import hero
+        for step in range(4):
+            print(step)
+            hero.move("right")
+            hero.move("up")
+        hero.say("Made it to the bell loft!")
+      output: |
+        0
+        1
+        2
+        3
+  - kind: mcq
+    question: What is the value of `step` on the last pass?
+    options:
+      - "3"
+      - "4"
+      - "5"
+    answer: 0
+    hint: Look at the last number on the Scroll. Does `range(4)` ever give 4?
+    explain: "`range(4)` stops just before 4. So the last value is 3."
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        from codeweald import hero
+        for step in range(4):
+            print(step)
+            hero.move("right")
+            hero.move("up")
+        hero.say("Made it to the bell loft!")
+      output: |
+        0
+        1
+        2
+        3
+  - kind: number
+    question: Change `range(4)` to `range(1, 5)` and run it again. What is the first number on the Scroll now?
+    answer: 1
+    hint: The first number inside `range(1, 5)` is the start.
+    explain: The hero still climbs four steps. But now `step` counts 1, 2, 3, 4.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        from codeweald import hero
+        for step in range(1, 5):
+            print(step)
+            hero.move("right")
+            hero.move("up")
+        hero.say("Made it to the bell loft!")
+      output: |
+        1
+        2
+        3
+        4
+  - kind: mcq
+    question: Who changes `step` from one number to the next?
+    options:
+      - The for loop does it by itself, on every pass.
+      - You must write `step = step + 1` inside the loop.
+      - The hero does it by moving.
+    answer: 0
+    hint: Is there any line in the program that changes `step`?
+    explain: The for loop hands `step` its next number each time around. You never add 1 to it yourself.
+
+hints:
+  - Press Run first. Then watch the Scroll and the stairs at the same time.
+  - "Each pass of the loop runs all three indented lines: print `step`, move right, move up. Then `step` gets the next number."
+  - |
+    Here's the trace of the first two passes:
+    ```text
+    pass 1: step is 0 -> print 0, right, up
+    pass 2: step is 1 -> print 1, right, up
+    pass 3: step is ____ -> ...
+    ```
+
+story_outro: |
+  "Up you go!" Gerta claps her gear-greasy hands. "Four steps, four passes, and you never touched `step` once." You earned the **Boots of Looping**. They climb any staircase, one numbered step at a time.

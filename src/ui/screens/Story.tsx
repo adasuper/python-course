@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { t } from '../../i18n/en';
 import { go, regions, type Route } from '../../state/store';
 import { Portrait } from '../components/Common';
+import { ReadAloud, useAutoRead } from '../components/ReadAloud';
 import { RichText } from '../components/RichText';
 
 export function speakerName(speaker: string): string | null {
@@ -20,6 +21,7 @@ export function StoryScreen({ route }: { route: Extract<Route, { name: 'story' }
   const line = route.lines[i]!;
   const last = i === route.lines.length - 1;
   useEffect(() => next.current?.focus(), [i]);
+  useAutoRead(line.text);
   const finish = () => go(route.next);
   const name = speakerName(line.speaker);
   return (
@@ -53,6 +55,7 @@ export function StoryScreen({ route }: { route: Extract<Route, { name: 'story' }
             {t.dialogue.skip}
           </button>
         )}
+        <ReadAloud rich={line.text} />
         <span class="muted" aria-hidden="true">
           {i + 1} / {route.lines.length}
         </span>

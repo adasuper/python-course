@@ -2,7 +2,7 @@
 // Checks every content file against the schema, cross-checks references, and runs
 // every reference solution and known-wrong solution through the real Python runtime.
 import { crossCheck, loadContent, units, type Problem } from './lib/content';
-import { checkRegion, checkUnit } from './lib/contentCheck';
+import { checkRegion, checkUnit, checkWorkshop } from './lib/contentCheck';
 import { getPyHost } from './lib/pyHost';
 import { reportProblems } from './lib/report';
 import { above, FLAG_ABOVE, readingLevels } from './reading-level';
@@ -20,6 +20,9 @@ async function main() {
     for (const region of content.regions) {
       for (const message of checkRegion(host, region.data)) problems.push({ file: region.file, message });
     }
+    if (content.workshop)
+      for (const message of checkWorkshop(host, content.workshop))
+        problems.push({ file: 'content/workshop.yaml', message });
   }
   if (problems.length) {
     reportProblems(problems);

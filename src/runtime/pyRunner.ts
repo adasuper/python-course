@@ -16,6 +16,9 @@ export interface RunnerOptions {
   indexURL: string;
   timeoutMs: number;
   createWorker?: () => Worker;
+  /** Python starts loading only after this, e.g. once the offline service worker controls the
+   *  page so the downloads land in its cache (§16). Restarts don't wait. */
+  beforeInit?: Promise<void>;
 }
 
 const defaultWorker = () =>
@@ -31,7 +34,7 @@ export class PyRunner {
   private ready!: Promise<void>;
   private nextRunId = 1;
   private pending = new Map<number, (result: RunResult) => void>();
-  private options: Required<RunnerOptions>;
+  private options: Required<Omit<RunnerOptions, 'beforeInit'>> & Pick<RunnerOptions, 'beforeInit'>;
 
   constructor(options: RunnerOptions) {
     this.options = { createWorker: defaultWorker, ...options };
@@ -98,7 +101,15 @@ export class PyRunner {
       };
     });
     this.ready.catch(() => {});
-    worker.postMessage({ kind: 'init', indexURL: this.options.indexURL });
+    const init = () => {
+      if (this.worker !== worker) return;
+      const cached = typeof navigator !== 'undefined' && Boolean(navigator.serviceWorker?.controller);
+      worker.postMessage({ kind: 'init', indexURL: this.options.indexURL, cached });
+    };
+    const wait = this.options.beforeInit;
+    this.options.beforeInit = undefined;
+    if (wait) void wait.then(init);
+    else init();
   }
 
   /** Throw the current worker away and boot a new one (after a timeout or crash). */

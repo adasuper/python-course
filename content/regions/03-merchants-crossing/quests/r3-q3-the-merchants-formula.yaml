@@ -1,0 +1,108 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-q3-the-merchants-formula
+region: merchants-crossing
+title: The Merchant's Formula
+type: modify
+npc: marta
+learning_outcome: Use parentheses to control the order of operations in a price calculation.
+csta: [2-AP-11]
+estimated_minutes: 7
+prerequisites: [r3-q2-sharing-apples]
+vocabulary: [order of operations, operator]
+
+story_intro: |
+  Marta Crust slams a pie on the counter. "My till says four wrapped pies cost 10 silver. TEN! I'll be broke by lunch!"
+
+  A pie costs 6 silver, and wrapping costs 1 silver *for each pie*. Python follows the [[order of operations]]: it does `*` before `+`, just like in math class. So `price + fee * pies` adds only one price. Parentheses `( )` go first of all.
+goal: Add parentheses so the wrapping fee is paid on each pie. Four wrapped pies should cost 28 silver.
+concept_card: |
+  Python does `*` and `/` before `+` and `-`. Parentheses go first of all, so use them to say what to work out first.
+  ```python
+  print(6 + 1 * 4)     # 10
+  print((6 + 1) * 4)   # 28
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_pie_merchant, name: Marta Crust }
+
+starter_code: |
+  price = 6    # silver for one pie
+  fee = 1      # silver to wrap one pie
+  pies = 4
+  total = price + fee * pies
+  print(f"{pies} wrapped pies cost {total} silver.")
+
+solution: |
+  price = 6    # silver for one pie
+  fee = 1      # silver to wrap one pie
+  pies = 4
+  total = (price + fee) * pies
+  print(f"{pies} wrapped pies cost {total} silver.")
+
+validators:
+  - id: four-pies
+    type: output
+    expect: 4 wrapped pies cost 28 silver.
+    fail_hint: Four pies at 6 silver, plus 1 silver to wrap each one, should cost 28 silver.
+  - id: other-pies
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    fail_hint: The formula should work for any price, fee and number of pies.
+    cases:
+      - { vars: { price: 5, fee: 2, pies: 3 } }
+      - { vars: { price: 9, fee: 1, pies: 1 } }
+      - { vars: { price: 4, fee: 3, pies: 10 } }
+
+common_mistakes:
+  - id: no-parens
+    detect: { kind: output_regex, pattern: "cost 10 silver" }
+    feedback: >-
+      Python did `fee * pies` first, then added just one price. Put parentheses around
+      `price + fee`, so Python adds those first and then multiplies.
+  - id: fee-once
+    detect: { kind: output_regex, pattern: "cost 25 silver" }
+    feedback: >-
+      Now every pie is paid for, but the wrapping fee only once. Each pie needs wrapping too:
+      add the fee to the price first, then multiply.
+  - id: typed-answer
+    detect: { kind: hidden_case_fails, validator: other-pies, case: 0 }
+    feedback: >-
+      28 is right for Marta's pies, but other customers get the wrong price. Did you type the
+      answer in? Work it out from `price`, `fee` and `pies`, so it works for every order.
+
+wrong_solutions:
+  - expect_mistake: no-parens
+    code: |
+      price = 6    # silver for one pie
+      fee = 1      # silver to wrap one pie
+      pies = 4
+      total = price + (fee * pies)
+      print(f"{pies} wrapped pies cost {total} silver.")
+  - expect_mistake: fee-once
+    code: |
+      price = 6    # silver for one pie
+      fee = 1      # silver to wrap one pie
+      pies = 4
+      total = price * pies + fee
+      print(f"{pies} wrapped pies cost {total} silver.")
+  - expect_mistake: typed-answer
+    code: |
+      price = 6    # silver for one pie
+      fee = 1      # silver to wrap one pie
+      pies = 4
+      total = 28
+      print(f"{pies} wrapped pies cost {total} silver.")
+
+hints:
+  - Which should happen first, adding the price and the fee, or multiplying by the number of pies?
+  - Python multiplies before it adds. Parentheses always go first, so put `( )` around the part you want worked out first.
+  - |
+    ```python
+    total = (____) * pies
+    ```
+
+story_outro: |
+  Marta's till dings: 28 silver. "Finally, a fair price! Fair for me, anyway." She wraps a pie just for you. It smells like cinnamon and victory.

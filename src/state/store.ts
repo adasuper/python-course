@@ -5,7 +5,9 @@ import type { Course, DialogueLine, Region } from '../content/types';
 import type { PyRunner } from '../runtime/pyRunner';
 import type { AppConfig } from './config';
 import { DEFAULT_CONFIG } from './config';
-import { progressHash, type Profile } from './profile';
+import { t } from '../i18n/en';
+import { awardBadges } from './badges';
+import { levelFor, progressHash, titleFor, type Profile } from './profile';
 import type { Storage } from './storage';
 
 export type Route =
@@ -18,11 +20,20 @@ export type Route =
   | { name: 'quest'; questId: string }
   | { name: 'check'; regionId: string }
   | { name: 'inventory' }
-  | { name: 'credits' };
+  | { name: 'item'; id: string }
+  | { name: 'workshop' }
+  | { name: 'settings' }
+  | { name: 'system' }
+  | { name: 'worldmap' }
+  | { name: 'spellbook'; tab?: 'pages' | 'spells' | 'examples' | 'scenes' | 'glossary' }
+  | { name: 'finale' }
+  | { name: 'credits'; back?: Route };
 
 export interface Toast {
   id: number;
-  kind: 'save-point' | 'info' | 'reward';
+  kind: 'save-point' | 'info' | 'reward' | 'celebrate';
+  /** For a celebration: the badge's emoji, or ⭐ for a level-up. */
+  icon?: string;
   text: string;
 }
 
@@ -68,15 +79,20 @@ export const unsaved = computed(() => {
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-/** Apply a change to the active profile, then save (debounced). */
+/** Apply a change to the active profile, then save (debounced). Badges are checked after
+ *  every change (§11.6), and new badges and level-ups are celebrated (F-PRG-08). */
 export function update(change: (p: Profile) => void) {
   const p = profile.value;
   if (!p) return;
   const next = structuredClone(p);
   change(next);
+  const fresh = course.value ? awardBadges(next, course.value) : [];
   profile.value = next;
   profiles.value = profiles.value.map((x) => (x.id === next.id ? next : x));
   scheduleSave();
+  const level = levelFor(next.xp);
+  if (level > levelFor(p.xp)) toast('celebrate', t.celebrate.levelUp(level, titleFor(level)), 8000, '⭐');
+  for (const b of fresh) toast('celebrate', t.celebrate.badge(b.name), 8000, b.emoji);
 }
 
 function scheduleSave() {
@@ -104,17 +120,34 @@ export function go(next: Route) {
 }
 
 let announceCounter = 0;
-/** Polite screen-reader announcement. */
+let lastAnnounced = 0;
+/** Polite screen-reader announcement. Messages that come together (a level-up and a badge,
+ *  say) are joined, so the second doesn't replace the first before it is read. */
 export function announce(text: string) {
-  announcement.value = { text, n: ++announceCounter };
+  const now = Date.now();
+  const previous = announcement.value.text;
+  const joined = now - lastAnnounced < 300 && previous ? `${previous} ${text}` : text;
+  lastAnnounced = now;
+  announcement.value = { text: joined, n: ++announceCounter };
 }
 
 let toastId = 0;
-export function toast(kind: Toast['kind'], text: string, ms = 6000) {
-  const t = { id: ++toastId, kind, text };
-  toasts.value = [...toasts.value, t];
+/** At most this many toasts show at once (older ones were already announced). */
+export const MAX_TOASTS = 3;
+
+export function toast(kind: Toast['kind'], text: string, ms = 6000, icon?: string) {
+  const item = { id: ++toastId, kind, text, ...(icon ? { icon } : {}) };
+  // A new save point replaces the last one. Over the limit, older toasts go first, but
+  // celebrations (badges, level-ups) outlast the rest.
+  const kept = kind === 'save-point' ? toasts.value.filter((x) => x.kind !== 'save-point') : toasts.value;
+  const next = [...kept, item];
+  while (next.length > MAX_TOASTS) {
+    const old = next.findIndex((x) => x.kind !== 'celebrate' && x !== item);
+    next.splice(old >= 0 ? old : 0, 1);
+  }
+  toasts.value = next;
   announce(text);
-  if (ms > 0) setTimeout(() => dismissToast(t.id), ms);
+  if (ms > 0) setTimeout(() => dismissToast(item.id), ms);
 }
 
 export function dismissToast(id: number) {

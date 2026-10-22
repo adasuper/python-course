@@ -475,3 +475,2996 @@ Eat
 
 3. Which line will Python skip? → **# Feed the chickens**. A line that starts with `#` is a comment. Python skips it.
 4. An error message says "line 3". Where do you look first? → **Line 3 of my code**. Start at line 3. Sometimes the real slip is just above it, so check that line too.
+
+## Region 2 — Whispering Library
+
+**Concepts:** variables; assignment and reassignment; naming rules; joining strings with +; f-strings
+
+**Byte's analogy:** A variable is a labeled jar. The label is the name, and what is inside is the value. You can pour out the old value and put in a new one, but the jar holds only one thing at a time.
+
+### The Labeled Jars
+
+`r2-q1-labeled-jars`
+
+- **Type:** predict
+- **Learning outcome:** Predict what a program prints when it stores text in a variable and then prints the variable.
+- **CSTA:** 2-AP-11 · **About 6 min**
+- **Goal (as students see it):** Read the program and predict what each print line shows. Then run it to check.
+
+**Code students read:**
+
+```python
+book = "The Owl Who Coded"
+print(book)
+print("book")
+```
+
+**Answers:**
+
+- Line 2 is `print(book)`, with no quotes. What does it show? → **The Owl Who Coded**. No quotes, so Python looks inside the jar named `book` and shows what it holds.
+- Line 3 is `print("book")`, with quotes. What does it show? → **book**. With quotes, `"book"` is just a string. Python shows the word book, not the jar's value.
+- Now type exactly what the whole program prints, one line at a time. → **The Owl Who Coded book**. First the jar's value, then the word book.
+
+**Hints (free, in this order):**
+
+1. Look for quotes. Text in quotes is shown as it is. A name without quotes is a jar.
+2. `print(book)` opens the jar called `book`. `print("book")` just shows the word.
+3. (code example)
+
+The Scroll will show two lines:
+```text
+The Owl Who ____
+book
+```
+
+### The Shelf Swap
+
+`r2-q2-the-shelf-swap`
+
+- **Type:** investigate
+- **Learning outcome:** Trace a variable's value line by line as it is reassigned.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Run the program, watch the Scroll, and answer Tobin's questions. Try the changes the questions ask for!
+
+**Code students run:**
+
+```python
+shelf = "Mysteries"
+print(shelf)
+shelf = "Dragons"
+print(shelf)
+```
+
+**Answers:**
+
+- Run the program. How many lines appear on the Scroll of Output? → **2**. There are two `print` lines, so there are two lines on the Scroll.
+- After line 3 runs, what is inside the jar `shelf`? → **"Dragons"**. Line 3 poured out "Mysteries" and put in "Dragons".
+- Change line 3 to `shelf = "Poems"` and run it. What is the second line on the Scroll now? → **Poems**. The jar now gets "Poems" on line 3, so line 4 shows Poems.
+- Put the code back. Now delete line 1, `shelf = "Mysteries"`, and run it. What happens? → **Python shows an error.**. Line 2 tries to look in a jar that has no label yet, so Python shows a NameError.
+
+**Hints (free, in this order):**
+
+1. Read the program from the top. After each line, say out loud what is in the jar `shelf`.
+2. After line 1, `shelf` holds "Mysteries". After line 3, it holds "Dragons". The old value is gone.
+3. (code example)
+
+Trace it line by line:
+```text
+line 1: shelf gets "Mysteries"
+line 2: prints Mysteries
+line 3: shelf gets "Dragons"
+line 4: prints ____
+```
+
+### Rules for Names
+
+`r2-q3-rules-for-names`
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix variable names that break Python's naming rules.
+- **CSTA:** 2-AP-11, 2-AP-17 · **About 7 min**
+- **Goal (as students see it):** Fix the four bad names so the program prints the archive card. Use the names that the print lines already use.
+
+**Starter code:**
+
+```python
+book title = "Moonlight Maps"
+2nd_shelf = "Atlases"
+book-count = 12
+print(book_title)
+print(shelf_2)
+print(Book_count)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+book_title = "Moonlight Maps"
+shelf_2 = "Atlases"
+book_count = 12
+print(book_title)
+print(shelf_2)
+print(book_count)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *space-or-dash* — A name can't have a space or a dash in it. Python reads `book title` as two names, and `book-count` as "book minus count". Use an underscore instead: `book_title`, `book_count`.
+- *starts-with-number* — A name can't start with a number. Move the number to the end, like the print line does: `shelf_2`.
+- *capital-letter* — Python is case-sensitive. `Book_count` with a capital B is a different jar from `book_count`. Make the names match exactly.
+- *values-changed* — The names work now, but the card changed. Keep the same values the starter code had.
+
+**Hints (free, in this order):**
+
+1. Run it and read the error. Which line does it point to? Fix one name, then run again.
+2. Look at the print lines: they use `book_title`, `shelf_2` and `book_count`. Make lines 1 to 3 use the same names, and fix the capital B on line 6.
+3. (code example)
+
+```python
+book_title = "Moonlight Maps"
+shelf_2 = "Atlases"
+____ = 12
+print(book_title)
+print(shelf_2)
+print(book_count)
+```
+
+### Glue the Catalog Card
+
+`r2-q4-catalog-card`
+
+- **Type:** fill
+- **Learning outcome:** Use + to join strings and variables into one sentence, with spaces in the right places.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Fill the two gaps so the card reads exactly "Find The Owl Who Coded on the Mysteries shelf."
+
+**Starter code:**
+
+```python
+book = "The Owl Who Coded"
+shelf = "Mysteries"
+card = "Find " + ____ + " on the " + shelf + ____
+print(card)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+book = "The Owl Who Coded"
+shelf = "Mysteries"
+card = "Find " + book + " on the " + shelf + " shelf."
+print(card)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *word-not-jar* — Your card says "Find book". With quotes, `"book"` is just the word. Without quotes, `book` is the jar, and Python uses what is inside it.
+- *missing-space* — Your words are glued together: "Mysteriesshelf". `+` never adds a space. Start the last string with a space: `" shelf."`
+- *typed-the-title* — The card looks right, but you typed the title again instead of using the jar. Put `book` (no quotes) in the first gap, so the card works for every book.
+
+**Hints (free, in this order):**
+
+1. The first gap is the book's title. Which jar holds it?
+2. The first gap is the jar `book`, with no quotes. The second gap is a string that starts with a space: `" shelf."`
+3. (code example)
+
+```python
+card = "Find " + book + " on the " + shelf + ____
+```
+
+### The Magic Ink
+
+`r2-q5-the-magic-ink`
+
+- **Type:** modify
+- **Learning outcome:** Use an f-string to place variable values inside a sentence.
+- **CSTA:** 2-AP-11 · **About 8 min**
+- **Goal (as students see it):** Rewrite the print line with one f-string. The Scroll must show exactly the same sentence as before.
+
+**Starter code:**
+
+```python
+name = "Ada"
+book = "The Owl Who Coded"
+print("Dear " + name + ", " + book + " is ready for you.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+name = "Ada"
+book = "The Owl Who Coded"
+print(f"Dear {name}, {book} is ready for you.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *missing-f* — Your note shows the braces, like `{name}`. The magic needs an `f` right before the first quote: `f"Dear {name}, ..."`.
+- *still-plus* — The note is right, but it still uses `+`. Rewrite the whole sentence as one f-string, with `{name}` and `{book}` inside it.
+- *typed-values* — You typed Ada's name into the text. Use `{name}` and `{book}` so the ink fills in whoever the reader is.
+
+**Hints (free, in this order):**
+
+1. Where do the two jars go in the sentence? Those spots become `{name}` and `{book}`.
+2. Start with `print(f"Dear ` and type the rest of the sentence. Put `{name}` and `{book}` where the jars go. No `+` signs!
+3. (code example)
+
+```python
+print(f"Dear {name}, ____ is ready for you.")
+```
+
+### Make a Library Card
+
+`r2-q6-library-card`
+
+- **Type:** make
+- **Learning outcome:** Write a program that stores three facts in clearly named variables and prints them as a library card.
+- **CSTA:** 2-AP-11 · **About 10 min**
+- **Goal (as students see it):** Store a name, a book title and a page count in the jars `name`, `book` and `pages`. Print the card, then walk to Madame Quill and make the hero say the card is ready.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+# Store the three facts in jars here.
+
+# Print the card here.
+
+# Walk to Madame Quill and say the card is ready.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+# Store the three facts in jars here.
+name = "Ada"
+book = "The Owl Who Coded"
+pages = 120
+# Print the card here.
+print(f"Name: {name}")
+print(f"Book: {book}")
+print(f"Pages: {pages}")
+# Walk to Madame Quill and say the card is ready.
+hero.move("right", 5)
+hero.say("My card is ready!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *pages-as-text* — `pages` should hold a number you can count, like `120`, with no quotes. With quotes, `"120"` is just text that looks like a number.
+- *typed-into-print* — Your card looks right, but the facts are typed into the print lines. Print the jars instead, like `f"Name: {name}"`, so the card works for every reader.
+- *not-delivered* — The card is perfect! Now deliver it: walk right until you stand next to Madame Quill, then use `hero.say("My card is ready!")`.
+
+**Hints (free, in this order):**
+
+1. Start with the jars. Pick a name, a book title and a page count, like `pages = 120`.
+2. Print each line with an f-string, like `print(f"Book: {book}")`. Then `hero.move("right", 5)` and `hero.say(...)`.
+3. (code example)
+
+```python
+name = "Ada"
+book = "The Owl Who Coded"
+pages = 120
+print(f"Name: {name}")
+print(f"Book: ____")
+print(f"Pages: {pages}")
+hero.move("right", 5)
+hero.say("My card is ready!")
+```
+
+### The Mislabeled Archive 🐛 boss
+
+`r2-boss-mislabeled-archive`
+
+**Boss:** The Mislabeled Archive (Swapsy the Label Moth). Fix the jars, update a record, and print the archive card. Each phase is saved on its own.
+
+#### Phase 1: Unswap the jars
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix variables that hold the wrong values.
+- **CSTA:** 2-AP-11, 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Fix the three jars so each one holds the right value. Don't change the print lines.
+
+**Starter code:**
+
+```python
+title = "Professor Hoot"
+author = "Mysteries"
+shelf = "The Owl Who Coded"
+print("Title: " + title)
+print("Author: " + author)
+print("Shelf: " + shelf)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = "Mysteries"
+print("Title: " + title)
+print("Author: " + author)
+print("Shelf: " + shelf)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *moved-the-labels* — The Scroll might look right, but you moved the print labels, not the values. The jars still hold the wrong things. Fix lines 1 to 3 instead.
+- *some-jars-wrong* — Some jars still hold the wrong value. Check each line of the Scroll against the card.
+
+**Hints (free, in this order):**
+
+1. Read the card Swapsy scrambled. Which value belongs in the `title` jar?
+2. Change only the values in lines 1 to 3. The title is "The Owl Who Coded".
+3. (code example)
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = ____
+```
+
+#### Phase 2: Found it!
+
+- **Type:** modify
+- **Learning outcome:** Use reassignment to update a stored value.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** After the first print, put "found" in the jar `status`, then print the same line again.
+
+**Starter code:**
+
+```python
+title = "The Owl Who Coded"
+status = "missing"
+print(title + " is " + status)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+title = "The Owl Who Coded"
+status = "missing"
+print(title + " is " + status)
+status = "found"
+print(title + " is " + status)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *new-jar* — You made a new jar. Use the same jar instead: `status = "found"` pours out "missing" and puts in "found".
+- *typed-found* — The Scroll says found, but the jar `status` still holds "missing". Store the new value in the jar with `status = "found"`, then print the jar.
+
+**Hints (free, in this order):**
+
+1. The jar `status` needs a new value between the two prints.
+2. Add `status = "found"` after the first print, then copy the print line below it.
+3. (code example)
+
+```python
+print(title + " is " + status)
+status = ____
+print(title + " is " + status)
+```
+
+#### Phase 3: The display card
+
+- **Type:** make
+- **Learning outcome:** Use an f-string to display stored values in a required format.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Print the display card with one print and one f-string that uses all three jars.
+
+**Starter code:**
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = "Mysteries"
+# Print the display card with one f-string:
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+title = "The Owl Who Coded"
+author = "Professor Hoot"
+shelf = "Mysteries"
+# Print the display card with one f-string:
+print(f"{title} by {author} (shelf: {shelf})")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *missing-f* — The card shows the braces. Put an `f` right before the first quote.
+- *not-fstring* — The card looks right, but it is not an f-string yet. Use `f"{title} by ..."`.
+- *typed-values* — You typed the book's facts into the text. Use `{title}`, `{author}` and `{shelf}` instead.
+
+**Hints (free, in this order):**
+
+1. Which three jars does the card use? Each one becomes a `{jar}` inside the f-string.
+2. Start with `print(f"{title} by ` and keep going. The brackets and the colon are just text.
+3. (code example)
+
+```python
+print(f"{title} by {author} (shelf: ____)")
+```
+
+### The Swap Trick ⭐ side quest
+
+`r2-side1-the-swap-trick`
+
+- **Type:** fill
+- **Learning outcome:** Use a third variable to swap the values of two variables.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Fill the two gaps so the two shelves swap, and no book gets lost.
+
+**Starter code:**
+
+```python
+shelf_a = "Dragons"
+shelf_b = "Poems"
+temp = ____
+shelf_a = shelf_b
+shelf_b = ____
+print("Shelf A: " + shelf_a)
+print("Shelf B: " + shelf_b)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+shelf_a = "Dragons"
+shelf_b = "Poems"
+temp = shelf_a
+shelf_a = shelf_b
+shelf_b = temp
+print("Shelf A: " + shelf_a)
+print("Shelf B: " + shelf_b)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *lost-a-book* — Oh no, both shelves hold the same books now! Once `shelf_a = shelf_b` runs, the old value of `shelf_a` is gone. Keep it safe in `temp` first, with `temp = shelf_a`.
+- *typed-words* — It works for Dragons and Poems, but you typed the words. Use the jars, like `temp = shelf_a`, so the trick works for any two shelves.
+
+**Hints (free, in this order):**
+
+1. Before `shelf_a` gets a new value, where can you keep its old value safe?
+2. The first gap saves Shelf A in the spare jar. The second gap gives Shelf B what you saved.
+3. (code example)
+
+```python
+temp = shelf_a
+shelf_a = shelf_b
+shelf_b = ____
+```
+
+### Knowledge check
+
+1. Which one is a valid variable name? → **gold_coins**. A name can use letters, numbers and `_`, but it can't start with a number, and it can't have spaces or dashes.
+2. What will this print?
+
+```python
+pet = "owl"
+pet = "bat"
+print(pet)
+```
+
+   Answer:
+
+```text
+bat
+```
+
+   The jar holds one thing at a time. The second line pours out "owl" and puts in "bat".
+
+3. What will this print?
+
+```python
+name = "Ada"
+book = "Maps"
+print(f"{name} reads {book}.")
+```
+
+   Answer:
+
+```text
+Ada reads Maps.
+```
+
+   In an f-string, each `{jar}` is replaced by the value inside the jar.
+
+4. What is the difference between `print(name)` and `print("name")`? → **The first shows what is inside the jar `name`. The second shows the word name.**. Without quotes, Python looks inside the jar. With quotes, it's just text.
+
+## Region 3 — Merchant's Crossing
+
+**Concepts:** int and float; + - * / // %; order of operations; input(); int() and str()
+
+**Byte's analogy:** `"5"` in quotes is a price tag: just a picture of a number. `5` without quotes is real coins you can count. `int()` turns a tag into coins, and `str()` turns coins back into a tag. `//` and `%` are like sharing apples: `//` is how many each friend gets, and `%` is what's left over.
+
+### Coins or Price Tags?
+
+`r3-q1-coins-or-tags`
+
+- **Type:** predict
+- **Learning outcome:** Predict the result of + and * when the values are ints, floats, or strings.
+- **CSTA:** 2-AP-11, 2-DA-07 · **About 6 min**
+- **Goal (as students see it):** Read the program and predict what it prints. Then run it to check.
+
+**Code students read:**
+
+```python
+print(2 + 3)
+print("2" + "3")
+print(7 / 2)
+print(6 / 2)
+print("ha" * 3)
+```
+
+**Answers:**
+
+- What will the Scroll of Output show? → **5 23 3.5 3.0 hahaha**. `2 + 3` adds two coins: 5. `"2" + "3"` glues two price tags: `23`. `/` always gives a float, so `7 / 2` is `3.5` and `6 / 2` is `3.0`. And `"ha" * 3` repeats the text three times.
+- Which lines work with text instead of numbers? → **Lines 2 and 5**. Lines 2 and 5 use strings in quotes, like `"2"` and `"ha"`. Text in quotes is never counted like coins.
+
+**Hints (free, in this order):**
+
+1. Look for quotes. A value in quotes is text, even when it looks like a number.
+2. `+` adds two numbers, but it glues two strings together. `/` always gives an answer with a dot, even when it divides evenly.
+3. (code example)
+
+Work out one line at a time:
+```text
+2 + 3      -> 5
+"2" + "3"  -> ____
+7 / 2      -> 3.5
+6 / 2      -> 3.0
+"ha" * 3   -> hahaha
+```
+
+### Sharing the Apple Cart
+
+`r3-q2-sharing-apples`
+
+- **Type:** investigate
+- **Learning outcome:** Explain what // and % calculate by running examples and changing the numbers.
+- **CSTA:** 2-AP-11 · **About 8 min**
+- **Goal (as students see it):** Run the program and answer Granny Pippin's questions. Try each change the questions ask for.
+
+**Code students run:**
+
+```python
+apples = 23
+baskets = 5
+each = apples // baskets
+left = apples % baskets
+print(f"Each basket gets {each} apples.")
+print(f"{left} apples are left over.")
+```
+
+**Answers:**
+
+- Run the program. How many apples does each basket get? → **4**. 5 baskets with 4 apples each is 20 apples. A fifth apple each would need 25.
+- And how many apples are left over? → **3**. 23 apples minus the 20 in the baskets leaves 3.
+- Change `apples` to `25` and run it again. How many apples are left over now? → **0**. 5 baskets with 5 apples each uses all 25. Nothing is left over, so `25 % 5` is 0.
+- Now try `apples = 4`. That's fewer apples than baskets! How many apples does each basket get? → **0 apples**. There aren't enough apples to go around. So `4 // 5` is 0, and all 4 apples are left over.
+- So what does `%` really give you? → **What's left over after sharing equally**. `%` gives the remainder: what's left after sharing. It is not percent!
+
+**Hints (free, in this order):**
+
+1. Press Run first. Then read the Scroll of Output, one line at a time.
+2. `23 // 5` asks: how many whole 5s fit into 23? `23 % 5` asks: what's left after that?
+3. (code example)
+
+```text
+23 // 5  ->  4    (5 + 5 + 5 + 5 = 20)
+23 % 5   ->  ____ (23 - 20)
+```
+
+### The Merchant's Formula
+
+`r3-q3-the-merchants-formula`
+
+- **Type:** modify
+- **Learning outcome:** Use parentheses to control the order of operations in a price calculation.
+- **CSTA:** 2-AP-11 · **About 7 min**
+- **Goal (as students see it):** Add parentheses so the wrapping fee is paid on each pie. Four wrapped pies should cost 28 silver.
+
+**Starter code:**
+
+```python
+price = 6    # silver for one pie
+fee = 1      # silver to wrap one pie
+pies = 4
+total = price + fee * pies
+print(f"{pies} wrapped pies cost {total} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 6    # silver for one pie
+fee = 1      # silver to wrap one pie
+pies = 4
+total = (price + fee) * pies
+print(f"{pies} wrapped pies cost {total} silver.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *no-parens* — Python did `fee * pies` first, then added just one price. Put parentheses around `price + fee`, so Python adds those first and then multiplies.
+- *fee-once* — Now every pie is paid for, but the wrapping fee only once. Each pie needs wrapping too: add the fee to the price first, then multiply.
+- *typed-answer* — 28 is right for Marta's pies, but other customers get the wrong price. Did you type the answer in? Work it out from `price`, `fee` and `pies`, so it works for every order.
+
+**Hints (free, in this order):**
+
+1. Which should happen first, adding the price and the fee, or multiplying by the number of pies?
+2. Python multiplies before it adds. Parentheses always go first, so put `( )` around the part you want worked out first.
+3. (code example)
+
+```python
+total = (____) * pies
+```
+
+### Asking the Customer
+
+`r3-q4-asking-the-customer`
+
+- **Type:** parsons
+- **Learning outcome:** Arrange the input, convert, calculate, and print lines into a working program.
+- **CSTA:** 2-AP-13 · **About 7 min**
+- **Goal (as students see it):** Arrange the lines so the program asks how many jars, works out the cost, and prints it. Wren wants 4 jars.
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 5
+answer = input("How many jars of honey? ")
+jars = int(answer)
+total = jars * price
+print(f"That will be {total} silver, please!")
+```
+
+**Distractor lines (not used):** `jars = answer`
+
+**Input values the quest provides:** `4`
+
+**Common mistakes and the feedback students get:**
+
+- *still-text* — Wren's answer is still text! `"4" * 5` repeats the text: `44444`. Use the line with `int()` to turn the answer into a real number.
+- *too-soon* — One line uses a name before it exists. Python runs from the top down, so ask first, then convert, then work out the total, and print last.
+
+**Hints (free, in this order):**
+
+1. What has to happen first, asking the question or doing math with the answer?
+2. Ask with `input()`, then turn the answer into a number with `int()`, then multiply, then print. The line without `int()` doesn't belong.
+3. (code example)
+
+```python
+price = 5
+answer = input("How many jars of honey? ")
+____
+total = jars * price
+print(f"That will be {total} silver, please!")
+```
+
+### Price Tag Trouble
+
+`r3-q5-price-tag-trouble`
+
+- **Type:** fix
+- **Learning outcome:** Fix a TypeError by converting between text and numbers with int() and str().
+- **CSTA:** 2-AP-11, 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix both bugs, so 4 turnips cost 8 silver and the till prints `Total: 8 silver`.
+
+**Starter code:**
+
+```python
+price = 2
+turnips = input("How many turnips? ")
+total = turnips * price
+print("Total: " + total + " silver")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 2
+turnips = int(input("How many turnips? "))
+total = turnips * price
+print("Total: " + str(total) + " silver")
+```
+
+**Input values the quest provides:** `4`
+
+**Common mistakes and the feedback students get:**
+
+- *glue-number* — Bug found! `total` is a number now, and `+` can't glue a number onto words. Turn it back into text with `str(total)`. (An f-string works too!)
+- *text-times-number* — The total is still text! `input()` hands back text, so `"4" * 2` repeats it: `44`. Wrap `input(...)` in `int(...)` so `turnips` is a real number.
+- *wrong-words* — No more errors, nice! But the Scroll doesn't match. It should say `Total: 8 silver` for 4 turnips. Keep the question `How many turnips? ` the same, too.
+
+**Hints (free, in this order):**
+
+1. Run it and read the Scroll. Is 44 silver right for 4 turnips at 2 silver each?
+2. `input()` hands back text. Wrap it in `int(...)` so `turnips` is a number. Then Python complains about line 4: turn `total` back into text with `str(total)`.
+3. (code example)
+
+```python
+price = 2
+turnips = int(input("How many turnips? "))
+total = turnips * price
+print("Total: " + ____ + " silver")
+```
+
+### The Receipt Writer
+
+`r3-q6-receipt-writer`
+
+- **Type:** make
+- **Learning outcome:** Write a program that reads a quantity with input(), works out the cost, and prints a receipt.
+- **CSTA:** 2-AP-11, 2-AP-13 · **About 10 min**
+- **Goal (as students see it):** Ask how many melons with `input()`. Store the cost in `total`. Then print both receipt lines with f-strings.
+
+**Starter code:**
+
+```python
+# Moon melons cost 6 silver each.
+price = 6
+# 1. Ask how many melons.
+# 2. Work out the total.
+# 3. Print the receipt.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Moon melons cost 6 silver each.
+price = 6
+# 1. Ask how many melons.
+melons = int(input("How many melons? "))
+# 2. Work out the total.
+total = melons * price
+# 3. Print the receipt.
+print(f"Melons: {melons}")
+print(f"Total: {total} silver")
+```
+
+**Input values the quest provides:** `3`
+
+**Common mistakes and the feedback students get:**
+
+- *no-convert* — Your total is text, not a number! `input()` hands back text, and `"3" * 6` just repeats it. Wrap `input(...)` in `int(...)` first.
+- *glue-number* — `+` can't glue a number onto words. Use an f-string instead, like `f"Total: {total} silver"`.
+- *missing-f* — Your braces printed as they are! Put an `f` right before the opening quote, like `f"Melons: {melons}"`.
+- *no-total* — Store the cost in a variable called `total` first, like `total = melons * price`. Then print it.
+- *not-asking* — Wren is waiting to tell you! Ask with `input("How many melons? ")`, and turn the answer into a number with `int()`.
+- *wrong-receipt* — Almost! The receipt must look exactly like this, with your own numbers: `Melons: 3` on one line and `Total: 18 silver` on the next.
+- *typed-total* — The receipt is right for Wren, but other customers get the wrong total. Did you type 18 in? Use `melons * price`, so it works for any answer.
+- *no-fstring* — It works! Now write the receipt lines as f-strings, just like in the Whispering Library.
+
+**Hints (free, in this order):**
+
+1. Three steps: ask, work out the total, print. Which spell asks a question?
+2. `int(input("How many melons? "))` asks and converts in one line. Then `total = melons * price`. Print each line with an f-string.
+3. (code example)
+
+```python
+price = 6
+melons = int(input("How many melons? "))
+total = ____
+print(f"Melons: {melons}")
+print(f"Total: {total} silver")
+```
+
+### The Haggling Bug 🐛 boss
+
+`r3-boss-haggling-bug`
+
+**Boss:** The Haggling Bug (Hagglebug). Fix the price list. Ask the customer. Make change in gold and silver. Then test it with every kind of customer.
+
+#### Phase 1: Fix the price list
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix errors in a calculation.
+- **CSTA:** 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Fix the two bugs so the price list prints the right prices.
+
+**Starter code:**
+
+```python
+pie = 7
+cider = 3
+three_pies = pie + 3
+lunch_for_two = pie + cider * 2
+print(f"3 pies: {three_pies} silver")
+print(f"Lunch for 2: {lunch_for_two} silver")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+pie = 7
+cider = 3
+three_pies = pie * 3
+lunch_for_two = (pie + cider) * 2
+print(f"3 pies: {three_pies} silver")
+print(f"Lunch for 2: {lunch_for_two} silver")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *wrong-operator* — 3 pies for 10 silver? `+` adds 3 to the price. For 3 pies, you need to *multiply* the price by 3. Use `*`.
+- *no-parens* — Lunch for 2 costs 13? Python multiplied `cider * 2` first and added just one pie. Put parentheses around `pie + cider`, so both people get a pie and a cider.
+- *wrong-prices* — The list runs, but some prices are still wrong. Work out each price by hand and compare.
+
+**Hints (free, in this order):**
+
+1. Work out each price by hand first. What should 3 pies cost? What about a pie and a cider for 2 people?
+2. `pie + 3` adds 3 silver, but 3 pies means 3 times the price. And Python multiplies before it adds, so `pie + cider * 2` needs parentheses.
+3. (code example)
+
+```python
+three_pies = pie * 3
+lunch_for_two = (____) * 2
+```
+
+#### Phase 2: Ask and convert
+
+- **Type:** modify
+- **Learning outcome:** Use input() and int() to read numbers from a customer.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Make `pies` and `paid` come from `int(input(...))` instead of Hagglebug's guesses.
+
+**Starter code:**
+
+```python
+price = 7
+pies = 3     # Hagglebug's guess. Ask the customer!
+paid = 50    # Hagglebug's guess. Ask the customer!
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+```
+
+**Input values the quest provides:** `2`, `50`
+
+**Common mistakes and the feedback students get:**
+
+- *text-not-number* — The answers are still text! `input()` always hands back text. Wrap each one in `int(...)`, like `pies = int(input("How many pies? "))`.
+- *still-guessing* — One of Hagglebug's guesses is still there. Ask the customer two questions: how many pies, and how much silver they pay.
+- *wrong-answers* — Ask for the pies first and the silver second, and store the answers in `pies` and `paid`.
+
+**Hints (free, in this order):**
+
+1. Which two numbers is Hagglebug guessing? Those are the ones to ask about.
+2. Replace `3` with `int(input("How many pies? "))`. Do the same for `50`, with a question about the silver.
+3. (code example)
+
+```python
+pies = int(input("How many pies? "))
+paid = ____
+```
+
+#### Phase 3: Make change
+
+- **Type:** make
+- **Learning outcome:** Use // and % to split an amount into gold and silver coins.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Store the change in `change`, the gold in `gold` and the silver in `silver`. Then print a line like `Your change: 3 gold and 6 silver.`
+
+**Starter code:**
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+print(f"{pies} pies cost {cost} silver.")
+print(f"You paid {paid} silver.")
+change = paid - cost
+gold = change // 10
+silver = change % 10
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+**Input values the quest provides:** `2`, `50`
+
+**Common mistakes and the feedback students get:**
+
+- *used-slash* — `/` gives a number with a dot, like 3.6 gold. Nobody has 0.6 of a coin! Use `//` to get whole gold coins.
+- *backwards* — Uh-oh, negative change! The change is what the customer paid, minus the cost: `paid - cost`.
+- *not-split* — Split the change with `//` for the gold coins and `%` for the silver left over.
+- *wrong-change* — Some customers get the wrong change. Check each step: `change = paid - cost`, then `gold = change // 10`, then `silver = change % 10`.
+- *say-it* — The math is right! Now print it exactly like this, with your own numbers: `Your change: 3 gold and 6 silver.`
+
+**Hints (free, in this order):**
+
+1. First find the change in silver: what the customer paid, minus the cost. Then ask: how many whole tens fit into it?
+2. `change // 10` gives the whole gold coins. `change % 10` gives the silver left over.
+3. (code example)
+
+```python
+change = paid - cost
+gold = change // 10
+silver = ____
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+#### Phase 4: Every customer
+
+- **Type:** fix
+- **Learning outcome:** Test a program with several inputs, including an edge case.
+- **CSTA:** 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Fix the bug. Then run the code once for each customer, and type in their numbers.
+
+**Starter code:**
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+change = paid - cost
+gold = change // 10
+silver = change - 10
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+price = 7
+pies = int(input("How many pies? "))
+paid = int(input("How much silver do you pay? "))
+cost = pies * price
+change = paid - cost
+gold = change // 10
+silver = change % 10
+print(f"Your change: {gold} gold and {silver} silver.")
+```
+
+**Input values the quest provides:** `1`, `20`
+
+**Common mistakes and the feedback students get:**
+
+- *exact-amount* — Cleo paid the exact amount, so her change should be 0 gold and 0 silver. What does your calculator say for her? Look closely at the line that works out `silver`.
+- *still-wrong* — Some customers still get the wrong change. Try Bram: 2 pies, paid with 50 silver. His change is 36 silver, so he should get 3 gold and 6 silver.
+- *test-them-all* — Now prove it works! Run the calculator again and type the next customer's numbers. Test Ada, Bram and Cleo, one run each. (Keep **Let me type the answers** ticked.)
+
+**Hints (free, in this order):**
+
+1. Work out each customer's change by hand first. Cleo's is easy, because she paid exactly the cost. Which customer does the calculator get wrong?
+2. `change - 10` only takes away one gold coin's worth. The silver should be what's left after *all* the gold: use `%`.
+3. (code example)
+
+```python
+gold = change // 10
+silver = change ____ 10
+```
+
+### The Penny Puzzle ⭐ side quest
+
+`r3-side1-penny-puzzle`
+
+- **Type:** investigate
+- **Learning outcome:** Explain why 0.1 + 0.2 shows 0.30000000000000004, and use round() to show money neatly.
+- **CSTA:** 2-DA-07 · **About 8 min**
+- **Goal (as students see it):** Run the program and answer Tally's questions. Try each change the questions ask for.
+
+**Code students run:**
+
+```python
+apple = 0.1
+pear = 0.2
+total = apple + pear
+print(total)
+print(round(total, 2))
+```
+
+**Answers:**
+
+- Run it. What does line 4 print? → **0.30000000000000004**. That's not a haunting. It's how floats work!
+- Why isn't the answer exactly 0.3? → **The computer stores 0.1 and 0.2 as very close guesses, not exact numbers.**. Computers store floats in a special way. Most decimal numbers become very, very close guesses, and the tiny errors can add up.
+- What does `round(total, 2)` print on line 5? → **0.3**. `round(total, 2)` rounds to 2 places after the dot. Python drops the extra 0, so it shows `0.3`.
+- Change line 5 to `print(round(4.567, 2))` and run it. What does it print now? → **4.57**. `4.567` rounded to 2 places is `4.57`, because the 7 rounds the 6 up.
+
+**Hints (free, in this order):**
+
+1. Run it first, then compare lines 4 and 5 on the Scroll.
+2. Computers store most decimal numbers as very close guesses. `round(x, 2)` rounds `x` to 2 places after the dot.
+3. (code example)
+
+```text
+0.1 + 0.2             ->  0.30000000000000004
+round(0.1 + 0.2, 2)   ->  ____
+```
+
+### The Caravan Clock ⭐ side quest
+
+`r3-side2-caravan-clock`
+
+- **Type:** make
+- **Learning outcome:** Use // and % to turn a number of minutes into hours and minutes.
+- **CSTA:** 2-AP-11 · **About 8 min**
+- **Goal (as students see it):** Ask for the trip length with `input()`. Store the whole hours in `hours` and the leftover minutes in `mins`. Then print them like `2 hours 15 minutes`.
+
+**Starter code:**
+
+```python
+# There are 60 minutes in one hour.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# There are 60 minutes in one hour.
+trip = int(input("How many minutes is the trip? "))
+hours = trip // 60
+mins = trip % 60
+print(f"{hours} hours {mins} minutes")
+```
+
+**Input values the quest provides:** `135`
+
+**Common mistakes and the feedback students get:**
+
+- *no-convert* — The trip length is still text, so Python can't do math with it. Wrap `input(...)` in `int(...)` to turn it into a number.
+- *used-slash* — `/` gives a number with a dot, like 2.25 hours. Use `//` to get whole hours.
+- *missing-names* — Store the whole hours in `hours`. Store the minutes left over in `mins`.
+- *not-split* — Split the trip with `//` for the hours and `%` for the minutes left over.
+- *wrong-time* — Some trips come out wrong. `trip // 60` is the whole hours, and `trip % 60` is the minutes left over.
+- *wrong-line* — The math is right! Now print it exactly like this, with your own numbers: `2 hours 15 minutes`.
+
+**Hints (free, in this order):**
+
+1. How many whole hours fit into 135 minutes? How many minutes are left over?
+2. `trip // 60` gives the whole hours, and `trip % 60` gives the minutes left over. Don't forget `int()` around `input()`.
+3. (code example)
+
+```python
+trip = int(input("How many minutes is the trip? "))
+hours = trip // 60
+mins = ____
+print(f"{hours} hours {mins} minutes")
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+print(17 // 5)
+print(17 % 5)
+```
+
+   Answer:
+
+```text
+3
+2
+```
+
+   `17 // 5` is how many whole 5s fit into 17: 3. `17 % 5` is what's left over: 2.
+
+2. What kind of value does `input()` hand back? → **Text (a string), even when you type a number**. `input()` always hands back text. Use `int()` to turn it into a number.
+3. What will this print?
+
+```python
+print(2 + 3 * 4)
+```
+
+   Answer:
+
+```text
+14
+```
+
+   Python multiplies before it adds. `3 * 4` is 12, and 2 + 12 is 14.
+
+4. This line gives a TypeError. Which line fixes it? → **print("Total: " + str(5))**. `+` can't glue a number onto text. `str(5)` turns the number into text first.
+5. What will this print?
+
+```python
+print("3" + "4")
+```
+
+   Answer:
+
+```text
+34
+```
+
+   These are strings in quotes, so `+` glues them together. It doesn't add them.
+
+## Region 4 — Forked Road Forest
+
+**Concepts:** booleans; comparisons; if/elif/else; and/or/not; indentation
+
+**Byte's analogy:** An if statement is a signpost at a fork in the road. It asks a yes-or-no question. If the answer is True, you take one path. If it's False, you take the other. Only one path gets walked.
+
+### The Talking Signpost
+
+`r4-q1-talking-signpost`
+
+- **Type:** investigate
+- **Learning outcome:** Explain which lines of an if/else run for different values.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Run the spell with different weather answers. Find out which lines run each time.
+
+**Code students run:**
+
+```python
+weather = input("How is the weather? ")
+if weather == "rain":
+    print("Go left, under the big oak.")
+else:
+    print("Go right. The view is lovely!")
+print("Have a nice walk!")
+```
+
+**Answers:**
+
+- Run the spell and type `rain`. Which path does Forky pick? → **The left path**. The condition `weather == "rain"` is True, so Python runs line 3 and skips the `else` path.
+- Run it again and type `sun`. What does Forky say now? → **Go right. The view is lovely!**. The condition is False, so Python skips line 3 and runs the `else` path on line 5.
+- Now type `Rain` with a capital R. Which path does Forky pick? → **The right path**. "Rain" and "rain" are different strings, so the condition is False. Python takes the `else` path.
+- Line 6 prints `Have a nice walk!`. When does it run? → **Every time, whatever the weather**. Line 6 isn't indented, so it isn't inside the `if` or the `else`. It runs after them, every time.
+- Finish the sentence with one word: each time the spell runs, Python walks ___ path of the if/else. → **one / 1 / only one / just one**. Only one branch runs each time. Python picks the `if` path or the `else` path, never both.
+
+**Input values the quest provides:** `rain`
+
+**Hints (free, in this order):**
+
+1. Run the spell and type an answer. Then read the Scroll. Which `print` lines showed up?
+2. When the condition on line 2 is `True`, line 3 runs. When it is `False`, line 5 runs. Line 6 runs every time, because it isn't indented.
+3. (code example)
+
+Here is how Python reads it when you type `sun`:
+```text
+line 2: is "sun" equal to "rain"? ____
+so Python skips line 3 and runs line 5
+line 6 runs, because it isn't indented
+```
+
+### True or False, Traveler?
+
+`r4-q2-true-or-false`
+
+- **Type:** predict
+- **Learning outcome:** Predict whether comparisons with ==, !=, <, >, <= and >= are True or False.
+- **CSTA:** 2-AP-11 · **About 6 min**
+- **Goal (as students see it):** Read the program and predict what each line prints. Then run it to check.
+
+**Code students read:**
+
+```python
+gold = 10
+print(gold >= 10)
+print(gold < 10)
+print(gold != 10)
+print("10" == 10)
+```
+
+**Answers:**
+
+- What will the program print? Write one line for each `print`. → **True False False False**. `gold >= 10` asks "is gold at least 10?" Yes, so True. 10 is not less than 10, so `gold < 10` is False. `!=` means "is not equal to", and gold is 10, so that's False too. The last line is a trick! See the next question.
+- Why is `"10" == 10` False? → **"10" is text and 10 is a number. Text is never equal to a number.**. `"10"` has quotes, so it is text, like a price tag. `10` is a real number. They are different kinds of values, so they are never equal. Watch out for this with `input()`, which always gives text.
+- Which sign means "is not equal to"? → **!=**. `!=` means is not equal to. `==` means is equal to. And `=!` isn't a Python sign at all.
+
+**Hints (free, in this order):**
+
+1. Each `print` shows the answer to one question. It can only be `True` or `False`. Read one line at a time.
+2. `>=` means at least. `<` means less than. `!=` means is not equal to. And text in quotes is never equal to a number.
+3. (code example)
+
+```text
+gold >= 10  ->  True
+gold < 10   ->  ____
+gold != 10  ->  False
+"10" == 10  ->  False
+```
+
+### Gold for the Gatekeeper
+
+`r4-q3-gatekeeper`
+
+- **Type:** make
+- **Learning outcome:** Use if/else to choose between two actions based on a comparison.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** If gold is 10 or more, walk 6 steps right, through the gate. Else, say "I'll come back later."
+
+**Starter code:**
+
+```python
+from codeweald import hero
+gold = 7
+# 10 gold or more: walk right 6 steps.
+# Else: say "I'll come back later."
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+gold = 7
+if gold >= 10:
+    hero.move("right", 6)
+else:
+    hero.say("I'll come back later.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *assign-not-compare* — In Python, `=` stores a value. To *compare* two values, use `==` or `>=`.
+- *not-indented* — The lines under `if` and `else` must be pushed in by 4 spaces. That's how Python knows they belong to the `if` or the `else`.
+- *no-else* — Use `if` and `else`, so the hero knows what to do either way.
+- *not-through* — Try `gold = 12`. The hero should walk 6 steps right, through the gate, all the way to the exit. Does your `if` check for 10 *or more*? And does it walk the full 6 steps?
+- *boundary* — What happens when gold is exactly 10? "10 or more" includes 10! Try `>=`, which means "at least".
+- *walks-anyway* — With only 3 gold, the hero walked through anyway! Put the walking line inside the `if`, indented, so it only runs when there is enough gold.
+- *silent* — Nice choice! But with too little gold, the hero just stands there. Under `else:`, make the hero say "I'll come back later."
+
+**Hints (free, in this order):**
+
+1. What should happen when gold is 10 or more? And what should happen when it isn't?
+2. `if gold >= 10:` checks the purse. Put an indented `hero.move("right", 6)` under it. Then write `else:` with an indented `hero.say(...)` under it.
+3. (code example)
+
+```python
+if gold >= 10:
+    hero.move("right", 6)
+else:
+    ____
+```
+When it works, change `gold = 7` to `gold = 12` and run it again!
+
+### The Crooked Branches
+
+`r4-q4-crooked-branches`
+
+- **Type:** fix
+- **Learning outcome:** Identify and fix syntax and indentation errors in an if/else statement.
+- **CSTA:** 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix the 3 bugs so the spell says the cart is full when it holds 10 logs, and says "Keep chopping, Burl!" when it doesn't.
+
+**Starter code:**
+
+```python
+logs = 10
+if logs = 10:
+print("Cart full! Off to the mill!")
+else
+    print("Keep chopping, Burl!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+logs = 10
+if logs == 10:
+    print("Cart full! Off to the mill!")
+else:
+    print("Keep chopping, Burl!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — Line 2 uses `=`, which *stores* a value. To compare two values, use two equals signs: `==`.
+- *not-indented* — The line under the `if` must be pushed in by 4 spaces. That's how Python knows it belongs to the `if`. Look at the line in the error message.
+- *missing-colon* — The `else` line needs a colon at the very end, just like the `if` line. Write `else:`.
+- *branch-lost* — No more errors! But with only 6 logs, Burl should hear "Keep chopping, Burl!". Keep the `if` and the `else`, so the spell can pick a branch.
+- *words-changed* — No more errors! But the words don't match. Compare each line with the starter code, letter by letter.
+
+**Hints (free, in this order):**
+
+1. Press Run and read the error message. Which line does it point to?
+2. Line 2 needs `==` to compare. Line 3 needs 4 spaces at the start. Line 4 needs a colon at the end.
+3. (code example)
+
+```python
+logs = 10
+if logs == 10:
+    print("Cart full! Off to the mill!")
+else____
+    print("Keep chopping, Burl!")
+```
+
+### Three Paths at the Fork
+
+`r4-q5-three-paths`
+
+- **Type:** parsons
+- **Learning outcome:** Arrange if/elif/else lines with correct indentation so the hero takes the right path for each weather report.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Put the lines in order with the right indents, so the hero takes the right path for sun, rain, or anything else.
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+weather = input("Sun, rain or fog? ")
+if weather == "sun":
+    hero.move("up", 2)
+elif weather == "rain":
+    hero.move("right", 3)
+else:
+    hero.move("left", 3)
+```
+
+**Distractor lines (not used):** `if weather == "rain":`, `elif weather = "rain":`
+
+**Input values the quest provides:** `rain`
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — One scrap uses `=`, which *stores* a value. To compare, Python needs `==`. Swap that scrap for the one with `==`.
+- *not-indented* — Each `hero.move` line must be pushed in under its own `if`, `elif` or `else`. Use the indent buttons (or the → key) to push it in.
+- *else-too-soon* — `else` must come last. It catches everything left over, so no `elif` can come after it.
+- *two-ifs* — A second `if` starts a brand new question, so Python checks it even after the sun path! Use the `elif` scrap instead. Then only one path runs.
+- *wrong-way* — The hero took the wrong path for one of the weather reports. Check that each `hero.move` line sits right under its own condition: sun goes up, rain goes right, anything else goes left.
+
+**Hints (free, in this order):**
+
+1. Start by asking for the weather. Then check for sun, then rain, and leave everything else to `else`.
+2. `if`, `elif` and `else` line up on the left. Each `hero.move` line is pushed in under its own condition. Use `elif`, not a second `if`.
+3. (code example)
+
+```python
+weather = input("Sun, rain or fog? ")
+if weather == "sun":
+    hero.move("up", 2)
+____
+    hero.move("right", 3)
+else:
+    hero.move("left", 3)
+```
+
+### The Picky Bridge Keeper
+
+`r4-q6-picky-bridge-keeper`
+
+- **Type:** modify
+- **Learning outcome:** Use and, or, and not to combine conditions in a working program.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Change the if so travelers cross when they are 10 or older and have at least 3 gold, or when they are 70 or older. Keep both messages the same.
+
+**Starter code:**
+
+```python
+age = int(input("How old are you? "))
+gold = input("How much gold? ")
+if age >= 10:
+    print("You may cross the bridge.")
+else:
+    print("Sorry, no crossing today.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+age = int(input("How old are you? "))
+gold = int(input("How much gold? "))
+if (age >= 10 and gold >= 3) or age >= 70:
+    print("You may cross the bridge.")
+else:
+    print("Sorry, no crossing today.")
+```
+
+**Input values the quest provides:** `11`, `2`
+
+**Common mistakes and the feedback students get:**
+
+- *gold-is-text* — `input()` always hands back text, like `"5"`, and text can't be compared with a number. Wrap the gold question in `int(...)`, just like the age question on line 1.
+- *words-changed* — Tobias only understands his own two messages. Keep them exactly as they were: "You may cross the bridge." and "Sorry, no crossing today."
+- *needs-both* — An 11-year-old with only 2 gold got across! The age rule and the gold rule must *both* be True. That's what `and` is for.
+- *grandparents* — Grandpa Gus is 72 and has no gold. He should cross for free! Add `or age >= 70` to your condition.
+- *at-least* — What about a traveler who is exactly 10, with exactly 3 gold? "At least" includes the number itself, so use `>=`.
+- *check-rules* — One traveler got the wrong answer. Check each rule again: 10 or older *and* at least 3 gold, *or* 70 or older. Kids under 10 can't cross, even with gold.
+- *use-and-or* — Every traveler gets the right answer. Nice! But Tobias wants one `if` that uses `and` and `or`. Can you join the rules that way?
+
+**Hints (free, in this order):**
+
+1. Which two things must both be true for most travelers? And who crosses for free?
+2. Join the age rule and the gold rule with `and`. Then add `or age >= 70`. Also look at line 2. `input()` gives text, so the gold needs `int(...)`.
+3. (code example)
+
+```python
+gold = int(input("How much gold? "))
+if (age >= 10 and gold >= 3) or ____:
+```
+
+### The Riddle Gate 🐛 boss
+
+`r4-boss-riddle-gate`
+
+**Boss:** The Riddle Gate (Riddlewig). Fix the Riddle Gate in four phases. Then Riddlewig turns back into a friendly firefly.
+
+#### Phase 1: The first riddle
+
+- **Type:** modify
+- **Learning outcome:** Use if/else with == to check an answer.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** If the answer is "owl", print "Correct! The lock clicks." Otherwise, print "WRONG! Hee hee hee!"
+
+**Starter code:**
+
+```python
+answer = input("Who hoots at night? ")
+print("WRONG! Hee hee hee!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl":
+    print("Correct! The lock clicks.")
+else:
+    print("WRONG! Hee hee hee!")
+```
+
+**Input values the quest provides:** `owl`
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — `=` stores a value. To check if the answer *is* "owl", use two: `answer == "owl"`.
+- *not-indented* — Push the `print` lines in by 4 spaces, so Python knows they belong to the `if` and the `else`.
+- *still-wrong* — The gate still says WRONG to "owl"! Use `if answer == "owl":` with "Correct! The lock clicks." under it. Put the WRONG line under `else:`, so it only runs for wrong answers.
+- *always-right* — Now "cat" opens the lock too! Put "WRONG! Hee hee hee!" under `else:`, so wrong answers still get it.
+- *no-else* — Use `if` and `else`, so the gate has an answer for right and wrong guesses.
+
+**Hints (free, in this order):**
+
+1. The gate needs to ask a question about `answer`. Is it equal to "owl"?
+2. Write `if answer == "owl":` with an indented `print("Correct! The lock clicks.")` under it. Then `else:` with the WRONG line under it.
+3. (code example)
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl":
+    print("Correct! The lock clicks.")
+____
+    print("WRONG! Hee hee hee!")
+```
+
+#### Phase 2: Two right answers
+
+- **Type:** modify
+- **Learning outcome:** Use or to accept more than one correct answer.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Print "Correct! The lock clicks." when the answer is "owl" or "Owl". Every other answer is still WRONG.
+
+**Starter code:**
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl":
+    print("Correct! The lock clicks.")
+else:
+    print("WRONG! Hee hee hee!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+answer = input("Who hoots at night? ")
+if answer == "owl" or answer == "Owl":
+    print("Correct! The lock clicks.")
+else:
+    print("WRONG! Hee hee hee!")
+```
+
+**Input values the quest provides:** `Owl`
+
+**Common mistakes and the feedback students get:**
+
+- *or-shortcut* — Each side of `or` needs its own comparison. Write `answer == "owl" or answer == "Owl"`. On its own, `"Owl"` always counts as True, so every answer would open the lock!
+- *capital-wrong* — The gate still says WRONG to "Owl". Add a second check with `or`: `answer == "owl" or answer == "Owl"`.
+- *cat-right* — Now "cat" opens the lock too! Only "owl" and "Owl" are right.
+- *need-or* — The gate works! But Riddlewig only respects `or`. Put both checks in one `if`, joined with `or`.
+
+**Hints (free, in this order):**
+
+1. There are two right answers now. How can one `if` check for either of them?
+2. `or` is True when at least one side is True. Each side needs its own `answer == ...`.
+3. (code example)
+
+```python
+if answer == "owl" or ____:
+    print("Correct! The lock clicks.")
+```
+
+#### Phase 3: Three doors
+
+- **Type:** make
+- **Learning outcome:** Use if/elif/else to choose one of several paths.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Use if, elif and else so the hero walks to the gold door, the silver door, or back to the start.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+# "Byte": walk up 2 to the gold door.
+# "owl": walk left 3 to the silver door.
+# Else: walk down 2, back to the start.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+if answer == "Byte":
+    hero.move("up", 2)
+elif answer == "owl":
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+**Input values the quest provides:** `owl`
+
+**Common mistakes and the feedback students get:**
+
+- *one-equals* — To compare the answer, use `==`. One `=` stores a value.
+- *not-indented* — Push each `hero.move` line in by 4 spaces, under its own `if`, `elif` or `else`.
+- *two-ifs* — You wrote two separate `if`s, so Python asks both questions! Use `elif` for the second door. Then Python walks only the first path whose answer is True.
+- *three-paths* — Use `if`, `elif` and `else`, one for each door.
+- *gold-door* — When the answer is "Byte", the hero should walk 2 steps up, onto the gold door.
+- *silver-door* — When the answer is "owl", the hero should walk 3 steps left, onto the silver door.
+- *back-to-start* — For any other answer, the hero should walk 2 steps down, back to the start.
+
+**Hints (free, in this order):**
+
+1. Three answers, three paths. Which answer gets the `if`, which gets the `elif`, and what's left for `else`?
+2. `if answer == "Byte":` then an indented move. Then `elif answer == "owl":` and its move. Then `else:` and the move back down.
+3. (code example)
+
+```python
+if answer == "Byte":
+    hero.move("up", 2)
+elif ____:
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+#### Phase 4: Every door tested
+
+- **Type:** make
+- **Learning outcome:** Test a program with inputs that reach every branch.
+- **CSTA:** 2-AP-17 · **About 5 min**
+- **Goal (as students see it):** Run your program at least 3 times with different answers, until a lamp lights for every door.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+if answer == "Byte":
+    hero.move("up", 2)
+elif answer == "owl":
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+answer = input("Who is the wisest bird? ")
+if answer == "Byte":
+    hero.move("up", 2)
+elif answer == "owl":
+    hero.move("left", 3)
+else:
+    hero.move("down", 2)
+```
+
+**Input values the quest provides:** `owl`
+
+**Common mistakes and the feedback students get:**
+
+- *three-doors* — Your gate needs three doors again, so use `if`, `elif` and `else`. Then test each one.
+- *broken-door* — Riddlewig was right: one door is broken! "Byte" goes 2 up, "owl" goes 3 left, and anything else goes 2 down. Fix it, then test every door again.
+
+**Hints (free, in this order):**
+
+1. Press Run and type an answer. Which lamp lit up? Now run it again with a different answer.
+2. Type "Byte" for the gold door, "owl" for the silver door, and anything else (like "pigeon") for the way back.
+3. (code example)
+
+Try these three runs, one after another:
+```text
+Run 1: Byte
+Run 2: owl
+Run 3: ____
+```
+
+### The Leap-Year Lantern Festival ⭐ side quest
+
+`r4-side1-leap-year-lanterns`
+
+- **Type:** make
+- **Learning outcome:** Use and, or, and % to decide if a year is a leap year.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Print "Leap year! Lanterns on!" for a leap year, or "Not a leap year." for any other year.
+
+**Starter code:**
+
+```python
+year = int(input("Which year? "))
+by_4 = year % 4 == 0
+# Rule 1: it divides evenly by 4.
+# Rule 2: but not if it divides by 100...
+# Rule 3: ...unless it divides by 400!
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+year = int(input("Which year? "))
+by_4 = year % 4 == 0
+by_100 = year % 100 == 0
+by_400 = year % 400 == 0
+if by_4 and (not by_100 or by_400):
+    print("Leap year! Lanterns on!")
+else:
+    print("Not a leap year.")
+```
+
+**Input values the quest provides:** `2024`
+
+**Common mistakes and the feedback students get:**
+
+- *year-is-text* — `input()` always hands back text, and `%` can't do maths with text. Wrap it in `int(...)`: `year = int(input("Which year? "))`.
+- *no-if* — Use `if` and `else`, so every year gets one message: "Leap year! Lanterns on!" or "Not a leap year."
+- *every-fourth* — 1900 divides evenly by 4, but it was NOT a leap year! Years that divide by 100 skip the lanterns, unless they also divide by 400.
+- *forgot-400* — 2000 divides evenly by 100, but it IS a leap year, because it also divides by 400. Add `or by_400` (or `or year % 400 == 0`) to the rule.
+- *check-years* — Some years got the wrong answer. Check the rules again with 2024 (leap), 2023 (not), 1900 (not) and 2000 (leap). And keep the messages exactly as shown.
+
+**Hints (free, in this order):**
+
+1. Try the rules by hand first. Is 2024 a leap year? What about 1900 and 2000?
+2. Make `by_100` and `by_400` like `by_4`. The year needs `by_4` *and* one more thing: `not by_100`, *or* `by_400`. Put that second part in brackets.
+3. (code example)
+
+```python
+by_100 = year % 100 == 0
+by_400 = year % 400 == 0
+if by_4 and (not by_100 or ____):
+    print("Leap year! Lanterns on!")
+else:
+    print("Not a leap year.")
+```
+
+### Rock, Paper, Mushroom ⭐ side quest
+
+`r4-side2-rock-paper-mushroom`
+
+- **Type:** make
+- **Learning outcome:** Use nested if statements to decide the winner of a two-player hand game.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Read both picks. Print "Player 1 wins!", "Player 2 wins!" or "It's a tie!". Use an if inside another if.
+
+**Starter code:**
+
+```python
+p1 = input("Player 1 picks: ")
+p2 = input("Player 2 picks: ")
+# rock squashes mushroom.
+# mushroom grows through paper.
+# paper wraps rock.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+p1 = input("Player 1 picks: ")
+p2 = input("Player 2 picks: ")
+if p1 == p2:
+    print("It's a tie!")
+elif p1 == "rock":
+    if p2 == "mushroom":
+        print("Player 1 wins!")
+    else:
+        print("Player 2 wins!")
+elif p1 == "mushroom":
+    if p2 == "paper":
+        print("Player 1 wins!")
+    else:
+        print("Player 2 wins!")
+else:
+    if p2 == "rock":
+        print("Player 1 wins!")
+    else:
+        print("Player 2 wins!")
+```
+
+**Input values the quest provides:** `rock`, `mushroom`
+
+**Common mistakes and the feedback students get:**
+
+- *no-winner* — Tilly is waiting for an answer! Print who won: "Player 1 wins!", "Player 2 wins!" or "It's a tie!".
+- *ties* — When both players pick rock, it's a tie! Check `if p1 == p2:` first, before anything else.
+- *wrong-winner* — Some games have the wrong winner. Check the rules: rock squashes mushroom, mushroom grows through paper, and paper wraps rock. And keep the messages exactly as shown.
+- *not-nested* — Every game is right. Great! Now try nesting: put an `if` inside another `if`. For example, inside `elif p1 == "rock":`, check `if p2 == "mushroom":`.
+
+**Hints (free, in this order):**
+
+1. Start with the easy case. What happens when both players pick the same thing?
+2. Then check Player 1's pick with `elif p1 == "rock":`. Inside it, indented one more step, check Player 2's pick to see who wins.
+3. (code example)
+
+```python
+if p1 == p2:
+    print("It's a tie!")
+elif p1 == "rock":
+    if p2 == "mushroom":
+        print("Player 1 wins!")
+    else:
+        ____
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+print(5 > 3 and 2 > 4)
+```
+
+   Answer:
+
+```text
+False
+```
+
+   `5 > 3` is True, but `2 > 4` is False. `and` needs both sides to be True, so the answer is False.
+
+2. What is the difference between `=` and `==`? → **One = stores a value in a variable. Two == check if two values are equal.**. `gold = 5` stores 5 in `gold`. `gold == 5` asks a question: is gold equal to 5? The answer is True or False.
+3. Which message will this print?
+
+```python
+temp = 15
+if temp > 25:
+    print("Swim in the lake!")
+elif temp > 10:
+    print("Go for a walk.")
+elif temp > 0:
+    print("Wear a warm coat.")
+else:
+    print("Build a snow owl!")
+```
+
+   Answer:
+
+```text
+Go for a walk.
+```
+
+   15 > 25 is False. 15 > 10 is True, so that path runs. Python skips the rest, even though 15 > 0 is True too. Only the first True path runs.
+
+4. Why is this code wrong? → **The print line is not indented, so Python can't tell it belongs to the if.**. The lines inside an `if` must be indented, usually by 4 spaces. That's how Python knows which lines belong to it.
+
+## Region 5 — The Endless Mines
+
+**Concepts:** while loops; counters; loop conditions; infinite loops; break
+
+**Byte's analogy:** A while loop is like a miner who says, "While my lantern is lit, keep digging." Before each dig, the miner checks the lantern. If the lantern never runs out, the miner digs forever. That's an infinite loop.
+
+### How Many Digs?
+
+`r5-q1-how-many-digs`
+
+- **Type:** predict
+- **Learning outcome:** Predict how many times a while loop runs and what it prints.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Read Dot's program and predict what it does. Then run it to check.
+
+**Code students read:**
+
+```python
+digs = 0
+while digs < 3:
+    print("Dig!")
+    digs = digs + 1
+print("Lunch break!")
+rocks = 5
+while rocks < 3:
+    print("Smash a rock!")
+    rocks = rocks + 1
+print("Home time.")
+```
+
+**Answers:**
+
+- How many times does the first loop print `Dig!`? → **3 times**. digs is 0, then 1, then 2, and each time `digs < 3` is True. Then digs becomes 3, and `3 < 3` is False. So the loop runs 3 times.
+- How many times does the second loop print `Smash a rock!`? → **0 times**. rocks starts at 5. Is `5 < 3`? No! The check is False the very first time, so the loop runs 0 times. Python skips right past it.
+- Now type everything the Scroll of Output will show, one line at a time. → **Dig! Dig! Dig! Lunch break! Home time.**. Three digs, then a lunch break, then straight to home time. The rock loop never ran.
+
+**Hints (free, in this order):**
+
+1. Put your finger on line 1. Each time you reach a `while` line, ask, "Is this True right now?"
+2. Keep a little table. digs is 0, then 1, then 2, then 3. The loop stops when `digs < 3` turns False. For the second loop, check `rocks < 3` when rocks is 5.
+3. (code example)
+
+```text
+digs = 0:  0 < 3 is True   -> Dig!
+digs = 1:  1 < 3 is True   -> Dig!
+digs = 2:  2 < 3 is True   -> Dig!
+digs = 3:  3 < 3 is ____   -> the loop stops
+rocks = 5: 5 < 3 is False  -> the rock loop runs 0 times
+```
+
+### Lantern Down the Tunnel
+
+`r5-q2-lantern-down-the-tunnel`
+
+- **Type:** investigate
+- **Learning outcome:** Explain how a while loop checks its condition before each repeat.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Run Wick's program and answer his questions. Use the **Step** button to watch each look, one at a time.
+
+**Code students run:**
+
+```python
+from codeweald import hero, world
+while world.look() == "floor":
+    hero.move("right")
+    print("Step!")
+hero.say("Rocks ahead!")
+```
+
+**Answers:**
+
+- Run the program. How many `Step!` lines appear on the Scroll of Output? → **5**. The hero took 5 steps, and each step printed `Step!` once.
+- Press **Step** in the replay to watch one action at a time. When does Python check `world.look() == "floor"`? → **Once before each repeat, at the top of the loop**. Python checks the `while` line, runs the indented lines, then goes back up and checks again.
+- How many times did the hero look ahead? Count the last look too, the one that saw the rocks. → **6**. Five looks said `"floor"`, and the sixth said `"rock"`. That False check is what ended the loop.
+- Change `"floor"` on line 2 to `"rock"`, then run it. What happens? → **The hero doesn't move at all.**. The very first check is False, so the loop runs 0 times. The hero just says "Rocks ahead!"
+- Put `"floor"` back. Now delete line 3, `hero.move("right")`, and run it. What happens? → **The loop never stops, so Byte has to stop it.**. Without a step, the hero always sees floor, so the check stays True. That's an infinite loop. Put line 3 back when you're done!
+
+**Hints (free, in this order):**
+
+1. Press Run first. Then use the **Step** button to watch one action at a time.
+2. Each time around, the hero looks ahead *first*. If the look says `"floor"`, the hero steps and prints. The last look sees the rocks, so the loop stops.
+3. (code example)
+
+```text
+look: floor -> step, print Step!   (1)
+look: floor -> step, print Step!   (2)
+... three more steps ...
+look: ____  -> the loop stops
+```
+
+### The Gem Tally
+
+`r5-q3-the-gem-tally`
+
+- **Type:** fill
+- **Learning outcome:** Use a counter variable in a while loop to count the gems the hero picks up.
+- **CSTA:** 2-AP-11, 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Fill the three gaps. The hero walks along the vein, picks up every gem, and counts them. Then the program prints the tally.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+gems = ____
+while world.look() == ____:
+    hero.move("right")
+    hero.pick_up()
+    gems = ____
+print("Gems in the tally:", gems)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+gems = 0
+while world.look() == "gem":
+    hero.move("right")
+    hero.pick_up()
+    gems = gems + 1
+print("Gems in the tally:", gems)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *wrong-word* — The hero didn't pick up the gems. What does `world.look()` say when a gem is in front of the hero? It says `"gem"`, in quotes, with no s.
+- *never-counted* — The tally says 0, but the hero picked up gems! Each time around the loop, add 1 to the old count: `gems = gems + 1`.
+- *stuck-at-one* — The tally is stuck at 1. `gems = 1` puts 1 in the jar every time. Add 1 to what is already there: `gems = gems + 1`.
+- *start-at-zero* — So close! Check where the tally starts. Before the hero picks up any gems, the count should be 0.
+- *other-tunnels* — It works in this tunnel. But Gemma's other tunnels have a different number of gems. Let the counter count them. Don't type the number yourself.
+
+**Hints (free, in this order):**
+
+1. There are three gaps. What number should a tally start at? What does `world.look()` say when a gem is ahead?
+2. Start with `gems = 0`. The loop keeps going while the look says `"gem"`. Inside the loop, add 1 to the old count with `gems = gems + 1`.
+3. (code example)
+
+```python
+gems = 0
+while world.look() == "gem":
+    hero.move("right")
+    hero.pick_up()
+    gems = ____
+```
+
+### The Tunnel That Never Ends
+
+`r5-q4-the-endless-tunnel`
+
+- **Type:** fix
+- **Learning outcome:** Fix an infinite loop by making sure its condition can become False.
+- **CSTA:** 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix the loop so it stops after 6 steps. The program prints the report, and the hero walks the new tunnel to Digby.
+
+**Starter code:**
+
+```python
+from codeweald import hero
+steps = 0
+buckets = 0
+while steps < 6:
+    buckets = buckets + 3
+print("Dug", steps, "steps of tunnel.")
+print("Filled", buckets, "buckets with dirt.")
+hero.move("right", steps)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero
+steps = 0
+buckets = 0
+while steps < 6:
+    buckets = buckets + 3
+    steps = steps + 1
+print("Dug", steps, "steps of tunnel.")
+print("Filled", buckets, "buckets with dirt.")
+hero.move("right", steps)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *still-forever* — The loop still runs forever! The `while` line checks `steps`, but nothing *inside* the loop changes `steps`. Add `steps = steps + 1` inside the loop, indented under `buckets = buckets + 3`.
+- *wrong-way* — Now `steps` changes, but it never reaches 6, so `steps < 6` stays True. Make it go up by 1 each time: `steps = steps + 1`.
+- *one-too-many* — One step too many! The machine dug 7 steps. Check the `while` line. `steps < 6` stops at 6, but `steps <= 6` keeps going one more time.
+- *wrong-report* — The loop stops now. Great! But the report doesn't match. It should say 6 steps and 18 buckets. Only add the missing line. Don't change the others.
+- *not-there* — The report is right, but the hero didn't walk all 6 steps to Digby. Keep the last line as it was.
+
+**Hints (free, in this order):**
+
+1. Run it and read Byte's message. Which variable does the `while` line check? Does anything inside the loop change it?
+2. The loop checks `steps < 6`, but `steps` stays 0 forever. Add a line *inside* the loop (indented) that adds 1 to `steps`.
+3. (code example)
+
+```python
+while steps < 6:
+    buckets = buckets + 3
+    ____
+```
+
+### Ride the Cart Tracks
+
+`r5-q5-ride-the-cart-tracks`
+
+- **Type:** modify
+- **Learning outcome:** Use break to stop a loop as soon as the hero reaches the exit.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Change the counting loop to `while True:`. Inside it, `break` as soon as the exit is in front of the hero. After the loop, the hero hops off onto the exit.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+rides = 0
+while rides < 4:
+    hero.move("right")
+    rides = rides + 1
+# Hop off the cart onto the exit.
+hero.move("right")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+while True:
+    if world.look() == "exit":
+        break
+    hero.move("right")
+# Hop off the cart onto the exit.
+hero.move("right")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *no-break-forever* — `while True:` never stops on its own, and your loop has no `break`. Inside the loop, check `if world.look() == "exit":` and `break` when it's True.
+- *cart-crash* — The cart never stopped! Check the word in your `if`. `world.look()` says `"exit"`, all in small letters.
+- *no-break* — That works on today's track. But the tracks keep changing! Use `while True:` with an `if` and `break`, so the cart stops at the exit on any track.
+- *bonked* — Bonk! The hero walked past the exit into the wall. If you already step onto the exit inside the loop, you don't need to hop off again after it.
+- *stopped-early* — The hero isn't standing on the exit. Did the loop stop too soon? After the loop, the hero still needs one more step to hop off onto the exit.
+- *other-tracks* — It works on this track, but not on a shorter or longer one. Let `world.look()` decide when to stop, not a number.
+
+**Hints (free, in this order):**
+
+1. `while True:` never stops by itself. What should happen when `world.look()` says `"exit"`?
+2. Replace the counting loop with `while True:`. Inside it, first check `if world.look() == "exit":` and `break`. Otherwise, move right one step.
+3. (code example)
+
+```python
+while True:
+    if world.look() == "exit":
+        ____
+    hero.move("right")
+# Hop off the cart onto the exit.
+hero.move("right")
+```
+
+### The Depth Gauge
+
+`r5-q6-the-depth-gauge`
+
+- **Type:** make
+- **Learning outcome:** Write a while loop that keeps asking until the answer is right, counting the tries.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Use a while loop that asks for a guess until it equals `depth`. Print "Deeper!" or "Not so deep!" after a wrong guess, and count the tries.
+
+**Starter code:**
+
+```python
+depth = 40
+tries = 0
+guess = 0
+# Ottie's plan:
+# 1. While the guess is not the depth:
+#      ask: guess = int(input("How deep is the crystal cave? "))
+#      add 1 to tries
+#      print "Deeper!" if the guess is too small,
+#      or "Not so deep!" if it is too big
+# 2. After the loop: print("Found it! Tries:", tries)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+depth = 40
+tries = 0
+guess = 0
+while guess != depth:
+    guess = int(input("How deep is the crystal cave? "))
+    tries = tries + 1
+    if guess < depth:
+        print("Deeper!")
+    elif guess > depth:
+        print("Not so deep!")
+print("Found it! Tries:", tries)
+```
+
+**Input values the quest provides:** `25`, `60`, `40`
+
+**Common mistakes and the feedback students get:**
+
+- *no-loop* — Ottie needs a loop that keeps asking. Start with `while guess != depth:` and put the `input()` line inside it.
+- *ask-inside* — Your program asks only once, so the loop goes round and round with the same guess. Move the `input()` line *inside* the loop, so every try asks again.
+- *text-not-number* — `input()` always gives you text, like `"25"`. Python can't compare text with the number 40. Turn the answer into a number: `int(input(...))`.
+- *ran-out* — The loop kept asking after the right answer. Is the guess a number? The text `"40"` is not the number 40, so wrap the answer in `int(...)`.
+- *hint-when-right* — When the guess is right, Ottie shouldn't shout a hint. Use `if guess < depth:` and then `elif guess > depth:`, so nothing prints for the right answer.
+- *tries-zero* — The tries never went up. Inside the loop, add 1 each time: `tries = tries + 1`.
+- *wrong-output* — Almost! Compare your Scroll with Ottie's example, line by line. The words must match: `Deeper!`, `Not so deep!` and `Found it! Tries: 3`
+
+**Hints (free, in this order):**
+
+1. What should happen again and again? Asking, counting, and giving a hint. That's the inside of your loop.
+2. Start with `while guess != depth:`. Inside, ask with `guess = int(input("How deep is the crystal cave? "))`, then add 1 to `tries`. Use `if` and `elif` to print the hint.
+3. (code example)
+
+```python
+while guess != depth:
+    guess = int(input("How deep is the crystal cave? "))
+    tries = tries + 1
+    if guess < depth:
+        print("Deeper!")
+    elif ____:
+        print("Not so deep!")
+print("Found it! Tries:", tries)
+```
+
+### The Cave-In 🐛 boss
+
+`r5-boss-cave-in`
+
+**Boss:** The Cave-In (Rumblebug). Beat Rumblebug in three phases. Then it turns back into a friendly firefly.
+
+#### Phase 1: Walk to the rocks
+
+- **Type:** make
+- **Learning outcome:** Use a while loop with world.look() to move until something blocks the way.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Use a `while` loop to walk right as long as the way ahead is floor. Stop right in front of the rocks.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+# Walk right while the way ahead is floor.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+# Walk right while the way ahead is floor.
+while world.look() == "floor":
+    hero.move("right")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *forever* — `while True:` never stops on its own, so the hero walks into the rocks again and again. Try `while world.look() == "floor":` instead.
+- *no-loop* — That works today, but Rumblebug will shake the rocks somewhere else! Use a `while` loop that keeps walking as long as `world.look()` says `"floor"`.
+- *bonked* — Bonk! The hero walked into the rocks. Check `world.look()` before each step.
+- *not-there* — The hero didn't reach the rocks. Check the word in your loop. `world.look()` says `"floor"`, all in small letters.
+- *other-tunnels* — It works here, but not when the rocks fall closer or farther away. Let `world.look()` decide when to stop.
+
+**Hints (free, in this order):**
+
+1. Rumblebug might shake more rocks down. Don't count the steps. Let `world.look()` tell you when to stop.
+2. `while world.look() == "floor":` keeps going while the way is clear. Inside the loop, move right one step.
+3. (code example)
+
+```python
+while world.look() == ____:
+    hero.move("right")
+```
+
+#### Phase 2: Count the steps
+
+- **Type:** modify
+- **Learning outcome:** Use a counter to report how many times a loop ran.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Add a counter called `steps`. It goes up by 1 for every step. After the loop, print the count like this: `Steps to the rocks: 5`
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+# Walk right while the way ahead is floor.
+while world.look() == "floor":
+    hero.move("right")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+steps = 0
+# Walk right while the way ahead is floor.
+while world.look() == "floor":
+    hero.move("right")
+    steps = steps + 1
+print("Steps to the rocks:", steps)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *print-in-loop* — The count prints after every step! The `print` line is inside the loop. Move it after the loop, with no indent, so it prints once at the end.
+- *stuck-at-zero* — The count says 0, but the hero walked! Inside the loop, add 1 for each step: `steps = steps + 1`.
+- *stuck-at-one* — The count is stuck at 1. `steps = 1` sets it to 1 every time. Add 1 to the old value instead: `steps = steps + 1`.
+- *no-report* — After the loop, print the count: `print("Steps to the rocks:", steps)`
+- *wrong-report* — Check the words and the number. It should say `Steps to the rocks: 5`.
+- *other-tunnels* — The count is right here, but not in other tunnels. Count with `steps`. Don't type the number.
+
+**Hints (free, in this order):**
+
+1. A counter starts at 0 before the loop. Where should it go up by 1?
+2. Put `steps = 0` before the loop. Inside the loop, after the move, add `steps = steps + 1`. After the loop, with no indent, print the count.
+3. (code example)
+
+```python
+steps = 0
+while world.look() == "floor":
+    hero.move("right")
+    steps = ____
+print("Steps to the rocks:", steps)
+```
+
+#### Phase 3: Find the way out
+
+- **Type:** modify
+- **Learning outcome:** Use if/elif and break inside a while loop to solve a path problem.
+- **CSTA:** 2-AP-10, 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Finish the loop. When `world.look()` says `"exit"`, step onto it and `break`. When the way is blocked, change direction: `"right"` becomes `"up"`, and `"up"` becomes `"right"`. It must work in any cave.
+
+**Starter code:**
+
+```python
+from codeweald import hero, world
+direction = "right"
+while True:
+    hero.face(direction)
+    ahead = world.look()
+    if ahead == "floor":
+        hero.move(direction)
+    # Add an elif: if the exit is ahead, step onto it and break.
+    # Add an else: the way is blocked, so change direction.
+    #   ("right" becomes "up", and "up" becomes "right")
+hero.say("I'm out!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+from codeweald import hero, world
+direction = "right"
+while True:
+    hero.face(direction)
+    ahead = world.look()
+    if ahead == "floor":
+        hero.move(direction)
+    elif ahead == "exit":
+        hero.move(direction)
+        break
+    elif direction == "right":
+        direction = "up"
+    else:
+        direction = "right"
+hero.say("I'm out!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *no-break-forever* — Your `while True:` loop has no `break`, so it can never end. When `world.look()` says `"exit"`, step onto the exit, then `break`.
+- *stuck* — The hero is stuck, looking at the same wall again and again! When the way is blocked, change direction. If `direction` is `"right"`, make it `"up"`. Otherwise, make it `"right"`.
+- *no-loop* — Rumblebug will shake the cave again, so a list of moves won't work for long. Use the `while True:` loop with `world.look()` and `break`.
+- *bonked* — Bonk! The hero walked into something. Only move when the look says `"floor"` or `"exit"`.
+- *not-out* — The hero stopped before the exit. Did the loop break too soon? Only `break` after the look says `"exit"` and the hero steps onto it.
+- *other-caves* — You got out of this cave, but not out of every cave. Make sure the hero only uses what `world.look()` sees, not a list of moves for this one cave.
+
+**Hints (free, in this order):**
+
+1. The loop already walks on floor. What should happen when the look says `"exit"`? And when it says anything else?
+2. Add `elif ahead == "exit":` with a move and a `break`. Then add `elif direction == "right":` that sets `direction = "up"`, and an `else:` that sets `direction = "right"`.
+3. (code example)
+
+```python
+    if ahead == "floor":
+        hero.move(direction)
+    elif ahead == "exit":
+        hero.move(direction)
+        ____
+    elif direction == "right":
+        direction = "up"
+    else:
+        direction = "right"
+```
+
+### The Crystal Bloom ⭐ side quest
+
+`r5-side1-crystal-bloom`
+
+- **Type:** make
+- **Learning outcome:** Use a while loop to find how many days it takes doubling crystals to fill a cave.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Use a while loop. Each day, double the crystals and add 1 to `days`. Stop when the crystals fill the cave, then print `The cave is full after 7 days!` (with the right number of days).
+
+**Starter code:**
+
+```python
+cave = int(input("How many crystals fit in the cave? "))
+crystals = 1
+days = 0
+# Each day, the crystals double (times 2).
+# Count the days until the crystals fill the cave.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+cave = int(input("How many crystals fit in the cave? "))
+crystals = 1
+days = 0
+# Each day, the crystals double (times 2).
+# Count the days until the crystals fill the cave.
+while crystals < cave:
+    crystals = crystals * 2
+    days = days + 1
+print("The cave is full after", days, "days!")
+```
+
+**Input values the quest provides:** `100`
+
+**Common mistakes and the feedback students get:**
+
+- *no-loop* — You need a loop that keeps going until the cave is full. Try `while crystals < cave:` and put the doubling and the day count inside it.
+- *plus-two* — Doubling means times 2, not plus 2. Use `crystals = crystals * 2`.
+- *days-zero* — The days never went up. Inside the loop, add 1 for each day: `days = days + 1`.
+- *full-is-full* — Try a cave for 64 crystals. On day 6 there are exactly 64, so the cave is full! Keep going only while `crystals < cave`, not `<=`.
+- *wrong-words* — Compare your Scroll with the example, word for word. It should say `The cave is full after 7 days!` for a cave of 100.
+
+**Hints (free, in this order):**
+
+1. Start with 1 crystal on day 0. What happens each day? When should you stop?
+2. `while crystals < cave:` keeps going until the cave is full. Inside, double the crystals with `crystals = crystals * 2`, and add 1 to `days`.
+3. (code example)
+
+```python
+while crystals < cave:
+    crystals = ____
+    days = days + 1
+print("The cave is full after", days, "days!")
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+count = 1
+while count <= 3:
+    print(count)
+    count = count + 1
+```
+
+   Answer:
+
+```text
+1
+2
+3
+```
+
+   count goes 1, 2, 3. When count is 4, `4 <= 3` is False, so the loop stops.
+
+2. This loop never stops. Which line is missing inside it? → **lamps = lamps + 1**. Nothing inside the loop changes `lamps`, so `lamps < 4` stays True forever. Adding 1 each time lets it reach 4.
+3. What does `break` do? → **It jumps out of the loop right away.**. `break` stops the loop at once. Python goes on with the first line after the loop.
+4. How many times does this loop run? Type what the program prints.
+
+```python
+while 5 < 3:
+    print("Dig!")
+print("Done")
+```
+
+   Answer:
+
+```text
+Done
+```
+
+   Is 5 less than 3? No. The check is False the very first time, so the loop runs 0 times.
+
+## Region 6 — Clocktower Peaks
+
+**Concepts:** for loops; range(start, stop, step); accumulators; nested loops
+
+**Byte's analogy:** A for loop is like climbing stairs where every step has a number. You know how many steps there are before you start. `range(1, 10, 2)` is a staircase where you skip every other step, and you stop *before* step 10.
+
+### Counting the Bells
+
+`r6-q1-counting-the-bells`
+
+- **Type:** predict
+- **Learning outcome:** Predict the numbers that range() makes for different start, stop, and step values.
+- **CSTA:** 2-AP-12 · **About 6 min**
+- **Goal (as students see it):** Predict the numbers each loop prints. Then run the program to check.
+
+**Code students read:**
+
+```python
+# Dinah's bell practice book
+for bell in range(5):
+    print(bell)
+print("---")
+for bell in range(2, 8):
+    print(bell)
+print("---")
+for bell in range(10, 0, -2):
+    print(bell)
+```
+
+**Answers:**
+
+- What numbers does the first loop, `range(5)`, print? → **0 1 2 3 4**. With one number, `range` starts at 0. It stops just before 5. That's five numbers: 0, 1, 2, 3, 4.
+- What numbers does the second loop, `range(2, 8)`, print? → **2 3 4 5 6 7**. It starts at 2, the first number. It stops just before 8, so 7 is the last bell.
+- The last loop counts down. What numbers does `range(10, 0, -2)` print? → **10 8 6 4 2**. It starts at 10 and takes steps of -2. It stops before 0, so 0 never rings.
+
+**Hints (free, in this order):**
+
+1. Look at each `range` on its own. Find its start, its stop, and its step.
+2. If there's only one number, the start is 0. The stop number is never printed. The third number is the step: how far to jump each time.
+3. (code example)
+
+Here's the first loop, step by step:
+```text
+range(5): start at 0, stop before 5
+0, 1, 2, 3, ____
+```
+
+### The Clockmaker's Loop
+
+`r6-q2-the-clockmakers-loop`
+
+- **Type:** investigate
+- **Learning outcome:** Explain how a for loop's variable changes on each pass.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Run the program, watch the hero climb, and answer Gerta's questions. Try the change one question asks for.
+
+**Code students run:**
+
+```python
+from codeweald import hero
+for step in range(4):
+    print(step)
+    hero.move("right")
+    hero.move("up")
+hero.say("Made it to the bell loft!")
+```
+
+**Answers:**
+
+- Press Run. How many numbers appear on the Scroll of Output? → **4**. `range(4)` makes four numbers, so the loop goes around four times.
+- What is the value of `step` on the very first pass? → **0**. With one number, `range` starts at 0. So `step` is 0 the first time.
+- What is the value of `step` on the last pass? → **3**. `range(4)` stops just before 4. So the last value is 3.
+- Change `range(4)` to `range(1, 5)` and run it again. What is the first number on the Scroll now? → **1**. The hero still climbs four steps. But now `step` counts 1, 2, 3, 4.
+- Who changes `step` from one number to the next? → **The for loop does it by itself, on every pass.**. The for loop hands `step` its next number each time around. You never add 1 to it yourself.
+
+**Hints (free, in this order):**
+
+1. Press Run first. Then watch the Scroll and the stairs at the same time.
+2. Each pass of the loop runs all three indented lines: print `step`, move right, move up. Then `step` gets the next number.
+3. (code example)
+
+Here's the trace of the first two passes:
+```text
+pass 1: step is 0 -> print 0, right, up
+pass 2: step is 1 -> print 1, right, up
+pass 3: step is ____ -> ...
+```
+
+### Rewind the Lift
+
+`r6-q3-rewind-the-lift`
+
+- **Type:** modify
+- **Learning outcome:** Use a for loop with range() to rewrite a while-loop counter program in fewer lines.
+- **CSTA:** 2-AP-12 · **About 7 min**
+- **Goal (as students see it):** Rewrite the lift program with a for loop. The Scroll must show exactly the same lines as before.
+
+**Starter code:**
+
+```python
+# Nell's lift: up from floor 1 to floor 5.
+floor = 1
+while floor <= 5:
+    print(f"Floor {floor}: clunk!")
+    floor = floor + 1
+print("Top floor. Mind the gap!")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Nell's lift: up from floor 1 to floor 5.
+for floor in range(1, 6):
+    print(f"Floor {floor}: clunk!")
+print("Top floor. Mind the gap!")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *still-while* — The lift still uses a `while` loop. Replace it with one `for` line, like `for floor in range(...):`. Then the loop does the counting for you.
+- *starts-at-zero* — The lift stopped at floor 0. There's no floor 0 in Nell's tower! With one number, `range` starts at 0. Give it a start too: `range(1, ...)`.
+- *stops-short* — The lift never reaches floor 5! `range` stops just *before* its stop number. To end on 5, the stop must be 6: `range(1, 6)`.
+- *adds-by-hand* — You don't need `floor = floor + 1` anymore. The for loop gives `floor` its next number on every pass. Delete that line.
+- *leftover-lines* — The ride is right! Now tidy up. The for loop sets `floor` all by itself, so `floor = 1` isn't needed. Three lines of code are enough.
+- *different-ride* — The lines on the Scroll changed. Compare them with the old ride, one line at a time. Every space and full stop counts.
+
+**Hints (free, in this order):**
+
+1. Which floors does the lift visit? The first one and the last one are all `range` needs to know.
+2. `range(1, 6)` gives 1, 2, 3, 4, 5. Use it in a `for` line. Then delete `floor = 1` and `floor = floor + 1`.
+3. (code example)
+
+```python
+for floor in range(1, ____):
+    print(f"Floor {floor}: clunk!")
+print("Top floor. Mind the gap!")
+```
+
+### The Toll Bucket
+
+`r6-q4-the-toll-bucket`
+
+- **Type:** fill
+- **Learning outcome:** Use an accumulator inside a for loop to add up a range of numbers.
+- **CSTA:** 2-AP-11, 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Fill the two gaps so the program adds up every toll and prints the total.
+
+**Starter code:**
+
+```python
+# Tolls go 5, 10, 15... up to 50 coins.
+first = 5
+last = 50
+____
+for toll in range(first, last + 1, 5):
+    ____
+print(f"The bucket holds {total} coins.")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Tolls go 5, 10, 15... up to 50 coins.
+first = 5
+last = 50
+total = 0
+for toll in range(first, last + 1, 5):
+    total = total + toll
+print(f"The bucket holds {total} coins.")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *typed-total* — Nice try, but no typing the answer! Copperpot's tolls change every day. Start the bucket at 0, then add each `toll` inside the loop.
+- *reset-inside* — `total = 0` is inside the loop, so the bucket is emptied on every pass! Only the last toll is left. Start the bucket once, before the loop.
+- *replaces* — `total = toll` throws away the coins already in the bucket. Add to them instead: `total = total + toll`.
+- *counts-travelers* — Adding 1 counts the travelers, not their coins. Add the toll each traveler pays: `total = total + toll`.
+- *no-start* — Python doesn't know that name yet. A bucket must exist before you add to it. In the first gap, start it empty: `total = 0`.
+- *other-tolls-fail* — Your bucket is right for 5 to 50, but not for other tolls. Don't type the total. Let the loop add each `toll`, and print `total`.
+
+**Hints (free, in this order):**
+
+1. The bucket needs a starting amount before any traveler pays. What should that be?
+2. In the first gap, start the bucket empty: `total = 0`. In the second gap, add this traveler's toll to what's already there.
+3. (code example)
+
+```python
+total = 0
+for toll in range(first, last + 1, 5):
+    total = ____
+```
+
+### The Skipping Clock
+
+`r6-q5-the-skipping-clock`
+
+- **Type:** fix
+- **Learning outcome:** Fix off-by-one errors in range() so a loop runs the right number of times.
+- **CSTA:** 2-AP-17 · **About 8 min**
+- **Goal (as students see it):** Fix the two ranges so the clock rings every hour from 1 to 12, then ticks at 0, 15, 30 and 45 minutes.
+
+**Starter code:**
+
+```python
+# Ring every hour, from 1 to 12.
+for hour in range(1, 12):
+    print(f"{hour} o'clock: DONG!")
+# Then tick every quarter hour.
+for minute in range(0, 60, 10):
+    print(f"Tick! {minute} minutes")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Ring every hour, from 1 to 12.
+for hour in range(1, 13):
+    print(f"{hour} o'clock: DONG!")
+# Then tick every quarter hour.
+for minute in range(0, 60, 15):
+    print(f"Tick! {minute} minutes")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *adds-one-by-hand* — Don't change `hour` or `minute` inside the loop. The for loop gives them their next value by itself. Fix the numbers inside `range` instead.
+- *skips-twelve* — The clock still skips 12 o'clock! `range` stops just *before* its stop number, so `range(1, 12)` ends at 11. What stop number gives you 12?
+- *steps-ten* — The hours are fixed. Now the little bell ticks every 10 minutes. The third number in `range` is the step. A quarter hour is 15 minutes.
+- *sixty* — 60 minutes is already the next hour! Keep the stop at 60. `range` stops just before it, so 45 is the last tick.
+- *loops-gone* — Milo wants his two loops back! Keep both `for` lines, and fix the numbers inside each `range`.
+- *clock-different* — Close! Compare the Scroll with the plan, one line at a time. Hours 1 to 12, then ticks at 0, 15, 30 and 45 minutes.
+
+**Hints (free, in this order):**
+
+1. Run it and read the Scroll. Which hour is missing? Which minutes are wrong?
+2. `range(1, 12)` stops at 11, so raise the stop by one. In `range(0, 60, 10)`, the 10 is the step. How many minutes are in a quarter hour?
+3. (code example)
+
+```python
+for hour in range(1, ____):
+    print(f"{hour} o'clock: DONG!")
+for minute in range(0, 60, ____):
+    print(f"Tick! {minute} minutes")
+```
+
+### The Pattern Weaver
+
+`r6-q6-the-pattern-weaver`
+
+- **Type:** make
+- **Learning outcome:** Use nested for loops to print a rectangle of symbols.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Use a loop inside a loop to print a rectangle of `*` stars, `width` wide and `height` tall. It must work for any size.
+
+**Starter code:**
+
+```python
+width = 6
+height = 3
+# Weave a rug of * stars: height rows,
+# and each row is width stars wide.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+width = 6
+height = 3
+# Weave a rug of * stars: height rows,
+# and each row is width stars wide.
+for line in range(height):
+    row = ""
+    for stitch in range(width):
+        row = row + "*"
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-loop* — That's a lovely rug, but Wren wants it woven with a loop inside a loop. Make an inner loop that adds one star at a time: `row = row + "*"`.
+- *swapped* — Your rug is turned on its side! The outer loop makes the rows, so it should use `range(height)`. The inner loop makes the stars in a row, so it uses `range(width)`.
+- *too-many-rows* — The loom printed far too many rows! Is `print(row)` inside the inner loop? Move it out one step, so it runs once, after the row is finished.
+- *growing-rows* — Your rows keep getting longer! Each row needs to start empty. Put `row = ""` inside the outer loop, just before the inner loop.
+- *fixed-size* — This rug works, but the loom must weave other sizes too. Use `range(height)` and `range(width)` instead of typing the numbers.
+- *wrong-rug* — The rug doesn't match yet. Wren wants `height` rows, and each row has `width` stars.
+
+**Hints (free, in this order):**
+
+1. Start small. Can you print just one row of `width` stars, with a loop that adds one star at a time?
+2. Put your row-making loop inside a loop that runs `height` times. Start each row with `row = ""`, and print it after the inner loop ends.
+3. (code example)
+
+```python
+for line in range(height):
+    row = ""
+    for stitch in range(width):
+        row = ____
+    print(row)
+```
+
+### The Broken Clock 🐛 boss
+
+`r6-boss-broken-clock`
+
+**Boss:** The Broken Clock (Tick-Tock-Tick). Rebuild the great clock's timetable in three phases. Then Tick-Tock-Tick turns back into a friendly firefly.
+
+#### Phase 1: Hours on the dial
+
+- **Type:** make
+- **Learning outcome:** Use range() with a start and stop to print a sequence.
+- **CSTA:** 2-AP-12 · **About 5 min**
+- **Goal (as students see it):** Use a for loop to print the hours 1 to 12, one per line.
+
+**Starter code:**
+
+```python
+# Print the hours 1 to 12 with a for loop.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# Print the hours 1 to 12 with a for loop.
+for hour in range(1, 13):
+    print(hour)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *starts-at-zero* — There's no 0 on a clock! With one number, `range` starts at 0. Give it a start: `range(1, ...)`.
+- *stops-at-eleven* — The dial stops at 11! `range` stops just *before* its stop number. To reach 12, use 13 as the stop.
+- *no-loop* — Tick-Tock-Tick laughs at all those lines. "Too slow!" Use one `for` loop with `range(1, 13)` to print every hour.
+- *too-long* — The dial is right! Now let the loop do all the work. Two lines are enough.
+- *wrong-dial* — Compare the Scroll with a clock face. Just the numbers 1 to 12, one on each line.
+
+**Hints (free, in this order):**
+
+1. Which number does the dial start at? Which number does it end at?
+2. `range` stops just before its stop number. For 1 to 12, use `range(1, 13)`. Print the loop variable on each pass.
+3. (code example)
+
+```python
+for hour in range(1, ____):
+    print(hour)
+```
+
+#### Phase 2: The timetable
+
+- **Type:** make
+- **Learning outcome:** Use nested loops and a range step to print a timetable pattern.
+- **CSTA:** 2-AP-12 · **About 6 min**
+- **Goal (as students see it):** Use a minute loop inside the hour loop to print the timetable, one row per hour, from 1 to 12.
+
+**Starter code:**
+
+```python
+for hour in range(1, 13):
+    print(hour)
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+for hour in range(1, 13):
+    row = f"{hour}:"
+    for minute in range(0, 60, 15):
+        row = row + f" {minute}"
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-loop* — Tick-Tock-Tick snickers. "Where's the second loop?" Put a minute loop inside the hour loop. It adds each minute to the row.
+- *typed-minutes* — No typing the minutes! Let `range` count them for you with a step: `range(0, 60, 15)`.
+- *step-ten* — The bell chimes every 15 minutes, not every 10. The third number in `range` is the step.
+- *too-many-rows* — The timetable has far too many rows! Is `print(row)` inside the minute loop? Move it out one step, so each hour prints just one row.
+- *growing-rows* — The rows keep getting longer! Start a fresh row on every pass of the hour loop, just before the minute loop.
+- *wrong-rows* — Compare the timetable with the example, row by row. Each row is the hour, a colon, then the minutes with a space before each one.
+
+**Hints (free, in this order):**
+
+1. Look at one row. Which part comes from the hour loop? Which parts come from a minute loop?
+2. Inside the hour loop, start a row with `row = f"{hour}:"`. Then loop with `range(0, 60, 15)` and add each minute with `row = row + f" {minute}"`. Print the row after the minute loop.
+3. (code example)
+
+```python
+for hour in range(1, 13):
+    row = f"{hour}:"
+    for minute in range(0, 60, ____):
+        row = row + f" {minute}"
+    print(row)
+```
+
+#### Phase 3: Count the chimes
+
+- **Type:** make
+- **Learning outcome:** Use an accumulator to total values across loop passes.
+- **CSTA:** 2-AP-11 · **About 5 min**
+- **Goal (as students see it):** Use a for loop to add up the chimes from 1 to 12 o'clock in `chimes`, then print the total.
+
+**Starter code:**
+
+```python
+# The bell rings 1 time at 1 o'clock,
+# 2 times at 2 o'clock, and so on.
+chimes = 0
+# Add up the chimes from 1 to 12 o'clock.
+
+print(f"Total chimes: {chimes}")
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+# The bell rings 1 time at 1 o'clock,
+# 2 times at 2 o'clock, and so on.
+chimes = 0
+# Add up the chimes from 1 to 12 o'clock.
+for hour in range(1, 13):
+    chimes = chimes + hour
+print(f"Total chimes: {chimes}")
+```
+
+**Common mistakes and the feedback students get:**
+
+- *typed-in* — Tick-Tock-Tick spots the typed number. "Cheater, cheater, clock eater!" Let a for loop add each hour's chimes to `chimes`.
+- *reset-inside* — `chimes = 0` inside the loop empties the count on every pass! Keep it before the loop, so the chimes pile up.
+- *counts-hours* — Adding 1 counts the hours, not the chimes. At each hour the bell rings `hour` times, so add `hour`.
+- *stops-short* — You forgot 12 o'clock, the loudest hour of all! `range` stops just before its stop number. Use 13.
+- *no-loop* — Use a for loop with `range(1, 13)`. On each pass, add that hour's chimes.
+- *wrong-total* — Not quite. Start `chimes` at 0 before the loop. Then, inside the loop, add `hour` on every pass.
+
+**Hints (free, in this order):**
+
+1. How many chimes at 1 o'clock? At 2 o'clock? What do you add each time?
+2. Loop over the hours with `range(1, 13)`. On each pass, add that hour to the total: `chimes = chimes + hour`.
+3. (code example)
+
+```python
+chimes = 0
+for hour in range(1, 13):
+    chimes = ____
+print(f"Total chimes: {chimes}")
+```
+
+### Staircase of Stars ⭐ side quest
+
+`r6-side1-staircase-of-stars`
+
+- **Type:** make
+- **Learning outcome:** Use nested loops where the inner range depends on the outer loop's variable to draw a triangle.
+- **CSTA:** 2-AP-12 · **About 8 min**
+- **Goal (as students see it):** Print a staircase of `*` stars, `height` rows tall. Row 1 has 1 star, row 2 has 2 stars, and so on. It must work for any height.
+
+**Starter code:**
+
+```python
+height = 4
+# A staircase: 1 star on row 1,
+# 2 stars on row 2, and so on.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+height = 4
+# A staircase: 1 star on row 1,
+# 2 stars on row 2, and so on.
+for step in range(1, height + 1):
+    row = ""
+    for star in range(step):
+        row = row + "*"
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *one-loop* — Nice stairs! Now weave them with a loop inside a loop. The inner loop adds one star at a time: `row = row + "*"`.
+- *all-same* — That's a rectangle, not a staircase! Every row has the same number of stars. Let the inner `range` use the outer loop's variable, so each row is longer than the one before.
+- *one-short* — Your staircase is one step short. `range(height)` starts at 0, so the first row gets 0 stars. Try `range(1, height + 1)` for the outer loop.
+- *fixed-height* — These stairs work for 4, but not for other towers. Use `height` in the outer `range` instead of typing a number.
+- *wrong-stairs* — Not quite a staircase yet. The first row has 1 star, and each row after it has one more.
+
+**Hints (free, in this order):**
+
+1. Row 1 has 1 star and row 4 has 4 stars. Which loop variable counts 1, 2, 3, 4?
+2. Make the outer loop count `step` from 1 to `height` with `range(1, height + 1)`. Then the inner loop adds `step` stars with `range(step)`.
+3. (code example)
+
+```python
+for step in range(1, height + 1):
+    row = ""
+    for star in range(____):
+        row = row + "*"
+    print(row)
+```
+
+### The Times-Table Tower ⭐ side quest
+
+`r6-side2-times-table-tower`
+
+- **Type:** make
+- **Learning outcome:** Use nested loops to print a multiplication grid.
+- **CSTA:** 2-AP-12 · **About 10 min**
+- **Goal (as students see it):** Use a loop inside a loop to print a times table, `size` rows by `size` columns. Build each cell with an f-string. It must work for any size.
+
+**Starter code:**
+
+```python
+size = 4
+# One row for each number from 1 to size.
+# Each row: that number times 1, 2, 3...
+# all the way up to times size.
+```
+
+**Reference solution** (other correct answers also pass — the checks test behavior):
+
+```python
+size = 4
+# One row for each number from 1 to size.
+# Each row: that number times 1, 2, 3...
+# all the way up to times size.
+for a in range(1, size + 1):
+    row = ""
+    for b in range(1, size + 1):
+        row = row + f"{a * b} "
+    print(row)
+```
+
+**Common mistakes and the feedback students get:**
+
+- *text-plus-number* — `row` is text, but `a * b` is a number, and Python can't join them. Turn the number into text with an f-string: `row = row + f"{a * b} "`.
+- *one-loop* — Build the tower with a loop inside a loop. The outer loop makes the rows. The inner loop adds one cell at a time.
+- *zero-row* — A row of zeros! With one number, `range` starts at 0. The times table starts at 1, so use `range(1, size + 1)`.
+- *too-many-rows* — The tower printed too many rows! Is `print(row)` inside the inner loop? Move it out one step, so each row prints once.
+- *one-short* — The tower is one row short. `range` stops just before its stop number, so use `size + 1` as the stop.
+- *no-fstring* — The tower is right! Now build each cell with an f-string, like `f"{a * b} "`. It's neater, and it turns the number into text for you.
+- *fixed-size* — This tower works for 4, but not for other sizes. Use `size` in both `range` calls instead of typing a number.
+- *wrong-tower* — Compare your tower with the example, row by row. Each cell is the row number times the column number.
+
+**Hints (free, in this order):**
+
+1. Look at the example. What does the row number times the column number give you?
+2. The outer loop counts `a` from 1 to `size`. Inside it, start `row = ""`, then loop `b` from 1 to `size` and add `f"{a * b} "` to the row.
+3. (code example)
+
+```python
+for a in range(1, size + 1):
+    row = ""
+    for b in range(1, size + 1):
+        row = row + ____
+    print(row)
+```
+
+### Knowledge check
+
+1. What will this print?
+
+```python
+for i in range(2, 10, 3):
+    print(i)
+```
+
+   Answer:
+
+```text
+2
+5
+8
+```
+
+   `range(2, 10, 3)` starts at 2 and jumps by 3: 2, 5, 8. The next jump is 11, and that is past 10, so it stops.
+
+2. How many times does this loop run, and what is the first value of `i`? → **5 times. The first value is 0.**. `range(5)` gives 0, 1, 2, 3, 4. That's 5 numbers, and it starts at 0.
+3. What will this print?
+
+```python
+total = 0
+for coins in range(1, 5):
+    total = total + coins
+print(total)
+```
+
+   Answer:
+
+```text
+10
+```
+
+   The bucket starts at 0. Then it adds 1, 2, 3 and 4. That makes 10.
+
+4. How many stars does the loom weave? Type what this prints.
+
+```python
+stars = 0
+for row in range(3):
+    for col in range(4):
+        stars = stars + 1
+print(f"{stars} stars")
+```
+
+   Answer:
+
+```text
+12 stars
+```
+
+   The inner loop runs 4 times on every pass of the outer loop, and the outer loop makes 3 passes. 3 times 4 is 12.

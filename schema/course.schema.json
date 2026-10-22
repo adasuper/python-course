@@ -29,6 +29,26 @@
         "additionalProperties": false
       }
     },
+    "finale": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speaker": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "speaker",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
     "regions": {
       "minItems": 1,
       "type": "array",
@@ -59,12 +79,17 @@
     "side_quests": {
       "default": true,
       "type": "boolean"
+    },
+    "more_regions_coming": {
+      "default": false,
+      "type": "boolean"
     }
   },
   "required": [
     "id",
     "title",
     "opening",
+    "finale",
     "regions"
   ],
   "additionalProperties": false

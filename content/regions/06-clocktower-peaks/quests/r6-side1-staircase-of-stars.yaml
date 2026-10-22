@@ -1,0 +1,165 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-side1-staircase-of-stars
+region: clocktower-peaks
+title: Staircase of Stars
+type: make
+side_quest: true
+learning_outcome: Use nested loops where the inner range depends on the outer loop's variable to draw a triangle.
+csta: [2-AP-12]
+estimated_minutes: 8
+prerequisites: [r6-boss-broken-clock]
+vocabulary: [nested loop, loop variable]
+
+story_intro: |
+  A note on the Quest Board says: *"WANTED: a staircase rug for the bell loft. One star on the top step, two on the next, and so on. Must fit any tower. Ask for Wren."*
+
+  This time each row is a different length. The trick: let the inner loop use the outer loop's [[loop variable]]. Row 1 gets 1 star, row 2 gets 2 stars...
+goal: Print a staircase of `*` stars, `height` rows tall. Row 1 has 1 star, row 2 has 2 stars, and so on. It must work for any height.
+concept_card: |
+  The inner `range` can use the outer loop's variable. Then every row is a different length.
+  ```python
+  for step in range(1, height + 1):
+      row = ""
+      for star in range(step):
+          row = row + "*"
+      print(row)
+  ```
+
+stage: { kind: none, view: tapestry }
+
+starter_code: |
+  height = 4
+  # A staircase: 1 star on row 1,
+  # 2 stars on row 2, and so on.
+
+solution: |
+  height = 4
+  # A staircase: 1 star on row 1,
+  # 2 stars on row 2, and so on.
+  for step in range(1, height + 1):
+      row = ""
+      for star in range(step):
+          row = row + "*"
+      print(row)
+
+validators:
+  - id: stairs
+    type: output
+    expect: |
+      *
+      **
+      ***
+      ****
+    fail_hint: With a height of 4, the staircase has rows of 1, 2, 3 and 4 stars.
+  - id: nested
+    type: custom
+    fail_hint: Put one for loop inside another.
+    python: |
+      def check(ctx):
+          tree = ctx.tree
+          if tree is not None:
+              for outer in ast.walk(tree):
+                  if isinstance(outer, ast.For):
+                      for inner in ast.walk(outer):
+                          if inner is not outer and isinstance(inner, ast.For):
+                              return Pass()
+          return Fail("Put one for loop inside another.")
+  - id: any-height
+    type: hidden_tests
+    mode: vars
+    compare: [output]
+    cases:
+      - { vars: { height: 1 } }
+      - { vars: { height: 2 } }
+      - { vars: { height: 3 } }
+      - { vars: { height: 5 } }
+      - { vars: { height: 6 } }
+    fail_hint: The staircase must fit any tower. Use `height` in your outer loop.
+  - id: uses-height
+    type: ast
+    uses_names: [height]
+    fail_hint: Use `height` in your loops, so the staircase fits any tower.
+
+common_mistakes:
+  - id: one-loop
+    detect: { kind: validator_failed, id: nested }
+    feedback: >-
+      Nice stairs! Now weave them with a loop inside a loop. The inner loop adds one star
+      at a time: `row = row + "*"`.
+  - id: all-same
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            rows = [r for r in ctx.lines if r.strip()]
+            return len(rows) > 1 and len({len(r) for r in rows}) == 1
+    feedback: >-
+      That's a rectangle, not a staircase! Every row has the same number of stars. Let the
+      inner `range` use the outer loop's variable, so each row is longer than the one before.
+  - id: one-short
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            h = ctx.vars.get("height")
+            rows = [r for r in ctx.lines if r.strip()]
+            return isinstance(h, int) and len(rows) == h - 1
+    feedback: >-
+      Your staircase is one step short. `range(height)` starts at 0, so the first row gets 0
+      stars. Try `range(1, height + 1)` for the outer loop.
+  - id: fixed-height
+    detect: { kind: validator_failed, id: any-height }
+    feedback: >-
+      These stairs work for 4, but not for other towers. Use `height` in the outer `range`
+      instead of typing a number.
+  - id: wrong-stairs
+    detect: { kind: validator_failed, id: stairs }
+    feedback: >-
+      Not quite a staircase yet. The first row has 1 star, and each row after it has one
+      more.
+
+wrong_solutions:
+  - expect_mistake: one-loop
+    code: |
+      height = 4
+      for step in range(1, height + 1):
+          print("*" * step)
+  - expect_mistake: all-same
+    code: |
+      height = 4
+      for step in range(1, height + 1):
+          row = ""
+          for star in range(height):
+              row = row + "*"
+          print(row)
+  - expect_mistake: one-short
+    code: |
+      height = 4
+      for step in range(height):
+          row = ""
+          for star in range(step):
+              row = row + "*"
+          print(row)
+  - expect_mistake: fixed-height
+    code: |
+      height = 4
+      for step in range(1, 5):
+          row = ""
+          for star in range(step):
+              row = row + "*"
+          print(row)
+
+hints:
+  - Row 1 has 1 star and row 4 has 4 stars. Which loop variable counts 1, 2, 3, 4?
+  - "Make the outer loop count `step` from 1 to `height` with `range(1, height + 1)`. Then the inner loop adds `step` stars with `range(step)`."
+  - |
+    ```python
+    for step in range(1, height + 1):
+        row = ""
+        for star in range(____):
+            row = row + "*"
+        print(row)
+    ```
+
+story_outro: |
+  Wren rolls out your staircase rug. It fits the bell loft perfectly. Byte hops up it, one star at a time. "Excellent stairs. Owl-approved."

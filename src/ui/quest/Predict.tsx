@@ -1,26 +1,23 @@
 // Predict quests: read code, lock in a prediction, then run it to check (§9.2).
-import type { InvestigateQuestion, PredictPrompt } from '../../content/types';
+import { useState } from 'preact/hooks';
+import type { InvestigateQuestion, PredictPrompt, PredictTwin } from '../../content/types';
+import { predictionCorrect, twinCorrect } from './answers';
 import { t } from '../../i18n/en';
 import { RichText } from '../components/RichText';
 
-export const normalizeAnswer = (s: string) =>
-  s
-    .replace(/\r\n/g, '\n')
-    .split('\n')
-    .map((l) => l.trim())
-    .join('\n')
-    .trim();
-
-export function predictionCorrect(
-  prompt: PredictPrompt,
-  answer: string | number | undefined,
-  output: string,
-): boolean {
-  if (answer === undefined) return false;
-  if (prompt.kind === 'mcq') return Number(answer) === prompt.answer;
+/** Side by side: what the student predicted and what really happened. */
+function Compare({ yours, real, realLabel }: { yours: string; real: string; realLabel: string }) {
   return (
-    normalizeAnswer(String(answer)) === normalizeAnswer(output) ||
-    normalizeAnswer(String(answer)) === normalizeAnswer(prompt.answer)
+    <div class="compare">
+      <div>
+        <p class="small-text">{t.predict.yourAnswer}</p>
+        <pre>{yours}</pre>
+      </div>
+      <div>
+        <p class="small-text">{realLabel}</p>
+        <pre>{real}</pre>
+      </div>
+    </div>
   );
 }
 
@@ -44,72 +41,149 @@ export function PredictPanel({
       {prompts.map((p, i) => {
         const correct = revealed && predictionCorrect(p, answers[i], output);
         return (
-          <fieldset key={i} class="prompt" disabled={locked}>
-            <legend>
-              <RichText rich={p.question} inline />
-            </legend>
-            {p.kind === 'mcq' ? (
-              <div class="options">
-                {p.options.map((opt, j) => (
-                  <label key={j} class="option">
-                    <input
-                      type="radio"
-                      name={`prompt-${i}`}
-                      checked={answers[i] === j}
-                      onChange={() => onAnswer(i, j)}
-                    />
-                    <code class="option-code">{opt}</code>
-                    {revealed && j === p.answer && <span class="tag-ok"> ✓ correct</span>}
+          <div key={i} class="prompt-wrap">
+            <fieldset class="prompt" disabled={locked}>
+              <legend>
+                <RichText rich={p.question} inline />
+              </legend>
+              {p.kind === 'mcq' ? (
+                <div class="options">
+                  {p.options.map((opt, j) => (
+                    <label key={j} class="option">
+                      <input
+                        type="radio"
+                        name={`prompt-${i}`}
+                        checked={answers[i] === j}
+                        onChange={() => onAnswer(i, j)}
+                      />
+                      <code class="option-code">{opt}</code>
+                      {revealed && j === p.answer && <span class="tag-ok"> ✓ correct</span>}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <label class="sr-only" for={`prompt-${i}-text`}>
+                    {t.predict.yourAnswer}
                   </label>
-                ))}
-              </div>
-            ) : (
-              <>
-                <label class="sr-only" for={`prompt-${i}-text`}>
-                  {t.predict.yourAnswer}
-                </label>
-                <textarea
-                  id={`prompt-${i}-text`}
-                  rows={3}
-                  class="code-input"
-                  value={String(answers[i] ?? '')}
-                  onInput={(e) => onAnswer(i, (e.target as HTMLTextAreaElement).value)}
-                />
-              </>
-            )}
-            {revealed && (
-              <div class={`verdict ${correct ? 'ok' : 'different'}`} role="status">
-                <strong>{correct ? `✓ ${t.predict.correct}` : `◐ ${t.predict.different}`}</strong>
-                {p.kind === 'text' && !correct && (
-                  <div class="compare">
-                    <div>
-                      <p class="small-text">{t.predict.yourAnswer}</p>
-                      <pre>{String(answers[i] ?? '')}</pre>
-                    </div>
-                    <div>
-                      <p class="small-text">{t.predict.realAnswer}</p>
-                      <pre>{output}</pre>
-                    </div>
-                  </div>
-                )}
-                <RichText rich={p.explain} />
-              </div>
-            )}
-          </fieldset>
+                  <textarea
+                    id={`prompt-${i}-text`}
+                    rows={3}
+                    class="code-input"
+                    value={String(answers[i] ?? '')}
+                    onInput={(e) => onAnswer(i, (e.target as HTMLTextAreaElement).value)}
+                  />
+                </>
+              )}
+              {revealed && (
+                <div class={`verdict ${correct ? 'ok' : 'different'}`} role="status">
+                  <strong>{correct ? `✓ ${t.predict.correct}` : `◐ ${t.predict.different}`}</strong>
+                  {p.kind === 'text' && !correct && (
+                    <Compare
+                      yours={String(answers[i] ?? '')}
+                      real={output}
+                      realLabel={t.predict.realAnswer}
+                    />
+                  )}
+                  {p.kind === 'mcq' && !correct && (
+                    <Compare
+                      yours={p.options[Number(answers[i])] ?? ''}
+                      real={p.options[p.answer] ?? ''}
+                      realLabel={t.predict.rightAnswer}
+                    />
+                  )}
+                  <RichText rich={p.explain} />
+                </div>
+              )}
+            </fieldset>
+            {revealed && !correct && p.twin && <TwinChallenge twin={p.twin} index={i} />}
+          </div>
         );
       })}
     </section>
   );
 }
 
-export type QuestionState = { value: string; status: 'unanswered' | 'right' | 'wrong' };
-
-export function checkQuestion(q: InvestigateQuestion, value: string): boolean {
-  const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
-  if (q.kind === 'mcq') return Number(value) === q.answer;
-  if (q.kind === 'number') return value.trim() !== '' && Math.abs(Number(value) - q.answer) < 1e-9;
-  return q.accept.some((a) => norm(a) === norm(value));
+/** A second, similar program to predict after a wrong prediction (F-QST-05). It sits
+ *  outside the locked prompt, so its controls stay usable. */
+function TwinChallenge({ twin, index }: { twin: PredictTwin; index: number }) {
+  const [open, setOpen] = useState(false);
+  const [answer, setAnswer] = useState<string | number | undefined>(undefined);
+  const [checked, setChecked] = useState(false);
+  const id = `twin-${index}`;
+  if (!open)
+    return (
+      <button
+        type="button"
+        class="small"
+        onClick={() => {
+          setOpen(true);
+          requestAnimationFrame(() => document.getElementById(`${id}-h`)?.focus());
+        }}
+      >
+        🔁 {t.predict.tryTwin}
+      </button>
+    );
+  const correct = checked && twinCorrect(twin, answer);
+  const real = twin.kind === 'mcq' ? (twin.options[twin.answer] ?? '') : twin.answer;
+  const yours = twin.kind === 'mcq' ? (twin.options[Number(answer)] ?? '') : String(answer ?? '');
+  return (
+    <section class="twin card" aria-labelledby={`${id}-h`}>
+      <h3 id={`${id}-h`} tabIndex={-1}>
+        🔁 {t.predict.twinHeading}
+      </h3>
+      <pre class="code-block" aria-label={t.predict.twinCode}>
+        <code>{twin.code}</code>
+      </pre>
+      <fieldset class="prompt" disabled={checked}>
+        <legend>
+          <RichText rich={twin.question} inline />
+        </legend>
+        {twin.kind === 'mcq' ? (
+          <div class="options">
+            {twin.options.map((opt, j) => (
+              <label key={j} class="option">
+                <input type="radio" name={id} checked={answer === j} onChange={() => setAnswer(j)} />
+                <code class="option-code">{opt}</code>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <>
+            <label class="sr-only" for={`${id}-text`}>
+              {t.predict.yourAnswer}
+            </label>
+            <textarea
+              id={`${id}-text`}
+              rows={3}
+              class="code-input"
+              value={String(answer ?? '')}
+              onInput={(e) => setAnswer((e.target as HTMLTextAreaElement).value)}
+            />
+          </>
+        )}
+      </fieldset>
+      {!checked ? (
+        <button
+          type="button"
+          class="primary small"
+          disabled={answer === undefined || answer === ''}
+          onClick={() => setChecked(true)}
+        >
+          {t.predict.twinCheck}
+        </button>
+      ) : (
+        <div class={`verdict ${correct ? 'ok' : 'different'}`} role="status">
+          <strong>{correct ? `✓ ${t.predict.correct}` : `◐ ${t.predict.different}`}</strong>
+          {!correct && <Compare yours={yours} real={real} realLabel={t.predict.realAnswer} />}
+          <RichText rich={twin.explain} />
+        </div>
+      )}
+    </section>
+  );
 }
+
+export type QuestionState = { value: string; status: 'unanswered' | 'right' | 'wrong' };
 
 export function InvestigatePanel({
   questions,

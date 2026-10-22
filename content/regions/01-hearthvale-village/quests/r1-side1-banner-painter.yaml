@@ -67,6 +67,17 @@ wrong_solutions:
       print("*  ~  FAIR  ~   *")
       print("*****************")
 
+bonus:
+  - id: framed
+    description: "Make a framed banner: at least 6 rows, with the same top row and bottom row."
+    xp: 15
+    check:
+      type: custom
+      python: |
+        def check(ctx):
+            rows = [line for line in ctx.lines if line.strip()]
+            return Pass() if len(rows) >= 6 and rows[0] == rows[-1] else Fail()
+
 hints:
   - Plan your picture first. What will each row look like?
   - Each `print("...")` paints one row. Use the same width for every row so the edges line up.

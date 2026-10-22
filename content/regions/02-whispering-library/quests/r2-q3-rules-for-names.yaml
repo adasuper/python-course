@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-q3-rules-for-names
+region: whispering-library
+title: Rules for Names
+type: fix
+npc: primm
+learning_outcome: Identify and fix variable names that break Python's naming rules.
+csta: [2-AP-11, 2-AP-17]
+estimated_minutes: 7
+prerequisites: [r2-q2-the-shelf-swap]
+vocabulary: [variable, syntax, case-sensitive]
+
+story_intro: |
+  Archivist Primm taps a list of jar labels. "Python is VERY picky about names. And somebody broke every rule."
+
+  This spell has **4 bugs**. A name can use letters, numbers and `_`. It can't start with a number. It can't have spaces or dashes. And Python is [[case-sensitive]]: `Book` and `book` are two different jars.
+goal: Fix the four bad names so the program prints the archive card. Use the names that the print lines already use.
+concept_card: |
+  **Rules for variable names**
+  - Use letters, numbers and `_` (underscore): `book_title`, `shelf_2`
+  - Never start with a number: `2nd_shelf` ✗
+  - No spaces or dashes: `book title` ✗, `book-count` ✗
+  - Capitals count: `Book` and `book` are different names.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_archivist, name: Archivist Primm }
+
+starter_code: |
+  book title = "Moonlight Maps"
+  2nd_shelf = "Atlases"
+  book-count = 12
+  print(book_title)
+  print(shelf_2)
+  print(Book_count)
+
+solution: |
+  book_title = "Moonlight Maps"
+  shelf_2 = "Atlases"
+  book_count = 12
+  print(book_title)
+  print(shelf_2)
+  print(book_count)
+
+validators:
+  - id: card
+    type: output
+    expect: |
+      Moonlight Maps
+      Atlases
+      12
+    fail_hint: The card should show the title, the shelf and the count, in that order.
+  - id: title-jar
+    type: variable
+    name: book_title
+    equals: Moonlight Maps
+    fail_hint: Store "Moonlight Maps" in a jar named `book_title`.
+  - id: shelf-jar
+    type: variable
+    name: shelf_2
+    equals: Atlases
+    fail_hint: Store "Atlases" in a jar named `shelf_2`.
+  - id: count-jar
+    type: variable
+    name: book_count
+    equals: 12
+    fail_hint: Store 12 in a jar named `book_count`.
+
+common_mistakes:
+  - id: space-or-dash
+    detect: { kind: error, key: syntax.bad_variable_name }
+    feedback: >-
+      A name can't have a space or a dash in it. Python reads `book title` as two names, and
+      `book-count` as "book minus count". Use an underscore instead: `book_title`, `book_count`.
+  - id: starts-with-number
+    detect: { kind: error, key: syntax.name_starts_with_digit }
+    feedback: >-
+      A name can't start with a number. Move the number to the end, like the print line does:
+      `shelf_2`.
+  - id: capital-letter
+    detect: { kind: error, type: NameError }
+    feedback: >-
+      Python is case-sensitive. `Book_count` with a capital B is a different jar from
+      `book_count`. Make the names match exactly.
+  - id: values-changed
+    detect: { kind: validator_failed, id: card }
+    feedback: The names work now, but the card changed. Keep the same values the starter code had.
+
+wrong_solutions:
+  - expect_mistake: starts-with-number
+    note: Only the space is fixed.
+    code: |
+      book_title = "Moonlight Maps"
+      2nd_shelf = "Atlases"
+      book-count = 12
+      print(book_title)
+      print(shelf_2)
+      print(Book_count)
+  - expect_mistake: space-or-dash
+    note: The dash is still there.
+    code: |
+      book_title = "Moonlight Maps"
+      shelf_2 = "Atlases"
+      book-count = 12
+      print(book_title)
+      print(shelf_2)
+      print(book_count)
+  - expect_mistake: capital-letter
+    note: The capital B is still there.
+    code: |
+      book_title = "Moonlight Maps"
+      shelf_2 = "Atlases"
+      book_count = 12
+      print(book_title)
+      print(shelf_2)
+      print(Book_count)
+
+hints:
+  - Run it and read the error. Which line does it point to? Fix one name, then run again.
+  - "Look at the print lines: they use `book_title`, `shelf_2` and `book_count`. Make lines 1 to 3 use the same names, and fix the capital B on line 6."
+  - |
+    ```python
+    book_title = "Moonlight Maps"
+    shelf_2 = "Atlases"
+    ____ = 12
+    print(book_title)
+    print(shelf_2)
+    print(book_count)
+    ```
+
+story_outro: |
+  Archivist Primm reads the card three times, then nods once. "Rules followed. Names fixed. I may even smile later." That is high praise from Primm.

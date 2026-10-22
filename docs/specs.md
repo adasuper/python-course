@@ -236,6 +236,7 @@ python-course/
 | Spellbook pages | Concept cards, worked examples, "My Spells" | §11.5 |
 | Workshop | Free sandbox | §11.7 |
 | Settings | Accessibility, audio, save/export | §14 |
+| Finale | The Great Script restored: fragments, the student's journey, the credits roll | After the last region's boss; replayable from the world map (§11.1a) |
 | Credits | Asset licenses, about | Reads `ASSETS_LICENSES.md` |
 | System check | Tests this device: service worker, IndexedDB, WebAssembly, storage quota, offline readiness, local TTS voices | Linked from Settings and the README; plain pass/fail list with fixes (§21) |
 
@@ -397,6 +398,10 @@ quests).** When the queue is empty and `interactiveInput` is true:
 The cost is that a program with N inputs runs N+1 times. Student programs are tiny, so this
 is milliseconds. There is a cap of 20 interactive inputs per run.
 
+In a quest with `interactive_input: true`, the player types the answers. If the quest also has
+an `inputs` queue, a "Let me type the answers" checkbox (on by default) switches between the
+two; `validate-content` and hidden tests always use the queue.
+
 **Rejected for v1: SharedArrayBuffer + `Atomics.wait`.** It needs cross-origin isolation
 (COOP/COEP headers). GitHub Pages cannot set headers. The `coi-serviceworker` workaround
 forces an extra reload and can break behind school filtering proxies, and some managed
@@ -414,7 +419,14 @@ A "show all output now" button skips ahead. Output is capped by `maxOutputChars`
 
 Each run gets a seed (random per run, or fixed per quest via `seed:`). The same seed, code
 and inputs always give the same result. This is required for replay-on-input and for stable
-hidden tests. Quests that use `random` (Region 11) test with several fixed seeds.
+hidden tests. Quests that use `random` (Region 11) test with several fixed seeds. Answering
+`input()` questions re-runs with the same seed. `validate-content` asks a quest whose code
+uses `random` for a `seed:`, unless it has `hidden_tests` with `mode: seed` or a `runs_ok`
+check (the capstone's free part, where every run of the student's own game gets a new seed), or
+it is an investigate quest that shows chance at work ("run it 5 times and compare") and no
+answer counts its output lines.
+A quest without `seed:` is checked with seeds 1–5: the solution and every sample solution must
+pass with each one, and running them again and again must satisfy `runs_ok`.
 
 ### 6.8 Error translation
 
@@ -464,8 +476,9 @@ interface PyErrorInfo {
 | `'str' object cannot be interpreted as an integer` | `type.str_as_int` | |
 | `takes N positional arguments but M were given` / `missing … required positional argument` | `type.arg_count` | |
 | `'NoneType' object …` | `type.none_value` | (Region 8: did the function `return`?) |
-| `IndexError: list index out of range` | `index.out_of_range` | "The list has 3 items (positions 0–2). You asked for position 3." |
-| `KeyError` | `key.missing` | "No key `'gold'`. Keys here: `'gems'`, `'coins'`." |
+| `IndexError: list index out of range` (also string and tuple) | `index.out_of_range` · `index.empty` · `index.generic` | "`shelf` has 3 items, so its positions go from 0 to 2. You asked for position 3." When the list can't be worked out: `index.generic`. |
+| `IndexError: pop from empty list` | `index.pop_empty` | |
+| `KeyError` | `key.missing` · `key.empty` · `key.generic` | "The dictionary `d` has no key `'gold'`. Its keys are `'gems'`, `'coins'`." (up to 6) |
 | `ZeroDivisionError` | `zero_division` | |
 | `ValueError: invalid literal for int() with base 10: 'abc'` | `value.int_conversion` | "`int()` can only turn digit-words like `'42'` into numbers." |
 | `could not convert string to float` | `value.float_conversion` | |
@@ -477,14 +490,23 @@ interface PyErrorInfo {
 | `ImportError` (sandbox) | `import.not_allowed` | |
 | anything else | `generic` | "Python found a problem: `TypeError`. Let's read the real error together." |
 
+To name the list or dictionary, the classifier looks at the subscripts on the error line and
+works out their values from the student's variables in the innermost student frame. It only
+reads names, literals, `len()`, unary minus, `+`/`-` and indexing into built-in lists, strings,
+tuples and dictionaries, so none of the student's code runs again. A test checks that every key
+the Python code (and the runner) can produce has a template in `content/errors.yaml`.
+
 **Presentation:**
 
 - Byte's friendly explanation appears in the feedback panel.
 - The editor gets a CodeMirror diagnostic: an underline, a gutter marker *with an icon*
   (not color only) and a line highlight. Focus does not jump, but a polite live region
-  announces "Error on line 3: …".
+  announces "Error on line 3: …". In the editor, Ctrl+Shift+M lists the diagnostic below the
+  code and F8 moves to it (CodeMirror's lint keys).
 - A **"Show the real Python error"** toggle shows the filtered traceback. From Region 10 on,
-  Byte annotates the parts of the real traceback (file, line, error type, message).
+  Byte annotates the parts of the real traceback: each line is listed with a note (the
+  "Traceback" heading, where: line and function, the code, the `^` marks, and the error type
+  and message), from `annotateTraceback` in `src/ui/traceback.ts`.
 - Templates live in `content/errors.yaml`, so course authors can change the wording without code.
 
 ---
@@ -623,10 +645,10 @@ locked ──(prerequisites met)──► available ──(opened)──► in_p
 
 | Type | What the student does | UI specifics | Completes when |
 |---|---|---|---|
-| `predict` | Reads code; predicts output by choosing (MCQ) or typing | Read-only editor; prediction box; "Lock in prediction" → Run | Every prompt is answered and the code has run. Correctness is recorded for mastery data. When a prediction is wrong, Byte shows a side-by-side "predicted vs. actual" view with the YAML `explain` text. An optional "twin" prompt lets them try again. |
+| `predict` | Reads code; predicts output by choosing (MCQ) or typing | Read-only editor; prediction box; "Lock in prediction" → Run | Every prompt is answered and the code has run. Correctness is recorded for mastery data. When a prediction is wrong, Byte shows a side-by-side "predicted vs. actual" view (for MCQ: the chosen option and the right one) with the YAML `explain` text. An optional `twin` (a similar program with its own question) lets them try again; its answer is proven against the real output at build time. |
 | `investigate` | Runs given code, answers questions | Questions: MCQ, number, short text (accepted-answers list), or "change X and run, what happens?" | All questions answered correctly (unlimited retries, per-question hints). |
 | `fix` | Repairs buggy code | Story says how many bugs ("This spell has 2 glitches") | All validators pass. |
-| `fill` | Completes gaps | Gaps marked `____` render as highlighted widgets. Optional `locked: true` makes non-gap lines read-only (CodeMirror read-only ranges). | All validators pass. |
+| `fill` | Completes gaps | Gaps marked `____` are highlighted, and a "Next gap" button selects the next one. Optional `locked: true` makes every line without a gap read-only (a CodeMirror change filter); a gap line can grow into several lines. Typing on a locked line shows "That line is locked". Running with a gap left gives the friendly `fill.gap_left` error, even where the gap isn't valid Python yet. The tier-3 hint can't be copied into a locked editor. | All validators pass. |
 | `parsons` | Orders and indents shuffled lines | Two lists, "Spell scraps" and "Your spell", plus optional distractors. Keyboard model in §14.3. | `check: run` (default): the assembled program passes validators, and any correct order is accepted. `check: order`: the order matches the solution or a listed alternative; used for comment-only plans (Region 11 blueprint). |
 | `modify` | Changes working code to meet a new requirement | Starter is a working program | All validators pass (usually behavior + "still uses a loop"-type AST checks). |
 | `make` | Writes code from (near) scratch | Minimal starter | All validators pass. |
@@ -643,18 +665,29 @@ message (§9.4).
 | `output` | `match: exact \| normalized \| contains \| regex \| fuzzy`, `expect` or `expect_regex`, `normalize: [trim, case, spaces, punctuation]`, `threshold` (fuzzy, 0–1) | Printed output. `normalized` trims line ends, unifies newlines and collapses blank trailing lines. `fuzzy` uses a difflib ratio after normalization. |
 | `state` | `hero_at: [c, r]`, `hero_on: exit`, `has_items: [gem]`, `items_count: {gem: 3}`, `chests_opened: [C]`, `max_bonks: 0`, `said_contains: "…"` | World state after the run. |
 | `variable` | `name`, `equals`, `value_type: int\|float\|str\|bool\|list\|dict`, `matches` (regex for strings) | Top-level variables in the student namespace. |
-| `ast` | `require: [For, If, …]`, `forbid: [While]`, `require_calls: [print]`, `min_count: {print: 3}`, `require_else: true`, `function: {name: heal, params: 1, returns: true}`, `no_literal: [42]`, `uses_names: [gold]`, `max_lines` | Code structure via Python's `ast` module. `no_literal` catches hard-coded answers. |
+| `ast` | `require: [For, If, …]`, `forbid: [While]`, `require_calls: [print]`, `min_count: {print: 3}`, `require_else: true`, `function: {name: heal, params: 1, returns: true}`, `no_literal: [42]`, `uses_names: [gold]`, `max_lines` | Code structure via Python's `ast` module. `no_literal` catches hard-coded answers. `Loop` stands for any `for` or `while` loop, and `require_calls: [random.*]` accepts any call into a module (also after `from random import randint`): the capstone's light rules. |
 | `hidden_tests` | `mode: vars \| inputs \| call \| seed`, `cases: [...]`, `compare: [output, returns, said, state, vars:<name>]`, `expect: from_solution` or explicit per case | Re-runs the program (each case gets a fresh namespace and world). `vars` rewrites the first top-level assignment of each named variable to the case value. `inputs` runs with that input queue. `call` calls the student's function with `args` and compares the return value and/or output. `seed` runs with fixed random seeds. |
 | `style` | `min_comments`, `comment_above: [lines matching a regex]`, `max_line_length` | Uses `tokenize` (the `ast` module drops comments). Used for the "document your code" quests (2-AP-19). |
 | `custom` | `python: \|` a `check(ctx)` function | Escape hatch. `ctx` has `.source .tree .output .lines .vars .world .run(vars=, inputs=, seed=, stage=) .call(name, *args)`. Returns `Pass()` or `Fail("hint")`. |
 
 `hidden_tests` also supports `mode: stages`, which re-runs the program on **hidden maps**
-(`cases: [{ grid: | … }]`). Use it, for example, to check that a `world.look()` loop solves
-any cave, not just the visible one.
+(`cases: [{ stage: { kind: grid, grid: | … } }]`). Use it, for example, to check that a
+`world.look()` loop solves any cave, not just the visible one. Each hidden map gets the same
+map checks as a visible one (§10.4).
 
-**Session validators** (`scope: session`) look across *all of the student's runs* in this quest
-or phase, not just the last one. The main thread keeps a small run history per quest session
-(line coverage, status, inputs used) and saves it with the draft.
+**Session validators** (`scope: session`, the default for these types) look across *all of the
+student's runs* in this quest or phase, not just the last one. After each run Python sends a
+small summary (which program it was, whether it finished, the inputs used, the program's
+`if`/`elif`/`else` "doors" and which of them ran). The main thread keeps the newest 30 in the
+draft record and sends them with the next run, and Python checks the session validators over
+them. Two runs count as the same program when their code has the same structure (comments
+and spacing don't matter). Lamps carry over between runs of programs with the same doors, so a
+student may light them by changing a variable or by typing different answers. The quest screen
+shows the lamps ("if on line 2: lit") and the count of finished runs. A quest that uses
+`branch_coverage` records coverage automatically (`track_coverage` turns it on explicitly).
+One run can't pass a session validator, so `validate-content` leaves them out of its
+single-run checks. Instead it checks that the solution has doors to light, and that
+`runs_ok` with `distinct_inputs` is only used with `interactive_input: true`.
 
 | `type` | Fields | Checks |
 |---|---|---|
@@ -679,7 +712,7 @@ The solution itself never ships in the app; instructors read it in the generated
 | `detector` (named, AST-based, from a library) | `{ kind: detector, name: printed_not_stored, var: gold }` |
 | `validator_failed` | `{ kind: validator_failed, id: boundary }` |
 | `hidden_case_fails` | `{ kind: hidden_case_fails, validator: cases, case: 0 }` |
-| `output_regex` | `{ kind: output_regex, pattern: '^Gold: \d+$', expect: absent }` |
+| `output_regex` | `{ kind: output_regex, pattern: '^Gold: \d+$', expect: absent }` (`absent` doesn't fire when the program crashed) |
 | `state` | `{ kind: state, min_bonks: 1 }` |
 | `custom` | `{ kind: custom, python: "def detect(ctx): ..." }` |
 
@@ -691,14 +724,17 @@ The solution itself never ships in the app; instructors read it in the generated
 - `number_as_string(value)`
 - `hardcoded_output`
 - `missing_call_parens` (e.g. `hero.say` without `()`)
-- `range_off_by_one`
+- `range_off_by_one(last, first)` — a `range(...)` with constant arguments that stops one step
+  short of `last` (or goes one past it), or starts one off `first`; without them, only
+  `range(len(x) + 1)`
 - `loop_var_not_updated`
-- `infinite_while_true_without_break`
-- `function_not_called`
-- `function_prints_not_returns`
-- `return_inside_loop_too_early`
-- `unused_variable`
-- `shadowed_builtin` (e.g. `list = [...]`)
+- `infinite_while_true_without_break` — a `break` of a nested loop doesn't count
+- `function_not_called(function)`
+- `function_prints_not_returns(function)`
+- `return_inside_loop_too_early(function)` — a `return` straight in the loop, or in both the
+  `if` and the `else`, so the loop never gets past the first item
+- `unused_variable(var)` — a loop variable left unused is fine
+- `shadowed_builtin(names)` (e.g. `list = [...]`)
 - `missing_fstring_prefix` (`"{name}"` without the `f`)
 
 **Selection order:**
@@ -707,6 +743,12 @@ The solution itself never ships in the app; instructors read it in the generated
 2. Validators failed → the first matching mistake in YAML order; else the first failing
    validator's `fail_hint`; else a generic "Not quite yet — try a hint?"
 3. All pass → success text (`story_outro`), rewards, and any earned bonus.
+
+**Bonus challenges** (`bonus:`) are checked only on a passing run. Once a quest is passed, its
+challenges are listed in the story panel ("✓ Done" / "○ Not yet"), so the student can change
+the code and run again to try them. Each challenge gives its XP once (per phase in a boss),
+recorded in the quest record's `bonus` list. `validate-content` runs every bonus check on the
+reference solution, so a broken check is caught before it can stop a student's run.
 
 ### 9.5 Hints
 
@@ -774,7 +816,10 @@ types a short free-text answer for each line.
 - Answers are **not graded**, and they are stored only in the local draft.
 - They are **excluded from exports** by default, because they are free text.
 - Finishing the walk-through unlocks the duck's closing question ("Did you spot anything
-  odd?") and counts toward the *Duck Whisperer* badge.
+  odd?") and counts toward the *Duck Whisperer* badge (the `duckChats` counter, once per quest).
+- The duck skips blank and comment-only lines, highlights the line it asks about in the editor,
+  and moves on only when there is an answer. At the end the student sees their notes next to
+  each line. Answers are kept per quest under `duck:<profile>:<quest>`, apart from drafts.
 
 ### 9.9 Side quests
 
@@ -798,8 +843,10 @@ once the region's core quests are done.
 └──────────────────────┴────────────────────────────────┴───────────────────────┘
 ```
 
-- At ≤ 1100 px wide the panels become tabs (Quest · Spellbook · Stage/Output), with a
-  persistent Run button.
+- At ≤ 1100 px wide (or at 200% text) the panels become tabs (Quest · Spellbook ·
+  Stage/Output), with a persistent Run button. All three panels stay mounted, so the editor
+  and the stage keep their state. Running a replay shows the Stage tab, and the feedback
+  brings back the Spellbook tab. The skip links open the tab they jump to.
 - The target screen is 1366×768, the most common school Chromebook resolution.
 - Skip links: "Skip to editor", "Skip to output".
 
@@ -816,7 +863,7 @@ once the region's core quests are done.
 | `content/regions/NN-slug/quests/*.yaml` | One quest per file |
 | `content/glossary.yaml` | Terms |
 | `content/items.yaml` | Concept items (name, icon, description = concept summary, linked concept card) |
-| `content/badges.yaml` | Badges (name, icon, description, trigger) |
+| `content/badges.yaml` | Badges (name, emoji, description, trigger), in save-code order |
 | `content/errors.yaml` | Friendly error templates by key |
 | `content/workshop.yaml` | Sandbox maps |
 
@@ -944,6 +991,7 @@ bonus:
 | `concept_card` | ✔ (non-boss) | Shown in the Spellbook after completion |
 | `stage` | ✔ | §7.2 |
 | `starter_code` | ✔ | (`predict`/`investigate`: the code shown) |
+| `locked` | — | `fill` only: lines without a `____` gap can't be edited (§9.2) |
 | `solution` | ✔ | Must pass all validators |
 | `validators` | ✔ | ≥ 1 (not for `predict`/`investigate`, which use `prompts`/`questions`) |
 | `common_mistakes` | — | §9.4 |
@@ -953,15 +1001,17 @@ bonus:
 | `bonus` | — | Optional challenges, extra XP |
 | `inputs`, `interactive_input` | — | §6.5 |
 | `seed` | — | Fixed seed for `random` |
-| `prompts` | `predict` | `[{ kind: mcq\|text, question, options?, answer, explain }]` |
+| `prompts` | `predict` | `[{ kind: mcq\|text, question, options?, answer, explain, twin? }]`; a `twin` is `{ kind, code, question, options?, answer, explain }` |
 | `questions` | `investigate` | `[{ kind: mcq\|number\|text, question, answer \| accept: [...], hint }]` |
-| `parsons` | `parsons` | `{ lines: [...], distractors: [...], indent: true }` (indent levels are written into `lines`) |
+| `parsons` | `parsons` | `{ lines: [...], distractors: [...], fixed_top: [...], indent: true, check: run\|order, alternatives: [[…]] }` (indent levels are written into `lines`; `alternatives` are other accepted orders for `check: order`, each listing every line number once) |
 | `phases` | `boss` | §9.6 |
 | `side_quest` | — | Default `false` |
 | `api_extras` | — | Extra API helpers for this quest |
 | `vocabulary` | — | Glossary terms (must exist) |
 | `retrieval` | — | Earlier regions this quest revisits, e.g. `[r2, r6]` (spaced retrieval; checked per region by §10.4) |
-| `duck` | — | Rubber-duck dialog (§9.8a) |
+| `duck` | fix, fill, modify, make | Rubber-duck dialog (§9.8a): `{ intro?, closing }` (`closing` defaults to "Did you spot anything odd?") |
+| `starters` | fix, modify, make | 2–4 programs to start from, `[{ id, title, description, code }]`; the student picks one (the capstone's game ideas). Leave `starter_code` out; Reset goes back to the list. Not with `carry_code`. |
+| `sample_solutions` | code-checked types | More programs that must pass, `[{ name, code }]`, for open quests (the capstone's free part). `validate-content` runs each one; the answer key lists them. |
 | `track_coverage` | — | `true` turns on line-coverage recording for session validators (§9.3) |
 
 ### 10.4 Schema implementation
@@ -980,7 +1030,11 @@ bonus:
   - regions ≥ 3 have ≥ 1 quest whose `retrieval` names an earlier region
   - every boss has 2–4 phases
   - knowledge checks have 3–5 items
-  - `____` gaps appear only in `fill` starters and tier-3 hints
+  - `____` gaps appear only in `fill` starters and tier-3 hints, and every `fill` starter has one
+  - `locked: true` only in `fill` quests
+  - Parsons `alternatives` list every line once; a `check: order` puzzle needs no validators
+  - `runs_ok` with `distinct_inputs` needs `interactive_input: true`
+  - every hidden map (`hidden_tests` `mode: stages`) passes the map checks
 
 ### 10.5 Region file and other content files
 
@@ -1033,7 +1087,7 @@ pois: [old-oak, mossy-well, hidden-glade]    # secret corners for the Explorer b
 | File | Shape (one entry) |
 |---|---|
 | `items.yaml` | `{ id, name, icon, description, concept_card, region, example?: code }` |
-| `badges.yaml` | `{ id, name, icon, description, trigger: { kind: first_fix \| no_hints \| distinct_attempts \| failed_then_passed \| all_pois \| real_error_views \| duck_used \| boss_defeated \| all_checks \| side_quests \| workshop_runs \| capstone, n?: number, region?: id } }` |
+| `badges.yaml` | `{ id, name, emoji, description, trigger }`, where `trigger.kind` is `quest_type_completed {type}` · `completed_without_hints` · `distinct_attempts {count}` · `passed_after_failures {count}` · `counter {counter: realErrorViews \| workshopRuns \| duckChats, count}` · `boss_defeated {region}` · `pois_visited {region}` · `side_quests {count}` · `checks_completed {count}` · `quest_completed {quest}`. A quest's `rewards.badge` also awards a badge. New badges go at the end (save codes store them in file order). |
 | `glossary.yaml` | `{ term, definition (≤ 2 sentences), example?, related?: [term] }` |
 | `errors.yaml` | `{ key: { title, message, tip?, glossary?: [term] } }` with `{line}`, `{name}`, `{suggestion}` placeholders |
 | `workshop.yaml` | `{ id, name, description, stage }` (same stage format as quests) |
@@ -1054,9 +1108,12 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 - `npm run new-quest -- --region 4 --type make --slug river-ferry` scaffolds a valid file with
   TODO markers.
 - In dev, run `npm run content` after editing YAML; the dev server reloads the compiled JSON.
-  `/?dev#/dev/quest/<quest-id>` (or `/?dev#/dev/check/<region-id>`) opens any quest or
-  knowledge check directly, with a throwaway "Dev Tester" profile. It only works with the
-  `?dev` flag, so it never appears in normal play.
+  `/?dev#/dev/quest/<quest-id>` (or `/?dev#/dev/check/<region-id>`,
+  `/?dev#/dev/concept/<region-id>`, `/?dev#/dev/region/<region-id>`) opens any quest, knowledge
+  check, concept scene or region map directly, with a throwaway "Dev Tester" profile. It only works with the
+  `?dev` flag, so it never appears in normal play. With `?dev`, end-to-end tests can also open
+  a compiled quest from `tests/e2e/fixtures/` (`window.__codewealdTest.openQuest`). That is how
+  quest types the content doesn't use yet are tested through the real UI.
 
 ---
 
@@ -1084,12 +1141,28 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 - **Author-added quests** without a map NPC appear on the Quest Board, so adding a quest
   never needs a map edit.
 
+### 11.1a The finale
+
+When every region in `course.yaml` is restored, the last boss's feedback offers **Restore the
+Great Script**. While the course is still growing (`more_regions_coming: true` in course.yaml),
+there is no finale yet: the world map and the last boss say that more regions are on the way. The `finale` lines from `course.yaml` play as a story, then the **Finale**
+screen shows:
+
+- the Script Fragments restored, one per region;
+- the student's journey: level and title, quests and side quests finished, badges earned;
+- the credits: the student (by nickname) as the Scriptwright, Byte, the people met in each
+  region (its NPCs), the Bugs (now fireflies), the tools the game is made with, and a button to
+  the full **Credits and licenses**.
+
+Nothing scrolls or moves on its own. The world map shows a **The Great Script** button once the
+course is complete, so the finale can be seen again. `/?dev#/dev/finale` opens it for testing.
+
 ### 11.2 XP and levels
 
 - **XP defaults by type** (overridable in YAML): predict 20 · investigate 25 · fill 30 ·
   parsons 30 · fix 35 · modify 40 · make 50 · boss phase 40 (+ 50 on defeat) · side quest
   40 · knowledge check 20 (first completion).
-- Bonus challenges award +10–20 XP.
+- Bonus challenges award +10–20 XP, once per challenge (§9.4).
 - XP is granted once per quest. **XP never decreases.**
 - **Level curve:** the cumulative XP for level *n* is `25·n·(n−1)`, so L2 = 50, L3 = 150,
   L5 = 500 and L10 = 2,250. With the curriculum map's 66 core quests, 39 boss phases, 18
@@ -1109,8 +1182,15 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 ### 11.4 Inventory / Notebook
 
 - A grid of item cards, each a focusable button. Enter opens a detail page with the concept
-  summary, worked example (runnable), related quests and glossary.
-- Searchable. Script Fragments appear on a separate shelf.
+  summary, worked example (runnable, with Byte's explanation if it shows an error on purpose),
+  the quest it came from (with that quest's concept card once completed) and the glossary
+  terms it uses.
+- Searchable (name and summary). Script Fragments and badges appear on separate shelves.
+- **Celebrations** (F-PRG-08): XP and items (on a quest pass), badges and level-ups pop up as
+  dismissible toasts, announced in the polite live region (messages that arrive together are
+  joined). At most three toasts show
+  at once, and a new save point replaces the last one, so they never cover the game. The pop is one 0.5 s scale
+  animation, never a flash, and reduced motion turns it off.
 
 ### 11.5 Spellbook (editor + reference)
 
@@ -1119,6 +1199,12 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
   diagnostics for errors.
 - **Spell Pages:** concept cards of completed quests, worked examples from concept scenes,
   and "My Spells", the student's own passing solution for each quest (viewable, copyable).
+  The Spellbook screen (HUD → 📖 Spellbook) has five tabs (WAI-ARIA tabs: ←/→ move between
+  them): Spell Pages, My Spells (not for predict and investigate quests, whose code isn't the
+  student's), Worked examples (with their line notes), Concept scenes ("Watch again") and the
+  Glossary (A–Z with search; words from quests the student hasn't started are marked "not met
+  yet", and a checkbox hides them). Copy uses the clipboard, or selects the code when a managed
+  device blocks it.
 - **Keyboard:** Tab indents. **Esc, then Tab** leaves the editor (CodeMirror's escape
   convention, explained in a visible hint under the editor), which satisfies "no keyboard
   trap". `Ctrl+Enter` runs.
@@ -1139,7 +1225,9 @@ variables after each run. Each one is a labelled jar with its name, value and ty
 ### 11.6 Badges
 
 Badges are defined in `badges.yaml` with a trigger. Triggers are evaluated in
-`state/badges.ts` after every state change.
+`state/badges.ts` after every state change (`store.update`); a new badge is stored with the date
+and celebrated with a toast. Badges are never taken away. The inventory shows every badge,
+earned or "not earned yet", so students can see what they could aim for.
 
 | Badge | Trigger |
 |---|---|
@@ -1166,6 +1254,14 @@ No badge rewards speed, so there is no time pressure.
   are no validators.
 - Students save up to 20 named programs locally, or export a program as a `.py` download.
 - An API reference panel lists only the calls learned so far, plus "more" for the rest.
+- `content/workshop.yaml` holds the maps (`{ id, name, description, stage }`) and the API
+  reference (`{ call, summary, example, region }`, where `region` is the number of the region
+  whose quests teach the call). A call counts as learned once its region is unlocked.
+  `validate-content` loads every map in Python and compiles every example.
+- The HUD shows a 🛠️ Workshop button once the first region's boss is defeated (and the deploy
+  has `features.workshop`). Every Run gets a new random seed (§6.7); answering `input()` keeps
+  it. The last code and map are kept as drafts. Each finished run counts toward Workshop
+  Inventor.
 
 ### 11.8 Character creator and nicknames
 
@@ -1237,21 +1333,31 @@ the profile.
 ### 12.3 Progress file (export / import)
 
 - File name `codeweald-<nickname>-<YYYY-MM-DD>.codeweald.json`: a JSON envelope
-  `{ format: "codeweald-progress", version, courseId, contentVersion, exportedOn, profile, drafts }`.
+  `{ format: "codeweald-progress", version, courseId, contentVersion, exportedOn, profile, drafts,
+  programs, checksum }`. Version 2 adds the Workshop `programs` and a `checksum` (FNV-1a of
+  `[profile, drafts, programs]` as written); version 1 files still import.
 - It holds everything, including the student's code.
 - **Import:** user-picked file only, ≤ 5 MB, Zod-validated, never rendered as HTML.
   - Unknown quest ids (from other content versions) are kept but ignored.
   - When the adventurer is already on this computer, the student chooses **Replace** or
     **Keep both**; otherwise it is added. A third option,
     **Merge**, keeps the best of both: union of completions, items and badges; max of XP,
-    hints, attempts and time.
+    hints, attempts and time. The local nickname, look and settings stay; local drafts win,
+    and missing ones are added; for Workshop programs the newer copy of each is kept
+    (`state/merge.ts`).
+  - A file whose checksum doesn't match ("changed or damaged"), or whose nickname breaks the
+    nickname rules, is refused with a friendly message, and nothing changes.
+- **Delete profile** (title screen): a confirmation names the profile and offers **Save a
+  progress file first**; focus starts on "Keep it".
 
 ### 12.4 Save code
 
 This is a text code for moving progress between devices, or handing it in by pasting it into
 an LMS text box. It needs no file handling.
 
-- **Format:** `CW1-` + Crockford Base32 in groups of 5, ending in a CRC-16 check group.
+- **Format:** `CW2-` + Crockford Base32 in groups of 5, ending in a CRC-16 check group. The
+  4-bit version inside says how to read the rest; version 1 codes (`CW1-`, Phase 1) still
+  restore.
 - **Payload** (bit-packed, varints):
   - content version hash (16 bits)
   - a short profile id (32 random bits, so a restore can recognise the same adventurer on
@@ -1264,9 +1370,14 @@ an LMS text box. It needs no file handling.
     (3: 0, 1, 2, 3, 4–5, 6–9, 10–19, 20+) and time bucket (3: <2, 2–5, 5–10, 10–15, 15–20,
     20–30, 30–45, 45+ min)
   - knowledge-check best scores
-  - a special-badge bitset
+  - version 2: the quests with a bonus challenge done, each as its place in the quest order
+    (8 bits), its number of challenges (3) and which are done, so a later course version can
+    add challenges (at the end of a quest's list)
+  - version 2: a bitset of earned badges in `badges.yaml` order (with its length first)
 
-  Items and most badges are re-derived from completions.
+  Items are re-derived from completions. All earned badges are stored, because some can't be
+  worked out again (Tinkerer, Error Reader); a restore also awards any badge the restored
+  quests earn (all of them, for a version 1 code).
 - **Size:** about 95 quests × 10 bits + header ≈ 155 bytes ≈ **250 characters**. That is fine
   to copy and paste, too long to type by hand. Code drafts are not included (use the file
   for those).
@@ -1358,15 +1469,26 @@ or in-app teacher guide. Instructors still need the solutions to be ready for qu
 
 ### 14.3 Accessible Parsons puzzle
 
-- Two `listbox`-style lists: "Spell scraps" and "Your spell".
+- Two listboxes (`role="listbox"`, each line a `role="option"`): "Spell scraps" and "Your
+  spell". Each list is one Tab stop; the focused line is the selected one.
 - **Keyboard:**
-  - ↑/↓ moves focus between lines.
-  - **Space** picks up a line (announced: "Picked up `print(x)`, position 2 of 5, indent 0").
+  - ↑/↓ moves focus between lines (Home/End: first/last).
+  - **Space** (or Enter) picks up a line (announced: "Picked up `print(x)`. Position 2 of 5,
+    indent 0").
   - ↑/↓ moves the held line.
-  - ←/→ (or Shift+Tab/Tab) changes the indent.
-  - **Space** drops it; **Esc** cancels.
-  - **M** moves a line between the two lists.
-- Each line also has visible buttons ▲ ▼ ◀ ▶ ⇄ for mouse users who cannot drag.
+  - ←/→ changes the indent of a line in "Your spell" (0–4). While a line is held, Tab and
+    Shift+Tab do too; otherwise Tab moves on, so the puzzle never traps the keyboard.
+  - **Space** drops it; **Esc** puts it back where it was picked up.
+  - **M** moves a line to the end of the other list, and focus follows it.
+  - The keyboard model is one pure function (`pressKey` in `parsonsModel.ts`), unit-tested.
+- **Pointer:** lines can be dragged with a mouse or a finger (pointer events, so touch screens
+  work). A bar shows where the line will land, and in "Your spell" the line's left edge sets its
+  indent (one step per 2rem). A click without moving selects the line.
+- Each line also has visible buttons ▲ ▼ ◀ ▶ ⇄ for mouse users who cannot drag. An option
+  can't contain buttons, so these are hidden from assistive technology; the same buttons for the
+  selected line sit below the lists ("Selected line: …"), for switch and voice-control users.
+- The scraps list is the tray for unused lines ("Lines you leave here are not used"; with
+  distractors: "Some scraps don't belong in the spell at all").
 - Indentation shows as guide bars **and** a text label ("indent 1").
 
 ### 14.4 Settings
@@ -1381,8 +1503,9 @@ or in-app teacher guide. Instructors still need the solutions to be ready for qu
 - Shortcut keys on/off.
 - Replay default speed.
 
-Settings are stored per profile. The title screen has its own quick text-size and contrast
-toggle, before any profile exists.
+Settings are stored per profile and apply at once (HUD → ⚙️ Settings). The title screen has
+its own quick text-size and contrast toggles before any profile exists. They are kept in
+`localStorage` (`codeweald:quick`) and become a new profile's first settings.
 
 ### 14.5 Text-to-speech
 
@@ -1451,15 +1574,33 @@ toggle, before any profile exists.
 - **Pyodide** (≈ 14 MB unpacked: `pyodide.asm.wasm`, `python_stdlib.zip`, `pyodide.asm.js`,
   `pyodide.mjs`, `pyodide-lock.json`) is **runtime-cached** (CacheFirst, cache name
   `pyodide-<version>`), not precached. This avoids a double download on the first visit:
-  1. The SW installs with the small precache, then `skipWaiting` + `clientsClaim`.
+  1. The SW installs with the small precache, then `clientsClaim`, so it controls the
+     page on the first visit.
   2. The worker starts after the SW controls the page (with a 3 s fallback).
   3. Its fetches go through the SW and land in the cache.
-  4. The worker streams the downloads and reports byte progress to the loading screen.
+  4. The worker streams the downloads and reports byte progress to the loading screen. It
+     skips files already cached, and waits for each download to reach the cache before
+     Pyodide asks for it again.
+  5. The cache ignores `Vary` (servers may send `Vary: Origin`, and Pyodide imports
+     `pyodide.asm.mjs` as a module after fetching it plainly).
+  6. If Python loaded before the SW took over, the files are copied into the cache once
+     Python is ready, mostly from the browser's HTTP cache.
+- **Precache** holds about 95 files (≈ 2.5 MB): `.woff2` fonts only (no `.woff`), and not
+  the art preview page.
 - **"Ready to play offline ✓"** shows in Settings and on the title screen once the precache
   and the Pyodide cache are both complete.
 - **Updates:** a new version shows "A new version of Codeweald is ready — reload when you're
-  done with this quest". It never auto-reloads mid-quest. Save data survives updates.
-  Content-version changes run migrations.
+  done with this quest". It never auto-reloads mid-quest. The waiting SW gets `skipWaiting`
+  only when the student clicks **Reload now**; the page saves, then reloads when the new SW
+  takes control. Save data survives updates. Content-version changes run migrations.
+- **Offline indicator:** the HUD shows "📴 Offline" while there is no network.
+- **System check** (title screen and Settings, F-OFF-08): service worker, storage, WebAssembly,
+  the `.wasm` Content-Type, storage quota (60 MB free needed), Python, offline readiness and
+  installed voices. Each row says Pass, Fail or Warning in words, with a fix tip.
+- **E2E test hooks:** with `CODEWEALD_TEST_SERVER=1`, `vite preview` counts downloads of
+  Python's files (`/__codeweald-requests`) and can serve a changed `sw.js`
+  (`/__codeweald-next-version`) to test updates. Browsers don't report a service worker's
+  own requests to Playwright, so the counting happens on the server.
 - `.wasm` must be served as `application/wasm` (deployment docs).
 - No COOP/COEP headers are required (§6.5).
 
@@ -1534,6 +1675,9 @@ CI fails if any quest lacks a passing solution or has fewer than 2 wrong solutio
 3. **Keyboard-only:** one full quest using only the keyboard (no `click()`), including
    leaving the editor with Esc+Tab.
 4. **Parsons keyboard flow.**
+4a. **Phase 2 quest types** (`tests/e2e/questTypes.spec.ts`, using fixture quests): fill gaps
+   and locked lines, typed input (Mode B) with session lamps, Parsons `check: order`, predict
+   twins, and bonus challenges.
 5. **Offline:** load, wait for "ready offline", `context.setOffline(true)`, reload, play a
    quest.
 6. **No third-party requests:** a request listener asserts same-origin only.

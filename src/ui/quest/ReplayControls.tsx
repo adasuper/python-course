@@ -1,5 +1,6 @@
 import { t } from '../../i18n/en';
 import type { ReplayState, Speed } from '../../game/replay';
+import { profile } from '../../state/store';
 
 const SPEEDS: Speed[] = [0.5, 1, 2, 4, 'instant'];
 
@@ -31,7 +32,7 @@ export function ReplayControls({
   // Shortcuts while the toolbar has focus: "." steps anywhere in it; Space plays or pauses
   // when the toolbar itself is focused (on a button, Space presses that button).
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === '.' && canStep) {
+    if (e.key === '.' && canStep && profile.value?.settings.shortcuts !== false) {
       e.preventDefault();
       onStep();
     } else if (e.key === ' ' && e.target === e.currentTarget) {

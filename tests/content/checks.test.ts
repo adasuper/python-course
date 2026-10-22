@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { CONTENT_DIR, crossCheck, gridProblems, loadContent, units, type Problem } from '../../scripts/lib/content';
 import { checkUnit } from '../../scripts/lib/contentCheck';
+import { pacing, pacingLine } from '../../scripts/lib/pacing';
+import { contentFiles } from '../../scripts/lib/prose';
 import { getPyHost } from '../../scripts/lib/pyHost';
 
 const R1 = 'regions/01-hearthvale-village';
@@ -93,5 +95,209 @@ describe('investigate answers are proven (F-QA-04)', () => {
     const unit = units(loadContent(root)).find((u) => u.key === 'r1-q2-hello-hearthvale')!;
     const found = checkUnit(await getPyHost(), unit);
     expect(found).toContain('question 1: the program prints 3 line(s), but the answer is 4');
+  });
+});
+
+describe('rules for the Phase 2 quest types (M2.1)', () => {
+  const q3 = `${R1}/quests/r1-q3-path-to-the-well.yaml`;
+  const q4 = `${R1}/quests/r1-q4-notes-for-the-baker.yaml`;
+  const q6 = `${R1}/quests/r1-q6-welcome-sign.yaml`;
+  let problems: Problem[];
+
+  beforeAll(() => {
+    const root = brokenCopy({
+      [q4]: (t) => t.replace(/^starter_code:/m, 'locked: true\nstarter_code:'),
+      [q6]: (t) =>
+        t.replace('type: make', 'type: fill').replace(
+          /^validators:\n/m,
+          [
+            'validators:',
+            '  - { type: runs_ok, min_runs: 3, distinct_inputs: true }',
+            '  - type: hidden_tests',
+            '    mode: stages',
+            '    cases:',
+            '      - { stage: { kind: grid, grid: "H.Z" } }',
+            '',
+          ].join('\n'),
+        ),
+      [q3]: (t) => t.replace('  indent: false', '  indent: false\n  alternatives: [[0, 1, 2]]'),
+    });
+    problems = crossCheck(loadContent(root), root);
+  });
+  const find = (re: RegExp) => problems.find((p) => re.test(p.message));
+
+  it('allows locked lines only in fill quests', () => {
+    expect(find(/r1-q4-notes-for-the-baker: locked: true only works in fill quests/)).toBeDefined();
+  });
+  it("needs a ____ gap in a fill quest's starter", () => {
+    expect(find(/r1-q6-welcome-sign: a fill quest's starter_code needs at least one ____ gap/)).toBeDefined();
+  });
+  it('needs typed input for runs_ok with distinct inputs', () => {
+    expect(find(/runs_ok with distinct_inputs needs interactive_input: true/)).toBeDefined();
+  });
+  it('checks the maps of hidden stages', () => {
+    expect(find(/r1-q6-welcome-sign: grid symbol "Z"/)).toBeDefined();
+  });
+  it('makes a Parsons alternative use every line once', () => {
+    expect(find(/alternative 1 must list every line number from 0 to 4 once/)).toBeDefined();
+  });
+});
+
+describe('order-checked Parsons and predict twins are proven (M2.1)', () => {
+  it('fails a "wrong" order that is really right, and a twin with the wrong answer', async () => {
+    const root = brokenCopy({
+      [`${R1}/quests/r1-q3-path-to-the-well.yaml`]: (t) =>
+        t
+          .replace('  indent: false', '  indent: false\n  check: order')
+          .replace('  - order: [1, 0, 2, 3, 4]\n    expect_mistake: bonked', '  - order: [0, 1, 2, 3, 4]\n    expect_feedback_contains: Not quite'),
+      [`${R1}/quests/r1-q1-first-steps.yaml`]: (t) =>
+        t.replace(
+          '    verify: { kind: none }\n',
+          [
+            '    verify: { kind: none }',
+            '    twin:',
+            '      kind: text',
+            '      code: print(2 + 2)',
+            '      question: What does this print?',
+            '      answer: "5"',
+            '      explain: Two plus two.',
+            '',
+          ].join('\n'),
+        ),
+    });
+    const content = loadContent(root);
+    expect(content.problems).toEqual([]);
+    const host = await getPyHost();
+    const q3 = checkUnit(host, units(content).find((u) => u.key === 'r1-q3-path-to-the-well')!);
+    expect(q3).toContain('wrong solution 1 is in a right order, but it should fail');
+    expect(q3).toContain('wrong solution 2: a check: order puzzle has no mistakes; use expect_feedback_contains');
+    const q1 = checkUnit(host, units(content).find((u) => u.key === 'r1-q1-first-steps')!);
+    expect(q1).toContain('prompt 2 twin: answer "5" ≠ real output "4\\n"');
+  });
+});
+
+describe('editor support for authors (F-AUT-07)', () => {
+  it('every content file names its JSON Schema, so VS Code autocompletes and checks it', () => {
+    const missing = contentFiles(CONTENT_DIR).filter(
+      (f) => !/^# yaml-language-server: \$schema=\S+\.schema\.json/.test(readFileSync(f, 'utf8')),
+    );
+    expect(missing).toEqual([]);
+  });
+});
+
+describe('the Quest Board and map NPCs (F-WLD-07)', () => {
+  it('needs a Quest Board on every map, and an npc quest to be offered by that npc', () => {
+    const q2 = `${R1}/quests/r1-q2-hello-hearthvale.yaml`;
+    const root = brokenCopy({
+      [`${R1}/region.yaml`]: (t) => t.replace(/^ {4}- \{ kind: board, at: \[11, 13\] \}\n/m, ''),
+      [q2]: (t) => t.replace('npc: pip', 'npc: baker'),
+    });
+    const problems = crossCheck(loadContent(root), root);
+    const board = problems.find((p) => /needs a Quest Board/.test(p.message));
+    expect(board?.file.endsWith(`${R1}/region.yaml`)).toBe(true);
+    const npc = problems.find((p) => /npc "baker" does not offer this quest on the map/.test(p.message));
+    expect(npc?.file.endsWith(q2)).toBe(true);
+    expect(npc?.line).toBe(lineOf(root, q2, 'npc: baker'));
+  });
+});
+
+describe('characters across regions', () => {
+  it('needs a character id used in two regions to be the same character', () => {
+    const r2 = 'regions/02-whispering-library/region.yaml';
+    const root = brokenCopy({ [r2]: (t) => t.replace(/^npcs:\n/m, 'npcs:\n  pip:\n    name: Not Pip\n    sprite: npc_reader\n') });
+    const problems = crossCheck(loadContent(root), root).map((p) => p.message);
+    expect(problems).toContain('npc id "pip" is already Pip Puddlefoot in hearthvale-village: give this character another id');
+  });
+});
+
+describe('random needs a seed (F-EXE-10)', () => {
+  it('asks a quest whose code uses random for seed:', () => {
+    const q6 = `${R1}/quests/r1-q6-welcome-sign.yaml`;
+    const root = brokenCopy({ [q6]: (t) => t.replace(/^solution: \|\n/m, 'solution: |\n  import random\n') });
+    const problems = crossCheck(loadContent(root), root);
+    expect(problems.find((p) => /the code uses random: add `seed:`/.test(p.message))).toBeDefined();
+  });
+  it('lets an investigate quest show chance at work, unless an answer counts output lines', () => {
+    // r1-q2 is an investigate quest with one answer that counts output lines.
+    const q2 = `${R1}/quests/r1-q2-hello-hearthvale.yaml`;
+    const withRandom = (t: string) => t.replace(/^starter_code: \|\n/m, 'starter_code: |\n  import random\n');
+    const randomProblems = (root: string) =>
+      crossCheck(loadContent(root), root).filter((p) => /uses random/.test(p.message));
+    expect(randomProblems(brokenCopy({ [q2]: withRandom }))).toHaveLength(1);
+    const noCount = (t: string) => withRandom(t).replace('    verify: { kind: output_lines }\n', '');
+    expect(randomProblems(brokenCopy({ [q2]: noCount }))).toEqual([]);
+  });
+});
+
+describe('Phase 4 mechanics: the duck, starters, samples and seeds (M4.0)', () => {
+  const q1 = `${R1}/quests/r1-q1-first-steps.yaml`;
+  const q6 = `${R1}/quests/r1-q6-welcome-sign.yaml`;
+
+  it('puts the duck and starters only where the student edits code', () => {
+    const root = brokenCopy({
+      [q1]: (t) => t.replace(/^starter_code:/m, 'duck: { closing: Odd? }\nstarter_code:'),
+      [q6]: (t) =>
+        t.replace(
+          /^starter_code:/m,
+          'starters:\n  - { id: a, title: A, description: One., code: print(1) }\n  - { id: a, title: B, description: Two., code: print(2) }\nstarter_code:',
+        ),
+    });
+    const problems = crossCheck(loadContent(root), root).map((p) => p.message);
+    expect(problems).toContain('r1-q1-first-steps: the duck talks through code the student edits (fix, fill, modify, make)');
+    expect(problems).toContain('r1-q6-welcome-sign: with starters, leave starter_code out (the student picks one)');
+    expect(problems).toContain('r1-q6-welcome-sign: starter ids must differ');
+  });
+
+  it('runs every sample solution, and random programs with several seeds and runs_ok', async () => {
+    // The sign is printed only when the dice say so: some seeds fail, and runs_ok lets the
+    // quest go without `seed:` (each of the student's runs gets a new one).
+    const lucky = (n: number) =>
+      [
+        'import random',
+        `if random.randint(1, ${n}) == 1:`,
+        '    print("Welcome to Hearthvale!")',
+        '    print("Try Bun\'s Bakery")',
+        '    print("Mind the chickens.")',
+      ]
+        .map((l) => `  ${l}`)
+        .join('\n');
+    const root = brokenCopy({
+      [q6]: (t) =>
+        t
+          .replace(/^solution: \|\n(.*\n)+?\n/m, `solution: |\n${lucky(1)}\n\n`)
+          .replace(
+            /^validators:\n/m,
+            `sample_solutions:\n  - name: fifty-fifty\n    code: |\n${lucky(2).replace(/^/gm, '    ')}\nvalidators:\n  - { type: runs_ok, min_runs: 3 }\n`,
+          ),
+    });
+    const content = loadContent(root);
+    expect(content.problems).toEqual([]);
+    expect(crossCheck(content, root).map((p) => p.message).filter((m) => m.includes('random'))).toEqual([]);
+    const problems = checkUnit(await getPyHost(), units(content).find((u) => u.key === 'r1-q6-welcome-sign')!);
+    expect(problems.find((p) => p.startsWith('sample solution "fifty-fifty" does not pass'))).toBeDefined();
+    expect(problems.find((p) => /^sample solution "fifty-fifty" fails with seed \d/.test(p))).toBeDefined();
+    expect(problems.filter((p) => p.startsWith('the reference solution'))).toEqual([]);
+  });
+});
+
+describe('pacing summary (F-AUT-11)', () => {
+  it('adds up the regions, lessons, quests and minutes that course.yaml turns on', () => {
+    // Only Hearthvale on: every later region gets `enabled: false`.
+    const onlyFirst = (t: string) =>
+      t.replace(/( {2}- id: (?!hearthvale-village)[\w-]+\n)( {4}lessons: \d+)/g, '$1    enabled: false\n$2');
+    const root = brokenCopy({ 'course.yaml': onlyFirst });
+    const first = pacing(loadContent(root));
+    expect(first).toMatchObject({ regions: 1, lessons: 2, quests: 7, sideQuests: 1 });
+    expect(first.skipped).toContain('whispering-library');
+    expect(first.minutes).toBeGreaterThan(50);
+    expect(pacingLine(first)).toMatch(/^pacing: 1 region\(s\), 2 lesson\(s\), 7 quest\(s\) and bosses \+ 1 side/);
+    expect(pacingLine(first)).toContain('left out: whispering-library');
+    const noSide = brokenCopy({
+      'course.yaml': (t) => onlyFirst(t).replace('side_quests: true', 'side_quests: false'),
+    });
+    expect(pacing(loadContent(noSide))).toMatchObject({ sideQuests: 0, quests: 7 });
+    // The whole course counts every region it turns on.
+    const all = pacing(loadContent());
+    expect(all.regions).toBe(loadContent().course!.data.regions.filter((r) => r.enabled).length);
   });
 });

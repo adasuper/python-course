@@ -1,0 +1,149 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r6-q5-the-skipping-clock
+region: clocktower-peaks
+title: The Skipping Clock
+type: fix
+npc: milo_minute
+learning_outcome: Fix off-by-one errors in range() so a loop runs the right number of times.
+csta: [2-AP-17]
+estimated_minutes: 8
+prerequisites: [r6-q4-the-toll-bucket]
+vocabulary: [off-by-one error, range, bug]
+
+story_intro: |
+  Milo Minute holds up his very first clock. It's lovely. It's shiny. It skips 12 o'clock completely, and the little bell ticks at all the wrong minutes.
+
+  This clock has **2 bugs**. Both are in a `range`. A loop that runs one time too few (or too many) has an [[off-by-one error]]. The hours should go from 1 to 12. The little bell should tick every quarter hour: 0, 15, 30 and 45 minutes.
+goal: Fix the two ranges so the clock rings every hour from 1 to 12, then ticks at 0, 15, 30 and 45 minutes.
+concept_card: |
+  `range` stops just **before** its stop number. To reach 12, the stop must be 13. The third number is the step: how far to jump each time.
+  ```python
+  # 1, 2, 3 ... 12
+  for hour in range(1, 13):
+      print(hour)
+  # 0, 15, 30, 45
+  for minute in range(0, 60, 15):
+      print(minute)
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_peaks_apprentice, name: Milo Minute }
+
+starter_code: |
+  # Ring every hour, from 1 to 12.
+  for hour in range(1, 12):
+      print(f"{hour} o'clock: DONG!")
+  # Then tick every quarter hour.
+  for minute in range(0, 60, 10):
+      print(f"Tick! {minute} minutes")
+
+solution: |
+  # Ring every hour, from 1 to 12.
+  for hour in range(1, 13):
+      print(f"{hour} o'clock: DONG!")
+  # Then tick every quarter hour.
+  for minute in range(0, 60, 15):
+      print(f"Tick! {minute} minutes")
+
+validators:
+  - id: clock
+    type: output
+    expect: |
+      1 o'clock: DONG!
+      2 o'clock: DONG!
+      3 o'clock: DONG!
+      4 o'clock: DONG!
+      5 o'clock: DONG!
+      6 o'clock: DONG!
+      7 o'clock: DONG!
+      8 o'clock: DONG!
+      9 o'clock: DONG!
+      10 o'clock: DONG!
+      11 o'clock: DONG!
+      12 o'clock: DONG!
+      Tick! 0 minutes
+      Tick! 15 minutes
+      Tick! 30 minutes
+      Tick! 45 minutes
+    fail_hint: Compare the Scroll with the clock's plan. Hours 1 to 12, then ticks at 0, 15, 30 and 45.
+  - id: loops
+    type: ast
+    min_count: { For: 2 }
+    fail_hint: Keep both for loops. Fix the numbers inside each `range`.
+
+common_mistakes:
+  - id: adds-one-by-hand
+    detect: { kind: code_regex, pattern: "^[ \\t]+(hour|minute)\\s*(=\\s*(hour|minute)\\s*\\+|\\+=)" }
+    feedback: >-
+      Don't change `hour` or `minute` inside the loop. The for loop gives them their next
+      value by itself. Fix the numbers inside `range` instead.
+  - id: skips-twelve
+    detect: { kind: detector, name: range_off_by_one, last: 12 }
+    feedback: >-
+      The clock still skips 12 o'clock! `range` stops just *before* its stop number, so
+      `range(1, 12)` ends at 11. What stop number gives you 12?
+  - id: steps-ten
+    detect: { kind: output_regex, pattern: "Tick! 10 minutes" }
+    feedback: >-
+      The hours are fixed. Now the little bell ticks every 10 minutes. The third number in
+      `range` is the step. A quarter hour is 15 minutes.
+  - id: sixty
+    detect: { kind: output_regex, pattern: "Tick! 60 minutes" }
+    feedback: >-
+      60 minutes is already the next hour! Keep the stop at 60. `range` stops just before it,
+      so 45 is the last tick.
+  - id: loops-gone
+    detect: { kind: validator_failed, id: loops }
+    feedback: >-
+      Milo wants his two loops back! Keep both `for` lines, and fix the numbers inside
+      each `range`.
+  - id: clock-different
+    detect: { kind: validator_failed, id: clock }
+    feedback: >-
+      Close! Compare the Scroll with the plan, one line at a time. Hours 1 to 12, then
+      ticks at 0, 15, 30 and 45 minutes.
+
+wrong_solutions:
+  - expect_mistake: skips-twelve
+    note: Only the quarter hours are fixed.
+    code: |
+      for hour in range(1, 12):
+          print(f"{hour} o'clock: DONG!")
+      for minute in range(0, 60, 15):
+          print(f"Tick! {minute} minutes")
+  - expect_mistake: steps-ten
+    note: Only 12 o'clock is fixed.
+    code: |
+      for hour in range(1, 13):
+          print(f"{hour} o'clock: DONG!")
+      for minute in range(0, 60, 10):
+          print(f"Tick! {minute} minutes")
+  - expect_mistake: adds-one-by-hand
+    code: |
+      for hour in range(1, 12):
+          hour = hour + 1
+          print(f"{hour} o'clock: DONG!")
+      for minute in range(0, 60, 15):
+          print(f"Tick! {minute} minutes")
+  - expect_mistake: sixty
+    code: |
+      for hour in range(1, 13):
+          print(f"{hour} o'clock: DONG!")
+      for minute in range(0, 61, 15):
+          print(f"Tick! {minute} minutes")
+
+hints:
+  - Run it and read the Scroll. Which hour is missing? Which minutes are wrong?
+  - "`range(1, 12)` stops at 11, so raise the stop by one. In `range(0, 60, 10)`, the 10 is the step. How many minutes are in a quarter hour?"
+  - |
+    ```python
+    for hour in range(1, ____):
+        print(f"{hour} o'clock: DONG!")
+    for minute in range(0, 60, ____):
+        print(f"Tick! {minute} minutes")
+    ```
+
+story_outro: |
+  DONG at 12 o'clock! Tick at a quarter past! Milo hugs his clock. "It's perfect! Well, it was always shiny. Now it's shiny AND right."

@@ -1,0 +1,492 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r4-boss-riddle-gate
+region: forked-road-forest
+title: The Riddle Gate
+type: boss
+npc: riddlewig
+learning_outcome: Use if/elif/else, == and or to check answers and choose a path, then test every branch.
+csta: [2-AP-12, 2-AP-17]
+estimated_minutes: 20
+prerequisites:
+  - r4-q1-talking-signpost
+  - r4-q2-true-or-false
+  - r4-q3-gatekeeper
+  - r4-q4-crooked-branches
+  - r4-q5-three-paths
+  - r4-q6-picky-bridge-keeper
+vocabulary: [bug, condition, elif, branch]
+
+boss:
+  name: The Riddle Gate
+  bug: Riddlewig
+  sprite: bug_riddlewig
+
+story_intro: |
+  A padlock-shaped [[bug]] named Riddlewig has crawled into the lock of the Riddle Gate. "Hee hee! The gate asks riddles. But now it says EVERY answer is wrong!"
+
+  Byte ruffles his feathers. "Riddles? About birds? Stand back. This is my moment."
+goal: Fix the Riddle Gate in four phases. Then Riddlewig turns back into a friendly firefly.
+concept_card: |
+  An `if` can check an answer. `or` accepts more than one right answer. `elif` adds more paths. And a good tester tries every path!
+
+phases:
+  - id: the-first-riddle
+    title: The first riddle
+    type: modify
+    learning_outcome: Use if/else with == to check an answer.
+    csta: [2-AP-12]
+    estimated_minutes: 5
+    inputs: ["owl"]
+    interactive_input: true
+    story_intro: |
+      The gate creaks: "Who hoots at night?" Byte types `owl` at once. "Wise, handsome, and always right," he adds.
+
+      "WRONG! Hee hee hee!" squeaks Riddlewig. The gate's spell says WRONG to every answer. Make it check the answer first.
+    goal: If the answer is "owl", print "Correct! The lock clicks." Otherwise, print "WRONG! Hee hee hee!"
+    stage:
+      kind: npc
+      cast:
+        - { sprite: byte, name: Byte }
+        - { sprite: bug_riddlewig, name: Riddlewig }
+    starter_code: |
+      answer = input("Who hoots at night? ")
+      print("WRONG! Hee hee hee!")
+    solution: |
+      answer = input("Who hoots at night? ")
+      if answer == "owl":
+          print("Correct! The lock clicks.")
+      else:
+          print("WRONG! Hee hee hee!")
+    validators:
+      - id: answers
+        type: hidden_tests
+        mode: inputs
+        compare: [output]
+        cases:
+          - { inputs: ["owl"] }
+          - { inputs: ["cat"] }
+          - { inputs: ["bat"] }
+      - id: if-else
+        type: ast
+        require: [If]
+        require_else: true
+        fail_hint: Use `if` and `else`, so the gate has an answer for right and wrong guesses.
+    common_mistakes:
+      - id: one-equals
+        detect: { kind: error, key: syntax.assign_in_condition }
+        feedback: "`=` stores a value. To check if the answer *is* \"owl\", use two: `answer == \"owl\"`."
+      - id: not-indented
+        detect: { kind: error, key: indent.expected }
+        feedback: Push the `print` lines in by 4 spaces, so Python knows they belong to the `if` and the `else`.
+      - id: still-wrong
+        detect: { kind: hidden_case_fails, validator: answers, case: 0 }
+        feedback: >-
+          The gate still says WRONG to "owl"! Use `if answer == "owl":` with "Correct! The lock clicks."
+          under it. Put the WRONG line under `else:`, so it only runs for wrong answers.
+      - id: always-right
+        detect: { kind: hidden_case_fails, validator: answers, case: 1 }
+        feedback: >-
+          Now "cat" opens the lock too! Put "WRONG! Hee hee hee!" under `else:`, so wrong answers still get it.
+      - id: no-else
+        detect: { kind: validator_failed, id: if-else }
+        feedback: Use `if` and `else`, so the gate has an answer for right and wrong guesses.
+    wrong_solutions:
+      - expect_mistake: one-equals
+        code: |
+          answer = input("Who hoots at night? ")
+          if answer = "owl":
+              print("Correct! The lock clicks.")
+          else:
+              print("WRONG! Hee hee hee!")
+      - expect_mistake: still-wrong
+        note: No else, so WRONG prints every time.
+        code: |
+          answer = input("Who hoots at night? ")
+          if answer == "owl":
+              print("Correct! The lock clicks.")
+          print("WRONG! Hee hee hee!")
+      - expect_mistake: always-right
+        code: |
+          answer = input("Who hoots at night? ")
+          print("Correct! The lock clicks.")
+    hints:
+      - The gate needs to ask a question about `answer`. Is it equal to "owl"?
+      - 'Write `if answer == "owl":` with an indented `print("Correct! The lock clicks.")` under it. Then `else:` with the WRONG line under it.'
+      - |
+        ```python
+        answer = input("Who hoots at night? ")
+        if answer == "owl":
+            print("Correct! The lock clicks.")
+        ____
+            print("WRONG! Hee hee hee!")
+        ```
+    story_outro: |
+      CLICK! The first lock opens. Riddlewig wobbles. "Lucky guess, bird."
+
+  - id: two-right-answers
+    title: Two right answers
+    type: modify
+    carry_code: true
+    learning_outcome: Use or to accept more than one correct answer.
+    csta: [2-AP-12]
+    estimated_minutes: 5
+    inputs: ["Owl"]
+    interactive_input: true
+    story_intro: |
+      Byte types "Owl" with a capital O. "WRONG! Hee hee hee!" Byte is outraged. "That's my NAME. Well, my kind of name!"
+
+      `"Owl"` and `"owl"` are different strings. Make the gate accept both. Use `or` to join two checks.
+    goal: Print "Correct! The lock clicks." when the answer is "owl" or "Owl". Every other answer is still WRONG.
+    stage:
+      kind: npc
+      cast:
+        - { sprite: byte, name: Byte }
+        - { sprite: bug_riddlewig, name: Riddlewig }
+    starter_code: |
+      answer = input("Who hoots at night? ")
+      if answer == "owl":
+          print("Correct! The lock clicks.")
+      else:
+          print("WRONG! Hee hee hee!")
+    solution: |
+      answer = input("Who hoots at night? ")
+      if answer == "owl" or answer == "Owl":
+          print("Correct! The lock clicks.")
+      else:
+          print("WRONG! Hee hee hee!")
+    validators:
+      - id: answers
+        type: hidden_tests
+        mode: inputs
+        compare: [output]
+        cases:
+          - { inputs: ["owl"] }
+          - { inputs: ["Owl"] }
+          - { inputs: ["cat"] }
+      - id: uses-or
+        type: ast
+        require: [Or]
+        fail_hint: Join the two checks with `or`.
+    common_mistakes:
+      - id: or-shortcut
+        detect: { kind: code_regex, pattern: 'or\s*["'']Owl["'']\s*:' }
+        feedback: >-
+          Each side of `or` needs its own comparison. Write `answer == "owl" or answer == "Owl"`. On its
+          own, `"Owl"` always counts as True, so every answer would open the lock!
+      - id: capital-wrong
+        detect: { kind: hidden_case_fails, validator: answers, case: 1 }
+        feedback: >-
+          The gate still says WRONG to "Owl". Add a second check with `or`: `answer == "owl" or answer == "Owl"`.
+      - id: cat-right
+        detect: { kind: hidden_case_fails, validator: answers, case: 2 }
+        feedback: Now "cat" opens the lock too! Only "owl" and "Owl" are right.
+      - id: need-or
+        detect: { kind: validator_failed, id: uses-or }
+        feedback: >-
+          The gate works! But Riddlewig only respects `or`. Put both checks in one `if`, joined with `or`.
+    wrong_solutions:
+      - expect_mistake: or-shortcut
+        code: |
+          answer = input("Who hoots at night? ")
+          if answer == "owl" or "Owl":
+              print("Correct! The lock clicks.")
+          else:
+              print("WRONG! Hee hee hee!")
+      - expect_mistake: capital-wrong
+        note: The phase 1 code, unchanged.
+        code: |
+          answer = input("Who hoots at night? ")
+          if answer == "owl":
+              print("Correct! The lock clicks.")
+          else:
+              print("WRONG! Hee hee hee!")
+      - expect_mistake: need-or
+        note: It works with elif, but the phase is about or.
+        code: |
+          answer = input("Who hoots at night? ")
+          if answer == "owl":
+              print("Correct! The lock clicks.")
+          elif answer == "Owl":
+              print("Correct! The lock clicks.")
+          else:
+              print("WRONG! Hee hee hee!")
+    hints:
+      - There are two right answers now. How can one `if` check for either of them?
+      - '`or` is True when at least one side is True. Each side needs its own `answer == ...`.'
+      - |
+        ```python
+        if answer == "owl" or ____:
+            print("Correct! The lock clicks.")
+        ```
+    story_outro: |
+      CLICK-CLICK! Byte smooths his feathers. "Capital letters are a sign of respect." Riddlewig's lock-shell rattles.
+
+  - id: three-doors
+    title: Three doors
+    type: make
+    learning_outcome: Use if/elif/else to choose one of several paths.
+    csta: [2-AP-12]
+    estimated_minutes: 5
+    inputs: ["owl"]
+    interactive_input: true
+    story_intro: |
+      The gate swings open. Behind it wait a **gold door** and a **silver door**. Riddlewig squeaks: "Last riddle! Who is the wisest bird?"
+
+      - "Byte" opens the gold door, 2 steps up. (Byte insisted.)
+      - "owl" opens the silver door, 3 steps left.
+      - Any other answer sends the hero back to the start, 2 steps down.
+    goal: Use if, elif and else so the hero walks to the gold door, the silver door, or back to the start.
+    stage:
+      kind: grid
+      grid: |
+        ###G###
+        #B...R#
+        S..H..#
+        #.....#
+        ###E###
+      facing: up
+      legend:
+        "#": { tile: wall, solid: true }
+        ".": { tile: cobble }
+        H: { tile: cobble, hero: true }
+        G: { tile: cobble, object: gold_door, solid: false, name: gold door, look: gold door }
+        S: { tile: cobble, object: silver_door, solid: false, name: silver door, look: silver door }
+        B: { tile: cobble, object: npc }
+        R: { tile: cobble, object: npc }
+      npcs:
+        B: { name: Byte, sprite: byte }
+        R: { name: Riddlewig, sprite: bug_riddlewig }
+    starter_code: |
+      from codeweald import hero
+      answer = input("Who is the wisest bird? ")
+      # "Byte": walk up 2 to the gold door.
+      # "owl": walk left 3 to the silver door.
+      # Else: walk down 2, back to the start.
+    solution: |
+      from codeweald import hero
+      answer = input("Who is the wisest bird? ")
+      if answer == "Byte":
+          hero.move("up", 2)
+      elif answer == "owl":
+          hero.move("left", 3)
+      else:
+          hero.move("down", 2)
+    validators:
+      - id: doors
+        type: hidden_tests
+        mode: inputs
+        compare: [state]
+        cases:
+          - { inputs: ["Byte"] }
+          - { inputs: ["owl"] }
+          - { inputs: ["pigeon"] }
+      - id: shape
+        type: ast
+        require: [If]
+        require_else: true
+        min_count: { If: 2 }
+        fail_hint: Use `if`, `elif` and `else`, one for each door.
+    common_mistakes:
+      - id: one-equals
+        detect: { kind: error, key: syntax.assign_in_condition }
+        feedback: To compare the answer, use `==`. One `=` stores a value.
+      - id: not-indented
+        detect: { kind: error, key: indent.expected }
+        feedback: Push each `hero.move` line in by 4 spaces, under its own `if`, `elif` or `else`.
+      - id: two-ifs
+        detect:
+          kind: custom
+          python: |
+            def detect(ctx):
+                return ctx.tree is not None and sum(isinstance(n, ast.If) for n in ctx.tree.body) >= 2
+        feedback: >-
+          You wrote two separate `if`s, so Python asks both questions! Use `elif` for the second door.
+          Then Python walks only the first path whose answer is True.
+      - id: three-paths
+        detect: { kind: validator_failed, id: shape }
+        feedback: Use `if`, `elif` and `else`, one for each door.
+      - id: gold-door
+        detect: { kind: hidden_case_fails, validator: doors, case: 0 }
+        feedback: When the answer is "Byte", the hero should walk 2 steps up, onto the gold door.
+      - id: silver-door
+        detect: { kind: hidden_case_fails, validator: doors, case: 1 }
+        feedback: When the answer is "owl", the hero should walk 3 steps left, onto the silver door.
+      - id: back-to-start
+        detect: { kind: hidden_case_fails, validator: doors, case: 2 }
+        feedback: For any other answer, the hero should walk 2 steps down, back to the start.
+    wrong_solutions:
+      - expect_mistake: three-paths
+        note: Only two doors.
+        code: |
+          from codeweald import hero
+          answer = input("Who is the wisest bird? ")
+          if answer == "Byte":
+              hero.move("up", 2)
+          else:
+              hero.move("down", 2)
+      - expect_mistake: two-ifs
+        note: With "Byte", the hero walks up, then the else path walks it back down.
+        code: |
+          from codeweald import hero
+          answer = input("Who is the wisest bird? ")
+          if answer == "Byte":
+              hero.move("up", 2)
+          if answer == "owl":
+              hero.move("left", 3)
+          else:
+              hero.move("down", 2)
+      - expect_mistake: gold-door
+        note: The gold and silver moves are swapped.
+        code: |
+          from codeweald import hero
+          answer = input("Who is the wisest bird? ")
+          if answer == "Byte":
+              hero.move("left", 3)
+          elif answer == "owl":
+              hero.move("up", 2)
+          else:
+              hero.move("down", 2)
+      - expect_mistake: one-equals
+        code: |
+          from codeweald import hero
+          answer = input("Who is the wisest bird? ")
+          if answer == "Byte":
+              hero.move("up", 2)
+          elif answer = "owl":
+              hero.move("left", 3)
+          else:
+              hero.move("down", 2)
+    hints:
+      - Three answers, three paths. Which answer gets the `if`, which gets the `elif`, and what's left for `else`?
+      - '`if answer == "Byte":` then an indented move. Then `elif answer == "owl":` and its move. Then `else:` and the move back down.'
+      - |
+        ```python
+        if answer == "Byte":
+            hero.move("up", 2)
+        elif ____:
+            hero.move("left", 3)
+        else:
+            hero.move("down", 2)
+        ```
+    story_outro: |
+      The doors shimmer. Riddlewig's lock-shell cracks down the middle. "One last trick," it squeaks.
+
+  - id: every-door-tested
+    title: Every door tested
+    type: make
+    carry_code: true
+    learning_outcome: Test a program with inputs that reach every branch.
+    csta: [2-AP-17]
+    estimated_minutes: 5
+    inputs: ["owl"]
+    interactive_input: true
+    story_intro: |
+      "Did you test EVERY door?" Riddlewig sneers. "I bet you didn't. I bet one of them is broken. Hee hee!"
+
+      Good testers try every [[branch]]. Run your gate and type a different answer each time. A lamp lights up for each door that runs. Light all three lamps!
+    goal: Run your program at least 3 times with different answers, until a lamp lights for every door.
+    stage:
+      kind: grid
+      grid: |
+        ###G###
+        #B...R#
+        S..H..#
+        #.....#
+        ###E###
+      facing: up
+      legend:
+        "#": { tile: wall, solid: true }
+        ".": { tile: cobble }
+        H: { tile: cobble, hero: true }
+        G: { tile: cobble, object: gold_door, solid: false, name: gold door, look: gold door }
+        S: { tile: cobble, object: silver_door, solid: false, name: silver door, look: silver door }
+        B: { tile: cobble, object: npc }
+        R: { tile: cobble, object: npc }
+      npcs:
+        B: { name: Byte, sprite: byte }
+        R: { name: Riddlewig, sprite: bug_riddlewig }
+    starter_code: |
+      from codeweald import hero
+      answer = input("Who is the wisest bird? ")
+      if answer == "Byte":
+          hero.move("up", 2)
+      elif answer == "owl":
+          hero.move("left", 3)
+      else:
+          hero.move("down", 2)
+    solution: |
+      from codeweald import hero
+      answer = input("Who is the wisest bird? ")
+      if answer == "Byte":
+          hero.move("up", 2)
+      elif answer == "owl":
+          hero.move("left", 3)
+      else:
+          hero.move("down", 2)
+    validators:
+      - id: lamps
+        type: branch_coverage
+        min: all
+      - id: runs
+        type: runs_ok
+        min_runs: 3
+        distinct_inputs: true
+      - id: shape
+        type: ast
+        require: [If]
+        require_else: true
+        min_count: { If: 2 }
+        fail_hint: Your gate needs three doors, so use `if`, `elif` and `else`.
+      - id: doors
+        type: hidden_tests
+        mode: inputs
+        compare: [state]
+        cases:
+          - { inputs: ["Byte"] }
+          - { inputs: ["owl"] }
+          - { inputs: ["pigeon"] }
+    common_mistakes:
+      - id: three-doors
+        detect: { kind: validator_failed, id: shape }
+        feedback: Your gate needs three doors again, so use `if`, `elif` and `else`. Then test each one.
+      - id: broken-door
+        detect: { kind: validator_failed, id: doors }
+        feedback: >-
+          Riddlewig was right: one door is broken! "Byte" goes 2 up, "owl" goes 3 left, and anything else
+          goes 2 down. Fix it, then test every door again.
+    wrong_solutions:
+      - expect_mistake: three-doors
+        note: Only two doors.
+        code: |
+          from codeweald import hero
+          answer = input("Who is the wisest bird? ")
+          if answer == "Byte":
+              hero.move("up", 2)
+          else:
+              hero.move("down", 2)
+      - expect_mistake: broken-door
+        note: The else door walks the wrong way.
+        code: |
+          from codeweald import hero
+          answer = input("Who is the wisest bird? ")
+          if answer == "Byte":
+              hero.move("up", 2)
+          elif answer == "owl":
+              hero.move("left", 3)
+          else:
+              hero.move("right", 2)
+    hints:
+      - Press Run and type an answer. Which lamp lit up? Now run it again with a different answer.
+      - 'Type "Byte" for the gold door, "owl" for the silver door, and anything else (like "pigeon") for the way back.'
+      - |
+        Try these three runs, one after another:
+        ```text
+        Run 1: Byte
+        Run 2: owl
+        Run 3: ____
+        ```
+
+story_outro: |
+  Every lamp blazes. Riddlewig shivers, glows, and turns into a friendly little firefly. "Ooh. I like riddles with right answers better," it hums, and floats off to light the forest paths.
+
+  You found **Script Fragment: Choices**! Byte nods, very pleased with himself. "And the wisest bird in the forest is...?" You know the answer.

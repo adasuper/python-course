@@ -5,7 +5,7 @@ import { completeCheck } from '../../state/progress';
 import { go, profile, regions, update } from '../../state/store';
 import { RichText } from '../components/RichText';
 import { shuffledOrder } from '../order';
-import { normalizeAnswer } from '../quest/Predict';
+import { normalizeAnswer } from '../quest/answers';
 import { Hud } from './Overworld';
 
 export function CheckScreen({ regionId }: { regionId: string }) {

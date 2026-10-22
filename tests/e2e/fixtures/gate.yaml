@@ -1,0 +1,25 @@
+# A Parsons puzzle with indentation and a distractor, for the keyboard and drag tests (M2.2).
+id: r1-q95-gate-check
+region: hearthvale-village
+title: The Gate Check
+type: parsons
+learning_outcome: Arrange an if/else with the right indentation.
+csta: [2-AP-12]
+estimated_minutes: 5
+story_intro: The gatekeeper checks your purse.
+goal: Put the lines in order, with the right indents.
+concept_card: The lines inside an if or else are indented.
+parsons:
+  lines:
+    - gold = 12
+    - 'if gold >= 10:'
+    - '    print("You may pass")'
+    - 'else:'
+    - '    print("Come back later")'
+  distractors:
+    - 'if gold = 10:'
+validators:
+  - { type: output, expect: You may pass }
+  - { type: ast, require_else: true }
+hints: [What comes first?, The print lines are indented., '____']
+story_outro: The gate swings open.

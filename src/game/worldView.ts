@@ -36,6 +36,8 @@ export interface OverworldOptions extends Look {
   start?: XY;
   onInteract(object: OverworldObject): void;
   onStep(position: XY): void;
+  /** A click or tap asked for a step that is blocked. */
+  onBlocked?(dir: Dir): void;
 }
 
 interface SheetIndex {
@@ -56,8 +58,12 @@ function frameOf(scene: Phaser.Scene, sheet: 'tiles' | 'chars', name: string): n
   return found ?? 0;
 }
 
-function heroFrame(scene: Phaser.Scene, look: Look, dir: Dir, step: number): number {
-  return frameOf(scene, 'chars', `${look.avatar}:${look.theme}:${dir}:${step % 2}`);
+function heroFrame(scene: Phaser.Scene, look: Look, dir: Dir, step: number | 'bonk'): number {
+  return frameOf(
+    scene,
+    'chars',
+    `${look.avatar}:${look.theme}:${dir}:${step === 'bonk' ? 'bonk' : step % 2}`,
+  );
 }
 
 function wait(scene: Phaser.Scene, ms: number): Promise<void> {
@@ -223,7 +229,28 @@ class OverworldScene extends Phaser.Scene {
     this.updateMarkers(this.opts.markers);
     this.layout();
     this.scale.on('resize', this.layout, this);
-    this.events.once('shutdown', () => this.scale.off('resize', this.layout, this));
+    this.input.on('pointerdown', this.onPointer, this);
+    this.events.once('shutdown', () => {
+      this.scale.off('resize', this.layout, this);
+      this.input.off('pointerdown', this.onPointer, this);
+    });
+  }
+
+  /** Click or tap to walk (F-WLD-05): one step toward the tile, or talk to a neighbour. */
+  private onPointer(pointer: Phaser.Input.Pointer) {
+    const at = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const [tx, ty] = [Math.floor(at.x / TILE), Math.floor(at.y / TILE)];
+    const [dx, dy] = [tx - this.pos[0], ty - this.pos[1]];
+    if (dx === 0 && dy === 0) return;
+    const dir: Dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+    const next = Math.abs(dx) + Math.abs(dy) === 1 ? this.objectsAt.get(`${tx},${ty}`) : undefined;
+    if (next && next.kind !== 'spawn' && next.kind !== 'poi' && !this.moving) {
+      this.facing = dir;
+      this.hero.setFrame(heroFrame(this, this.opts, dir, 0));
+      this.opts.onInteract(next);
+      return;
+    }
+    if (!this.tryMove(dir)) this.opts.onBlocked?.(dir);
   }
 
   private animateWater(layer: Phaser.Tilemaps.TilemapLayer, tiles: XY[]) {
@@ -350,6 +377,8 @@ class StageScene extends Phaser.Scene {
   private items = new Map<string, Phaser.GameObjects.Image[]>();
   private chests = new Map<string, Phaser.GameObjects.Sprite>();
   private bubble: Phaser.GameObjects.Text | null = null;
+  /** Characters on stage; the first one hands over input() answers (F-EXE-12). */
+  private cast: Phaser.GameObjects.Sprite[] = [];
   private cols = 1;
   private rows = 1;
   private stepCount = 0;
@@ -377,6 +406,7 @@ class StageScene extends Phaser.Scene {
     this.chests.clear();
     this.bubble = null;
     this.hero = null;
+    this.cast = [];
     const { stage } = this.data_;
     if (stage.kind === 'grid') this.buildGrid(stage);
     else if (stage.kind === 'npc') this.buildCast(stage);
@@ -406,7 +436,7 @@ class StageScene extends Phaser.Scene {
           );
         } else if (cell.object === 'npc') {
           const sprite = stage.npcs?.[ch]?.sprite ?? 'npc_villager_a';
-          this.add.sprite(cx, cy, 'chars', frameOf(this, 'chars', sprite)).setDepth(8);
+          this.cast.push(this.add.sprite(cx, cy, 'chars', frameOf(this, 'chars', sprite)).setDepth(8));
         } else if (cell.object) {
           const tiles = this.cache.json.get('tiles-index') as SheetIndex | undefined;
           const sheet = tiles?.frames[cell.object] !== undefined ? 'tiles' : 'chars';
@@ -445,9 +475,11 @@ class StageScene extends Phaser.Scene {
       .sprite(TILE * 1.5, TILE * 1.5, 'chars', heroFrame(this, this.data_, 'right', 0))
       .setDepth(20);
     cast.forEach((member, i) => {
-      this.add
-        .sprite((3 + i * 2) * TILE + TILE / 2, TILE * 1.5, 'chars', frameOf(this, 'chars', member.sprite))
-        .setDepth(10);
+      this.cast.push(
+        this.add
+          .sprite((3 + i * 2) * TILE + TILE / 2, TILE * 1.5, 'chars', frameOf(this, 'chars', member.sprite))
+          .setDepth(10),
+      );
     });
   }
 
@@ -498,7 +530,8 @@ class StageScene extends Phaser.Scene {
       case 'bonk': {
         if (!hero) return;
         this.facing = action.dir;
-        hero.setFrame(heroFrame(this, this.data_, action.dir, 0));
+        // Stars over the head: a still picture, plus the word, even with reduced motion.
+        hero.setFrame(heroFrame(this, this.data_, action.dir, 'bonk'));
         this.flash(action.at, 'bonk!', ms);
         if (!this.reducedMotion && ms > 0) {
           const [dx, dy] = DELTA[action.dir];
@@ -508,6 +541,7 @@ class StageScene extends Phaser.Scene {
             ms / 2,
           );
         } else await wait(this, ms);
+        if (ms > 0) hero.setFrame(heroFrame(this, this.data_, action.dir, 0));
         return;
       }
       case 'face':
@@ -519,6 +553,16 @@ class StageScene extends Phaser.Scene {
         this.say(action.text);
         await wait(this, ms);
         return;
+      case 'input': {
+        // The character hands over the answer in a speech bubble; a typed one is the player's.
+        const giver = action.source === 'queue' ? this.cast[0] : null;
+        if (giver) {
+          const t = label(this, giver.x, giver.y - TILE / 2 - 2, action.value, this.cameras.main.zoom);
+          void wait(this, Math.max(ms, 600)).then(() => t.destroy());
+        }
+        await wait(this, ms);
+        return;
+      }
       case 'pickup': {
         if (!action.item) {
           this.flash(action.at, '?', ms);
@@ -560,6 +604,23 @@ class StageScene extends Phaser.Scene {
   }
 
   /** The Bug turns into a friendly, glowing firefly (F-BOS-03). Static with reduced motion. */
+  /** The hero cheers when a quest passes (F-ONB-03): arms up, with a small hop unless motion
+   *  is reduced. */
+  cheer() {
+    const hero = this.hero;
+    if (!hero) return;
+    hero.setFrame(frameOf(this, 'chars', `${this.data_.avatar}:${this.data_.theme}:celebrate`));
+    if (this.reducedMotion) return;
+    this.tweens.add({
+      targets: hero,
+      y: hero.y - 3,
+      duration: 160,
+      yoyo: true,
+      repeat: 1,
+      ease: 'Quad.easeOut',
+    });
+  }
+
   celebrate(bugSprite: string) {
     const bugFrame = String(frameOf(this, 'chars', bugSprite));
     const bug = this.children.list.find(
@@ -716,6 +777,10 @@ export class WorldView implements ReplayView {
   apply(action: Action, ms: number): Promise<void> {
     if (!this.game.scene.isActive('stage')) return Promise.resolve();
     return this.stage.apply(action, ms);
+  }
+
+  cheer() {
+    if (this.game.scene.isActive('stage')) this.stage.cheer();
   }
 
   celebrateBoss(bugSprite: string) {

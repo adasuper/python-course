@@ -19,9 +19,11 @@ grades 6–8.
 
 ## Status
 
-**Phase 1 — vertical slice.** Region 1 (Hearthvale Village) is playable end to end. Play
-it at <https://adasuper.github.io/python-course/>. See [PROGRESS.md](PROGRESS.md) for
-what's done, what's next and known issues.
+**Phase 3 — Regions 1–6.** Six regions are playable end to end, from Hearthvale Village
+(`print`) to Clocktower Peaks (`for` loops): about 7.5 hours of quests. Regions 7–11 are on the
+way. The live site, <https://adasuper.github.io/python-course/>, shows the latest version
+merged into `main`. See [PROGRESS.md](PROGRESS.md) for what's done, what's next and known
+issues.
 
 ## Try the demo
 
@@ -51,8 +53,9 @@ Open <http://localhost:4173> in Chrome or Edge. The first load downloads Python 
 | `npm run lint` · `npm run typecheck` · `npm run format` | Code quality |
 
 **Open any quest directly:** `http://localhost:4173/?dev#/dev/quest/r1-q5-criers-crooked-announcement`
-(or `/?dev#/dev/check/hearthvale-village` for a knowledge check). This uses a throwaway
-"Dev Tester" profile.
+(or `/?dev#/dev/check/hearthvale-village` for a knowledge check, `/?dev#/dev/concept/…` for a
+concept scene, `/?dev#/dev/region/…` for a region's map). This uses a throwaway "Dev Tester"
+profile.
 
 ### Editing content
 
@@ -60,8 +63,8 @@ Quests, regions, dialogue, the glossary and error messages are YAML files in
 [`content/`](content). Each quest file starts with a `yaml-language-server` line, so VS Code
 (with the YAML extension) autocompletes and checks fields as you type. After editing, run
 `npm run validate-content`: it reports problems as `file:line — message` and runs every
-reference solution and known-wrong solution through the real Python runtime. A full authoring
-guide arrives in Phase 5.
+reference solution and known-wrong solution through the real Python runtime. The full guide
+is [docs/quest-authoring.md](docs/quest-authoring.md).
 
 ## Architecture in one minute
 
@@ -126,9 +129,19 @@ request, in three stages:
 
 `npm run build` produces a static site in `dist/` that works on any static host (GitHub
 Pages, a school web server). Use `CODEWEALD_BASE=/repo-name/ npm run build` for a sub-path.
-No special headers are needed, but serve `.wasm` as `application/wasm` and use HTTPS. On
-GitHub, the CI/CD pipeline above does all of this for you. Notes for other servers arrive
-in Phase 6.
+No special headers are needed, but serve `.wasm` as `application/wasm` and use HTTPS (the
+offline service worker needs it). On GitHub, the CI/CD pipeline above does all of this for
+you. Notes for other servers arrive in Phase 6.
+
+**Offline play:** after one visit, the game works with no network. The title screen shows
+"Ready to play offline ✓" once the game and Python (about 14 MB, downloaded once) are
+stored. Before the first lesson, open the game once on each computer while online. A new
+version waits until the student clicks **Reload now**.
+
+**System check:** the title screen's **System check** button shows whether this computer
+and network can run the game: the offline helper (service worker), saving, WebAssembly, the
+`.wasm` file type, free space, Python, offline readiness and read-aloud voices. Each failure
+comes with a tip for fixing it.
 
 **Handling exported files:** a progress file contains the student's nickname and their code.
 Keep it somewhere private, such as the student's own Google Drive.
@@ -143,6 +156,7 @@ Keep it somewhere private, such as the student's own Google Drive.
 | [docs/build-plan.md](docs/build-plan.md) | Phases, milestones and exit criteria |
 | [docs/open-questions.md](docs/open-questions.md) | Decisions and the assumptions in use |
 | [docs/solutions.md](docs/solutions.md) | Instructor answer key (generated) |
+| [docs/quest-authoring.md](docs/quest-authoring.md) | How to write and check quests, regions and other content |
 | [ASSETS_LICENSES.md](ASSETS_LICENSES.md) | Every asset and its license |
 
 ## Stack

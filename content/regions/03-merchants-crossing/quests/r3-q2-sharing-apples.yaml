@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-q2-sharing-apples
+region: merchants-crossing
+title: Sharing the Apple Cart
+type: investigate
+npc: pippin
+learning_outcome: Explain what // and % calculate by running examples and changing the numbers.
+csta: [2-AP-11]
+estimated_minutes: 8
+prerequisites: [r3-q1-coins-or-tags]
+vocabulary: [floor division, remainder, operator]
+rewards: { item: abacus-of-reckoning }
+
+story_intro: |
+  Granny Pippin pats her apple cart. "23 apples, 5 baskets. My abacus used to share them out for me. Then a Bug ate the beads!"
+
+  Python has two sharing [[operators|operator]]. `//` is [[floor division]]: how many whole apples each basket gets. `%` gives the [[remainder]]: the apples left over.
+
+  **Careful:** `%` is *not* percent! In Python, it means "what's left over".
+goal: Run the program and answer Granny Pippin's questions. Try each change the questions ask for.
+concept_card: |
+  `a // b` shares `a` into `b` equal groups and gives the whole amount in each group. `a % b` gives what's left over. `%` is not percent!
+  ```python
+  print(23 // 5)   # 4 in each basket
+  print(23 % 5)    # 3 left over
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_apple_seller, name: Granny Pippin }
+
+starter_code: |
+  apples = 23
+  baskets = 5
+  each = apples // baskets
+  left = apples % baskets
+  print(f"Each basket gets {each} apples.")
+  print(f"{left} apples are left over.")
+
+questions:
+  - kind: number
+    question: Run the program. How many apples does each basket get?
+    answer: 4
+    hint: Look at the first line on the Scroll. `//` gives the whole apples in each basket.
+    explain: 5 baskets with 4 apples each is 20 apples. A fifth apple each would need 25.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        apples = 23
+        baskets = 5
+        each = apples // baskets
+        left = apples % baskets
+        print(f"Each basket gets {each} apples.")
+        print(f"{left} apples are left over.")
+      output: |
+        Each basket gets 4 apples.
+        3 apples are left over.
+  - kind: number
+    question: And how many apples are left over?
+    answer: 3
+    hint: Read the second line on the Scroll. `%` gives what's left after sharing.
+    explain: 23 apples minus the 20 in the baskets leaves 3.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        apples = 23
+        baskets = 5
+        each = apples // baskets
+        left = apples % baskets
+        print(f"Each basket gets {each} apples.")
+        print(f"{left} apples are left over.")
+      output: |
+        Each basket gets 4 apples.
+        3 apples are left over.
+  - kind: number
+    question: Change `apples` to `25` and run it again. How many apples are left over now?
+    answer: 0
+    hint: 25 apples in 5 baskets. Does it share out evenly?
+    explain: 5 baskets with 5 apples each uses all 25. Nothing is left over, so `25 % 5` is 0.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        apples = 25
+        baskets = 5
+        each = apples // baskets
+        left = apples % baskets
+        print(f"Each basket gets {each} apples.")
+        print(f"{left} apples are left over.")
+      output: |
+        Each basket gets 5 apples.
+        0 apples are left over.
+  - kind: mcq
+    question: Now try `apples = 4`. That's fewer apples than baskets! How many apples does each basket get?
+    options:
+      - 0 apples
+      - 1 apple
+      - Python shows an error.
+    answer: 0
+    hint: There are only 4 apples and 5 baskets. Can each basket get a whole apple?
+    explain: There aren't enough apples to go around. So `4 // 5` is 0, and all 4 apples are left over.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        apples = 4
+        baskets = 5
+        each = apples // baskets
+        left = apples % baskets
+        print(f"Each basket gets {each} apples.")
+        print(f"{left} apples are left over.")
+      output: |
+        Each basket gets 0 apples.
+        4 apples are left over.
+  - kind: mcq
+    question: So what does `%` really give you?
+    options:
+      - What's left over after sharing equally
+      - A percent, like 50%
+      - The answer with a decimal point
+    answer: 0
+    hint: Think about the leftover apples. Was 3 a percent?
+    explain: "`%` gives the remainder: what's left after sharing. It is not percent!"
+
+hints:
+  - Press Run first. Then read the Scroll of Output, one line at a time.
+  - "`23 // 5` asks: how many whole 5s fit into 23? `23 % 5` asks: what's left after that?"
+  - |
+    ```text
+    23 // 5  ->  4    (5 + 5 + 5 + 5 = 20)
+    23 % 5   ->  ____ (23 - 20)
+    ```
+
+story_outro: |
+  "Four in each basket, three for my pie. Perfect!" Granny Pippin hands you her spare abacus. You earned the **Abacus of Reckoning**. Its beads never get eaten. Probably.

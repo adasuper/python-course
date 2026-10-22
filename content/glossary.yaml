@@ -83,3 +83,201 @@
   definition: Your character in a quest. You control the hero with instructions like hero.move("up").
   example: '`hero.say("Hi!")`'
   related: [instruction]
+# Region 2: Whispering Library
+- term: variable
+  definition: A name for a value, like a labeled jar. You store a value in it with `=`.
+  example: '`gold = 12` stores 12 in a variable named `gold`.'
+  related: [value, assignment]
+- term: value
+  definition: The thing stored in a variable, like a number or a piece of text.
+  example: 'In `pet = "owl"`, the value is `"owl"`.'
+  related: [variable]
+- term: assignment
+  definition: Storing a value in a variable with `=`. Read `=` as "gets".
+  example: '`score = 10` means "score gets 10".'
+  related: [variable, reassign]
+- term: reassign
+  definition: To store a new value in a variable that already has one. The old value is gone.
+  example: |
+    ```python
+    pet = "owl"
+    pet = "bat"
+    ```
+  related: [assignment, variable]
+- term: concatenate
+  definition: To join strings into one longer string with `+`. It never adds spaces for you.
+  example: '`"Find " + "owls"` gives `"Find owls"`.'
+  related: [string]
+- term: f-string
+  definition: A string with an `f` before the first quote. Each `{name}` inside it is replaced by that variable's value.
+  example: '`f"Hi {name}!"` shows `Hi Ada!` when `name` is `"Ada"`.'
+  related: [string, variable]
+# Region 3: Merchant's Crossing
+- term: integer
+  definition: A whole number, like 7, 0 or -2. Python calls it an int.
+  example: '`coins = 12` stores an integer.'
+  related: [float, data type]
+- term: float
+  definition: A number with a decimal point, like 3.5 or 2.0. Python stores floats as very close guesses.
+  example: '`7 / 2` gives the float `3.5`.'
+  related: [integer, data type]
+- term: data type
+  definition: The kind of value something is. Text in quotes is a string, a whole number is an integer, and a number with a dot is a float.
+  example: '`"5"` is a string, `5` is an integer, and `5.0` is a float.'
+  related: [string, integer, float, convert]
+- term: operator
+  definition: A symbol that does math with values or joins them, like `+`, `-`, `*`, `/` or `%`.
+  example: '`3 * 4` uses the `*` operator to multiply.'
+  related: [order of operations, floor division, remainder]
+- term: floor division
+  definition: Division with `//`. It keeps only the whole part of the answer.
+  example: '`17 // 5` is `3`, because 5 fits into 17 three whole times.'
+  related: [remainder, operator]
+- term: remainder
+  definition: What is left over after sharing equally. In Python, `%` gives the remainder (it is not percent).
+  example: '`17 % 5` is `2`: share 17 apples among 5 friends, and 2 are left.'
+  related: [floor division, operator]
+- term: order of operations
+  definition: The order Python does math in. Parentheses come first, then `*` and `/`, then `+` and `-`.
+  example: '`2 + 3 * 4` is `14`, but `(2 + 3) * 4` is `20`.'
+  related: [operator]
+- term: input
+  definition: An instruction that asks a question and waits for an answer. `input()` always hands back the answer as a string.
+  example: '`name = input("What is your name? ")`'
+  related: [convert, string]
+- term: convert
+  definition: To change a value into another data type. `int("7")` turns text into a number, and `str(7)` turns a number into text.
+  example: '`coins = int("12")` gives the number 12.'
+  related: [data type, input]
+- term: edge case
+  definition: An unusual input that is easy to forget, like zero or an exact amount. Good testers always try the edge cases.
+  example: A customer who pays the exact price should get 0 change.
+  related: [bug, debugging]
+# Region 4: Forked Road Forest
+- term: boolean
+  definition: A value that is either True or False. A comparison like gold >= 10 gives back a boolean.
+  example: '`print(5 > 3)` shows **True**.'
+  related: [comparison, condition]
+- term: comparison
+  definition: A check that compares two values with ==, !=, <, >, <= or >=. The answer is always True or False.
+  example: '`gold >= 10` asks: is gold at least 10?'
+  related: [boolean, condition]
+- term: condition
+  definition: A question in your code whose answer is True or False. An if statement runs its lines only when its condition is True.
+  example: '`if gold >= 10:` has the condition `gold >= 10`.'
+  related: [if statement, comparison, boolean]
+- term: if statement
+  definition: Code that runs some lines only when a condition is True. The if line ends with a colon, and the lines inside are indented.
+  example: |
+    ```python
+    if gold >= 10:
+        print("You may pass.")
+    ```
+  related: [condition, else, elif, indentation]
+- term: else
+  definition: The part of an if statement that runs when the condition is False.
+  example: |
+    ```python
+    if gold >= 10:
+        print("You may pass.")
+    else:
+        print("Come back later.")
+    ```
+  related: [if statement, elif]
+- term: elif
+  definition: Short for "else if". It checks another condition when the ones above it were False.
+  example: |
+    ```python
+    if weather == "sun":
+        print("Up the hill!")
+    elif weather == "rain":
+        print("To the mushroom grove!")
+    ```
+  related: [if statement, else]
+- term: branch
+  definition: One of the paths an if statement can take. Only one branch runs each time.
+  example: An `if` with an `else` has two branches.
+  related: [if statement, else]
+- term: indentation
+  definition: The spaces at the start of a line. Python uses indentation to see which lines belong inside an if.
+  example: |
+    ```python
+    if gold >= 10:
+        print("This line is indented by 4 spaces.")
+    ```
+  related: [if statement, syntax]
+- term: compound condition
+  definition: A condition built from smaller ones, joined with and or or.
+  example: '`age >= 10 and gold >= 3` is True only when both parts are True.'
+  related: [condition, boolean]
+# Region 5: The Endless Mines
+- term: loop
+  definition: Code that repeats. A loop runs the same lines again and again, so you don't have to write them many times.
+  example: '`while digs < 3:` repeats the lines under it.'
+  related: [while loop, infinite loop]
+- term: while loop
+  definition: A loop that repeats its indented lines as long as its condition is True. Python checks the condition before each repeat.
+  example: |
+    ```python
+    digs = 0
+    while digs < 3:
+        print("Dig!")
+        digs = digs + 1
+    ```
+  related: [loop, counter, break]
+- term: counter
+  definition: A variable that counts things. It usually starts at 0 and goes up by 1 each time something happens.
+  example: '`gems = gems + 1`'
+  related: [while loop]
+- term: infinite loop
+  definition: A loop that never stops, because its condition never turns False. Something inside the loop must change, so the loop can end.
+  example: '`while True:` with no `break` runs forever.'
+  related: [while loop, break]
+- term: break
+  definition: An instruction that jumps out of a loop right away. Python goes on with the first line after the loop.
+  example: |
+    ```python
+    while True:
+        print("Dig!")
+        break
+    ```
+  related: [loop, while loop]
+# Region 6: Clocktower Peaks
+- term: for loop
+  definition: A loop that runs its indented lines once for each value it is given. It knows how many times it will run before it starts.
+  example: |
+    ```python
+    for bell in range(3):
+        print("DONG!")
+    ```
+  related: [range, loop variable, nested loop]
+- term: range
+  definition: Makes the numbers for a for loop. `range(start, stop, step)` starts at start, jumps by step, and stops just before stop.
+  example: '`range(1, 10, 2)` gives 1, 3, 5, 7, 9.'
+  related: [for loop, off-by-one error]
+- term: loop variable
+  definition: The variable in a for loop that holds the current value. The loop gives it the next value on every pass, all by itself.
+  example: 'In `for step in range(4):`, the loop variable is `step`. It is 0, then 1, then 2, then 3.'
+  related: [for loop]
+- term: accumulator
+  definition: A variable that collects a total while a loop runs. It starts at 0, and every pass adds a little more.
+  example: |
+    ```python
+    total = 0
+    for coins in range(1, 4):
+        total = total + coins
+    ```
+  related: [for loop]
+- term: nested loop
+  definition: A loop inside another loop. The inner loop runs all the way through on every pass of the outer loop.
+  example: |
+    ```python
+    for row in range(2):
+        for col in range(3):
+            print("*")
+    ```
+  related: [for loop]
+- term: off-by-one error
+  definition: A bug where a loop runs one time too many or one time too few. With range, it often happens because range stops just before its stop number.
+  example: "`range(1, 12)` stops at 11, so 12 o'clock is skipped."
+  related: [range, bug]

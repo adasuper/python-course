@@ -20,6 +20,20 @@ describe('storage (IndexedDB)', () => {
     expect((await storage.profiles()).find((x) => x.id === p.id)).toBeUndefined();
     expect(await storage.draft(p.id, 'r1-q1')).toBeUndefined();
   });
+
+  it('keeps rubber-duck answers apart from drafts, so they never reach a save file', async () => {
+    const storage = await Storage.open();
+    const p = newProfile('Quiet Heron', 'avatar-1', 'moss', 'r1');
+    await storage.saveProfile(p);
+    expect(await storage.duck(p.id, 'r10-q4')).toEqual({ answers: [], finished: false });
+    await storage.saveDraft(p.id, 'r10-q4', 'x = 1');
+    await storage.saveDuck(p.id, 'r10-q4', { answers: ['It stores one in x.'], finished: true });
+    expect(await storage.duck(p.id, 'r10-q4')).toEqual({ answers: ['It stores one in x.'], finished: true });
+    // Save files and save codes take drafts from here: no free text from the duck.
+    expect(await storage.drafts(p.id)).toEqual({ 'r10-q4': 'x = 1' });
+    await storage.deleteProfile(p.id);
+    expect(await storage.duck(p.id, 'r10-q4')).toEqual({ answers: [], finished: false });
+  });
 });
 
 const good = {

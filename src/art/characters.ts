@@ -19,6 +19,7 @@ import type { PixelSprite } from './types';
  *   O outline   1 skin   2 skin shade   3 hair   4 hair shade   e eyes
  *   5 cloak     6 cloak shade           7 trousers   8 shoes
  *   G glasses   L lens glint   W/w wheel (dark/light)  9 wheelchair seat
+ *   Y sparkle (the stars of a bump, the sparkles of a celebration)
  *   a b c x z   accessory colours (hats, aprons, bells…), set per character
  *
  * A palette per character maps roles to real colours, so one body template
@@ -474,6 +475,7 @@ const AVATAR_DEFS: AvatarDef[] = [
 export const AVATARS: { id: string; alt: string }[] = AVATAR_DEFS.map(({ id, alt }) => ({ id, alt }));
 
 const COMMON_ROLES: Record<string, string> = {
+  Y: '#ffd84a',
   O: '#2b1d2e',
   e: '#1d1424',
   7: '#4b3b5c',
@@ -484,7 +486,7 @@ const COMMON_ROLES: Record<string, string> = {
   L: '#b4e6ff',
 };
 
-interface PersonOptions {
+export interface PersonOptions {
   skin: [string, string];
   hair: [string, string];
   style: HairStyle;
@@ -532,7 +534,60 @@ export interface AvatarArt {
   up: string[][];
   left: string[][];
   right: string[][];
+  /** One frame per direction for a bump: stars over the head (F-ONB-03). It is a still
+   *  picture, so it also works as the "static bonk icon" with reduced motion (F-API-13). */
+  bonk: Record<Direction, string[]>;
+  /** Facing the player with both arms up, under sparkles. */
+  celebrate: string[];
   palette: Record<string, string>;
+}
+
+const DIZZY_STARS = px`
+  ..Y.........Y...
+  .YYY.......YYY..
+  ..Y.........Y...
+`;
+
+const SPARKLES = px`
+  .Y............Y.
+  YYY..........YYY
+  .Y............Y.
+`;
+
+/** Both arms raised beside the head (starting at row 3). */
+const ARMS_UP = px`
+  .O1O........O1O.
+  .O5O........O5O.
+  .O5O........O5O.
+  .O5O........O5O.
+  .O5O........O5O.
+  .O5O........O5O.
+  .O5O........O5O.
+`;
+
+/** The front torso with the arms gone from the sides (they are up). */
+const TORSO_FRONT_ARMS_UP = px`
+  ...O55555555O...
+  ...O55555555O...
+  ...O55666655O...
+`;
+
+function celebrateFrame(o: PersonOptions): Frame {
+  let f = stack([...HEAD_DOWN, ...TORSO_FRONT_ARMS_UP, ...LEGS_FRONT_A], HAIR[o.style].down);
+  if (o.glasses) f = overlay(f, GLASSES.down);
+  if (o.wheelchair) {
+    f = overlay(f, WHEELCHAIR.down, 11);
+    // The chair's armrests stay; the arms themselves are up.
+    f = overlay(
+      f,
+      px`
+      ...O55666655O...
+      .OwOO566665OOwO.
+    `,
+      11,
+    );
+  }
+  return stack(f, SPARKLES, [...Array(3).fill('................'), ...ARMS_UP]);
 }
 
 /** All four directions (two walk frames each) for one avatar in one colour theme. */
@@ -551,18 +606,25 @@ export function avatarFrames(avatarId: string, themeId: string): AvatarArt {
     wheelchair: def.wheelchair,
   };
   const left = personFrames(opts, 'left');
+  const down = personFrames(opts, 'down');
+  const up = personFrames(opts, 'up');
+  const right = left.map(mirrorX) as [Frame, Frame];
+  const dizzy = (f: Frame) => overlay(f, DIZZY_STARS);
   return {
-    down: personFrames(opts, 'down'),
-    up: personFrames(opts, 'up'),
+    down,
+    up,
     left,
-    right: left.map(mirrorX),
+    right,
+    bonk: { down: dizzy(down[0]), up: dizzy(up[0]), left: dizzy(left[0]), right: dizzy(right[0]) },
+    celebrate: celebrateFrame(opts),
     palette: personPalette(opts),
   };
 }
 
 // ── Villagers (facing down, two idle "bob" frames) ────────────────────────────────────
 
-function villager(
+/** A villager facing down, with two idle "bob" frames. Regions use it for their people. */
+export function villager(
   name: string,
   o: PersonOptions,
   accessory: Frame = [],
@@ -860,7 +922,8 @@ const BYTE_TALK = plot(BYTE_BUST, [
 
 // ── Bugs ──────────────────────────────────────────────────────────────────────────────
 
-const BUG_PALETTE: Record<string, string> = {
+/** Bugs: O outline, V body, L highlight, w/e eyes, M mouth, g legs; Y/y bell gold. */
+export const BUG_PALETTE: Record<string, string> = {
   O: '#2b1d2e',
   Y: '#f7cd4f',
   y: '#c9972f',

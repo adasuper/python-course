@@ -37,15 +37,26 @@ export interface Settings {
   editorFontSize: number;
   highContrast: boolean;
   font: 'atkinson' | 'opendyslexic' | 'system';
+  codeFont: 'atkinson' | 'system';
+  /** Single-key shortcuts (WASD, Q, L, E, ".") (WCAG 2.1.4). Arrows and Enter always work. */
+  shortcuts: boolean;
+  /** Read aloud (§14.5). `voice` is a voice name; '' picks the first offline voice. */
+  tts: { autoRead: boolean; voice: string; rate: number; readCode: boolean };
+  /** Volumes from 0 to 1. Sound effects are off by default (§14.4). */
+  audio: { master: number; music: number; effects: number };
 }
 
 export interface Counters {
   /** Times "Show the real Python error" was opened (the Error Reader badge). */
   realErrorViews: number;
+  /** Programs run in the Workshop (Workshop Inventor). */
+  workshopRuns: number;
+  /** Rubber-duck chats with Byte (Duck Whisperer, Region 10). */
+  duckChats: number;
 }
 
 export interface Profile {
-  schemaVersion: 2;
+  schemaVersion: 4;
   id: string;
   nickname: string;
   avatarId: string;
@@ -55,6 +66,8 @@ export interface Profile {
   quests: Record<string, QuestRecord>;
   checks: Record<string, CheckRecord>;
   items: string[];
+  /** Earned badges: id → the date it was earned. */
+  badges: Record<string, string>;
   poisVisited: Record<string, string[]>;
   seen: { opening: boolean; regionIntros: string[]; conceptScenes: string[] };
   /** Where the student left off: region, map position and the quest that was open. */
@@ -72,6 +85,10 @@ export const DEFAULT_SETTINGS: Settings = {
   editorFontSize: 16,
   highContrast: false,
   font: 'atkinson',
+  codeFont: 'atkinson',
+  shortcuts: true,
+  tts: { autoRead: false, voice: '', rate: 1, readCode: false },
+  audio: { master: 0.8, music: 0, effects: 0 },
 };
 
 export function today(): string {
@@ -86,7 +103,7 @@ export function newProfile(
   defaults: Partial<Pick<Settings, 'textScale' | 'reducedMotion' | 'replaySpeed'>> = {},
 ): Profile {
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
     id: crypto.randomUUID(),
     nickname,
     avatarId,
@@ -96,6 +113,7 @@ export function newProfile(
     quests: {},
     checks: {},
     items: [],
+    badges: {},
     poisVisited: {},
     seen: { opening: false, regionIntros: [], conceptScenes: [] },
     location: { region: firstRegion, at: null, quest: null },
@@ -105,7 +123,7 @@ export function newProfile(
       ...(defaults.reducedMotion !== undefined && { reducedMotion: defaults.reducedMotion }),
       ...(defaults.replaySpeed !== undefined && { replaySpeed: defaults.replaySpeed }),
     },
-    counters: { realErrorViews: 0 },
+    counters: { realErrorViews: 0, workshopRuns: 0, duckChats: 0 },
     lastSavedOutHash: null,
   };
 }

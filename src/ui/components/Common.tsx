@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
 import type { PyRunner } from '../../runtime/pyRunner';
 import { announcement, dismissToast, regions, toasts } from '../../state/store';
+import { playEffect } from '../audio';
 
 const ART = `${import.meta.env.BASE_URL}assets/art/`;
 
@@ -31,9 +32,11 @@ export function Modal({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const first = ref.current?.querySelector<HTMLElement>(
-      'input, textarea, button, [href], [tabindex]:not([tabindex="-1"])',
-    );
+    const first =
+      ref.current?.querySelector<HTMLElement>('[data-autofocus]') ??
+      ref.current?.querySelector<HTMLElement>(
+        'input, textarea, button, [href], [tabindex]:not([tabindex="-1"])',
+      );
     first?.focus();
     return () => previous?.focus?.();
   }, []);
@@ -77,12 +80,17 @@ export function Modal({
 }
 
 export function Toasts({ onCopyCode, onSaveFile }: { onCopyCode: () => void; onSaveFile: () => void }) {
+  // A little fanfare for a new badge or level (only with sound effects turned on).
+  const celebrations = toasts.value.filter((x) => x.kind === 'celebrate').at(-1)?.id;
+  useEffect(() => {
+    if (celebrations) playEffect('badge');
+  }, [celebrations]);
   return (
     <div class="toasts">
       {toasts.value.map((toast) => (
         <div key={toast.id} class={`toast toast-${toast.kind}`}>
-          <span aria-hidden="true">
-            {toast.kind === 'save-point' ? '💾' : toast.kind === 'reward' ? '✨' : 'ℹ️'}
+          <span aria-hidden="true" class="toast-icon">
+            {toast.icon ?? (toast.kind === 'save-point' ? '💾' : toast.kind === 'reward' ? '✨' : 'ℹ️')}
           </span>
           <span>{toast.text}</span>
           {toast.kind === 'save-point' && (

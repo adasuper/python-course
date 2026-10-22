@@ -266,6 +266,28 @@ textarea {
 .toast-save-point {
   border-color: var(--accent);
 }
+/* Badges and level-ups: one gentle pop, never a flash (F-PRG-08). Reduced motion turns
+   every animation off (see the end of this file). */
+.toast-celebrate {
+  border-color: var(--accent);
+  font-weight: 700;
+  animation: celebrate-pop 500ms ease-out 1;
+}
+.toast-celebrate .toast-icon {
+  font-size: 1.6rem;
+}
+/* Scale only: fading the opacity would leave the text below contrast for a moment. */
+@keyframes celebrate-pop {
+  0% {
+    transform: scale(0.85);
+  }
+  70% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 
 /* ----- screens ----- */
 .screen {
@@ -313,7 +335,13 @@ main:focus {
   gap: 0.5rem;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
+.profile-row {
+  display: flex;
+  gap: 0.3rem;
+  align-items: stretch;
+}
 .profile-button {
+  flex: 1;
   display: flex;
   gap: 0.6rem;
   align-items: center;
@@ -783,6 +811,29 @@ button.run {
   border-left: 4px solid var(--accent);
   padding-left: 0.6rem;
 }
+.trace-annotated {
+  list-style: none;
+  padding: 0.5rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.trace-annotated li {
+  display: grid;
+  gap: 0.1rem;
+}
+.trace-line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.trace-note {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: #fff3c4;
+}
+.trace-note::before {
+  content: '↳ Byte: ';
+  font-weight: 700;
+}
 .real-error {
   background: #1d1726;
   color: #ffd8d1;
@@ -912,14 +963,63 @@ button.run {
   box-shadow: 0 0 0 3px var(--accent);
 }
 .parsons-handle {
-  flex: 1;
+  /* Narrow columns put the line's buttons below it, instead of squeezing the code. */
+  flex: 1 1 11rem;
   min-height: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
   text-align: left;
-  background: transparent;
-  border: none;
   padding: 0.1rem 0.2rem;
-  font-weight: 400;
+  border-radius: 4px;
   cursor: grab;
+  /* Touch drags move the line instead of scrolling the page. */
+  touch-action: none;
+  user-select: none;
+}
+.parsons-handle code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.indent-label {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.parsons-handle[aria-selected='true'] {
+  background: var(--parchment-2);
+}
+.parsons-item.dragging {
+  opacity: 0.4;
+}
+.parsons-drop {
+  list-style: none;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.parsons-float {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  background: #fff;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.25);
+}
+.parsons-scraps {
+  background: var(--parchment-2);
+  border-style: dashed;
+}
+.parsons-tray-help {
+  margin: 0 0 0.3rem;
+}
+.parsons-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  align-items: center;
+  margin-top: 0.5rem;
 }
 .parsons-buttons {
   margin-left: auto;
@@ -987,6 +1087,60 @@ button.run {
   display: flex;
   gap: 0.8rem;
   align-items: flex-start;
+}
+.item-card {
+  width: 100%;
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink);
+}
+.item-name {
+  display: block;
+  font-size: 1.1rem;
+}
+.item-summary {
+  display: block;
+}
+.item-page {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+}
+.inventory-screen section.card {
+  margin-bottom: 0.8rem;
+}
+.search input {
+  margin-left: 0.3rem;
+}
+.badges {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.badge-card {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.badge-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.badge-card.not-yet {
+  border-style: dashed;
+}
+.badge-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+.glossary-list dt {
+  font-weight: 700;
+}
+.glossary-list dd {
+  margin: 0 0 0.5rem;
 }
 
 .loading-panel {
@@ -1107,4 +1261,454 @@ img.pixel,
 }
 .credits-link {
   margin-top: 1rem;
+}
+
+/* ----- M2.1: fill gaps, typed input, session lamps, bonus challenges, twins ----- */
+.note-locked {
+  color: var(--warn);
+  font-weight: 700;
+  margin: 0.2rem 0;
+}
+.check-label {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+.input-so-far {
+  background: #1d1726;
+  color: #f4ecff;
+  border-radius: 6px;
+  padding: 0.5rem;
+  max-height: 10rem;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.modal form label {
+  display: block;
+  font-weight: 700;
+  margin: 0.5rem 0 0.2rem;
+}
+.modal form input[type='text'] {
+  width: 100%;
+  font-family: var(--font-code);
+  font-size: 1.05rem;
+}
+.session {
+  background: var(--parchment-2);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+  margin: 0.5rem 0;
+}
+.duck-panel,
+.starters {
+  background: var(--parchment-2);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem 0.6rem;
+  margin: 0.5rem 0;
+}
+.duck-panel textarea {
+  width: 100%;
+  font-size: 1rem;
+  margin-top: 0.2rem;
+}
+.duck-panel label {
+  font-weight: 700;
+}
+.duck-line {
+  background: var(--code-bg);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  margin: 0.3rem 0;
+  white-space: pre-wrap;
+  font-family: var(--font-code);
+}
+.duck-notes {
+  padding-left: 1.5rem;
+  margin: 0.3rem 0;
+}
+.duck-notes li {
+  margin: 0.2rem 0;
+}
+.starters fieldset {
+  border: none;
+  padding: 0;
+  margin: 0.3rem 0;
+}
+.starters label {
+  display: block;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  margin: 0.3rem 0;
+  cursor: pointer;
+}
+.starters label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--parchment);
+}
+.starters .starter-description {
+  display: block;
+  margin-left: 1.6rem;
+}
+.lamps {
+  list-style: none;
+  padding: 0;
+  margin: 0.3rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+}
+.lamps li {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+}
+.lamps li.lit {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  font-weight: 700;
+}
+.bonus-list {
+  list-style: none;
+  padding: 0;
+}
+.bonus-list li {
+  margin: 0.3rem 0;
+}
+.bonus-status {
+  font-weight: 700;
+}
+.bonus-status.ok {
+  color: var(--ok);
+}
+.xp-tag {
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.twin {
+  margin: 0.4rem 0 0.8rem;
+  border: 2px dashed var(--accent);
+}
+.twin h3 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+.twin .code-block {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ----- tabs (WAI-ARIA pattern) and the Spellbook ----- */
+.tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  border-bottom: 3px solid var(--line);
+  margin-bottom: 0.6rem;
+}
+.tab-list [role='tab'] {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+.tab-list [role='tab'][aria-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.spell-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.spell-list h3 {
+  margin-top: 0;
+}
+.spell-code {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+}
+.spell-code .code-block {
+  width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.example-notes li {
+  margin: 0.2rem 0;
+}
+.glossary-entry {
+  margin-bottom: 0.5rem;
+}
+.glossary-example {
+  border-left: 4px solid var(--accent);
+  padding-left: 0.6rem;
+}
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  min-height: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ----- Workshop ----- */
+.field {
+  display: block;
+  margin: 0.4rem 0;
+  font-weight: 700;
+}
+.field input,
+.field select {
+  margin-left: 0.3rem;
+  font-weight: 400;
+}
+.program-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.program-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.3rem;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+}
+.program-list li.current {
+  border-color: var(--accent);
+}
+.api-list dt {
+  margin-top: 0.5rem;
+}
+.api-list dd {
+  margin: 0;
+}
+/* Long lines wrap: a scrolling box would need its own keyboard focus. */
+.api-list .code-block {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+button.danger {
+  background: var(--err);
+  color: var(--parchment);
+  border-color: var(--err);
+}
+
+/* ----- Settings ----- */
+.settings-screen section.card {
+  margin-bottom: 0.8rem;
+}
+.setting {
+  margin: 0.5rem 0;
+  border: none;
+  padding: 0;
+}
+.setting legend {
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.small-choice {
+  padding: 0.3rem 0.6rem;
+}
+.slider {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.slider label {
+  min-width: 8rem;
+  font-weight: 700;
+}
+.quick-settings {
+  margin-top: 1rem;
+}
+.small-heading {
+  font-size: 1rem;
+  margin: 0 0 0.4rem;
+}
+
+/* ----- narrow quest screen: tabs (F-QST-03) ----- */
+.quest-grid.narrow {
+  grid-template-columns: 1fr;
+}
+.sticky-run {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--parchment);
+  border-top: 2px solid var(--line);
+  padding: 0.4rem 0.6rem;
+  margin-top: 0.6rem;
+}
+.sticky-run .run-bar {
+  margin: 0;
+}
+
+/* ----- offline, updates and the system check (§16, F-OFF-08) ----- */
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.4rem 0.8rem 0;
+}
+.offline-status.ready {
+  font-weight: 700;
+}
+.offline-pill {
+  color: var(--ink);
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: var(--parchment-2);
+  border: 1px solid var(--line);
+}
+.system-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6rem 0;
+}
+.system-table th,
+.system-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .system-table thead {
+    display: none;
+  }
+  .system-table tr,
+  .system-table th,
+  .system-table td {
+    display: block;
+  }
+}
+
+/* ----- world map (F-WLD-08) ----- */
+.road-picture {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  display: block;
+  margin: 0.5rem 0 1rem;
+}
+.road-picture .road {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 4;
+  stroke-dasharray: 8 6;
+}
+.road-picture circle {
+  stroke: var(--ink);
+  stroke-width: 2;
+  fill: var(--parchment-2);
+}
+.road-picture .stop-restored circle {
+  fill: var(--ok-bg, #d9f2e3);
+}
+.road-picture .stop-locked circle {
+  fill: var(--parchment);
+  stroke-dasharray: 3 3;
+}
+.road-picture text {
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+.region-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.region-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--parchment);
+}
+.region-row.region-locked {
+  border-style: dashed;
+}
+.region-number {
+  font-weight: 700;
+  min-width: 1.6rem;
+  text-align: center;
+}
+.region-name {
+  flex: 1 1 14rem;
+}
+.more-regions {
+  padding: 0.5rem 0.7rem;
+  border: 2px dashed var(--line);
+  border-radius: 8px;
+}
+
+/* ----- the tapestry: printed patterns on a loom (Region 6) ----- */
+.output-tapestry .output-body {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 1.3em, rgba(138, 115, 86, 0.18) 1.3em 1.35em),
+    repeating-linear-gradient(90deg, transparent 0 0.9em, rgba(138, 115, 86, 0.18) 0.9em 0.95em),
+    var(--parchment);
+  border: 6px double var(--line);
+}
+.output-tapestry pre {
+  font-size: 1.35rem;
+  line-height: 1.3;
+  letter-spacing: 0.32em;
+  font-weight: 700;
+}
+
+/* The finale (M4.6). */
+.finale-intro {
+  font-size: 1.15rem;
+}
+.finale-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.fragment-list,
+.journey-list,
+.cast-list {
+  padding-left: 1.2rem;
+}
+.fragment-list li,
+.journey-list li {
+  margin: 0.25rem 0;
+}
+.credits-roll {
+  text-align: center;
+}
+.credits-roll h3 {
+  margin: 1rem 0 0.2rem;
+}
+.credits-roll .cast-list {
+  list-style: none;
+  padding: 0;
+}
+.finale-thanks {
+  font-size: 1.15rem;
+  margin: 1.2rem 0;
 }

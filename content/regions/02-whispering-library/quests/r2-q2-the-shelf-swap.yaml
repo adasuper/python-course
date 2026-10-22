@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r2-q2-the-shelf-swap
+region: whispering-library
+title: The Shelf Swap
+type: investigate
+npc: tobin
+learning_outcome: Trace a variable's value line by line as it is reassigned.
+csta: [2-AP-11]
+estimated_minutes: 7
+prerequisites: [r2-q1-labeled-jars]
+vocabulary: [variable, value, reassign]
+rewards: { item: jar-of-labels }
+
+story_intro: |
+  Tobin Turnpage scratches his head. "I keep the shelf name in a jar called `shelf`. Then I changed it. Then I changed it again. Where are the dragon books now?"
+
+  When you store a new value in a jar, the old one is poured out. That is called [[reassigning|reassign]] a variable.
+goal: Run the program, watch the Scroll, and answer Tobin's questions. Try the changes the questions ask for!
+concept_card: |
+  A variable holds **one value at a time**. When you store a new value, the old one is gone.
+  ```python
+  shelf = "Mysteries"
+  shelf = "Dragons"
+  print(shelf)   # Dragons
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_shelver, name: Tobin Turnpage }
+
+starter_code: |
+  shelf = "Mysteries"
+  print(shelf)
+  shelf = "Dragons"
+  print(shelf)
+
+questions:
+  - kind: number
+    question: Run the program. How many lines appear on the Scroll of Output?
+    answer: 2
+    hint: Count the `print` lines. Each one makes one line on the Scroll.
+    explain: There are two `print` lines, so there are two lines on the Scroll.
+    verify: { kind: output_lines }
+  - kind: mcq
+    question: After line 3 runs, what is inside the jar `shelf`?
+    options:
+      - '"Dragons"'
+      - '"Mysteries"'
+      - Both "Mysteries" and "Dragons"
+    answer: 0
+    hint: A jar holds one thing at a time. What did line 3 put in it?
+    explain: Line 3 poured out "Mysteries" and put in "Dragons".
+  - kind: mcq
+    question: Change line 3 to `shelf = "Poems"` and run it. What is the second line on the Scroll now?
+    options:
+      - Poems
+      - Dragons
+      - Mysteries
+    answer: 0
+    hint: Line 4 prints whatever is in the jar after line 3.
+    explain: The jar now gets "Poems" on line 3, so line 4 shows Poems.
+    verify:
+      kind: try
+      outcome: ok
+      code: |
+        shelf = "Mysteries"
+        print(shelf)
+        shelf = "Poems"
+        print(shelf)
+      output: |
+        Mysteries
+        Poems
+  - kind: mcq
+    question: Put the code back. Now delete line 1, `shelf = "Mysteries"`, and run it. What happens?
+    options:
+      - Python shows an error.
+      - It prints Dragons twice.
+      - It prints nothing at all.
+    answer: 0
+    hint: When line 2 runs, has anything been put in the jar yet?
+    explain: Line 2 tries to look in a jar that has no label yet, so Python shows a NameError.
+    verify:
+      kind: try
+      outcome: error
+      code: |
+        print(shelf)
+        shelf = "Dragons"
+        print(shelf)
+
+hints:
+  - Read the program from the top. After each line, say out loud what is in the jar `shelf`.
+  - After line 1, `shelf` holds "Mysteries". After line 3, it holds "Dragons". The old value is gone.
+  - |
+    Trace it line by line:
+    ```text
+    line 1: shelf gets "Mysteries"
+    line 2: prints Mysteries
+    line 3: shelf gets "Dragons"
+    line 4: prints ____
+    ```
+
+story_outro: |
+  "Dragons! On the Dragons shelf! Of course!" Tobin runs off, then runs back. "Thanks! Here, take this." You earned the **Jar of Labels**. A variable holds one value at a time, and a new value replaces the old one.

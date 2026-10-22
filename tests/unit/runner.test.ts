@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { PyRunner } from '../../src/runtime/pyRunner';
 import type { FromWorker, ToWorker } from '../../src/runtime/protocol';
 import { BLOCKED_GETTERS, BLOCKED_GLOBALS, neuterNetwork } from '../../src/worker/neuter';
@@ -102,5 +102,50 @@ describe('a crashed worker is handled like a timeout (F-EXE-05)', () => {
     FakeWorker.made[0]!.onerror?.({ message: 'no wasm', preventDefault() {} } as ErrorEvent);
     await expect(runner.whenReady()).rejects.toThrow('no wasm');
     expect(runner.status.value).toBe('failed');
+  });
+});
+
+describe('the hard timeout (F-EXE-04, §6.3)', () => {
+  it('answers limits.timeout and starts a fresh worker when a run never finishes', async () => {
+    vi.useFakeTimers();
+    try {
+      FakeWorker.made = [];
+      const runner = new PyRunner({
+        indexURL: '/pyodide/',
+        timeoutMs: 3000,
+        createWorker: () => new FakeWorker() as unknown as Worker,
+      });
+      FakeWorker.made[0]!.boot();
+      const pending = runner.run(request);
+      await vi.advanceTimersByTimeAsync(2999);
+      expect(FakeWorker.made[0]!.terminated).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      const result = await pending;
+      expect(result.status).toBe('timeout');
+      expect(result.error).toMatchObject({ key: 'limits.timeout', params: { seconds: '3' } });
+      expect(FakeWorker.made[0]!.terminated).toBe(true);
+      expect(FakeWorker.made).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('waits for beforeInit before asking the worker to load Python, but not on a restart', async () => {
+    FakeWorker.made = [];
+    let release!: () => void;
+    const runner = new PyRunner({
+      indexURL: '/pyodide/',
+      timeoutMs: 60_000,
+      createWorker: () => new FakeWorker() as unknown as Worker,
+      beforeInit: new Promise<void>((resolve) => (release = resolve)),
+    });
+    expect(FakeWorker.made[0]!.sent).toEqual([]);
+    release();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(FakeWorker.made[0]!.sent.map((m) => m.kind)).toEqual(['init']);
+    FakeWorker.made[0]!.boot();
+    void runner.restart();
+    expect(FakeWorker.made[1]!.sent.map((m) => m.kind)).toEqual(['init']);
   });
 });

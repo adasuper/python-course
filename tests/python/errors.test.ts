@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getPyHost, type PyHost } from '../../scripts/lib/pyHost';
@@ -18,6 +18,9 @@ const DEEP =
 // One fixture per classifier row in docs/specs.md §6.8, pinned to Python 3.14 messages.
 const CASES: [string, string, Record<string, string>?, number?][] = [
   ['print("Hear ye!)', 'syntax.unclosed_string', {}, 1],
+  ['note = """Dear baker,\nPlease bake bread.', 'syntax.unclosed_string', {}, 1],
+  ['shelf = [1, 2, 3', 'syntax.unclosed_bracket', { bracket: '[', closer: ']' }, 1],
+  ['jar = {"gold": 3', 'syntax.unclosed_bracket', { bracket: '{', closer: '}' }, 1],
   ['print("Market at noon!"', 'syntax.unclosed_bracket', { bracket: '(', closer: ')' }, 1],
   ['print("hi"))', 'syntax.extra_bracket'],
   ['print "hi"', 'syntax.print_no_parens'],
@@ -41,11 +44,33 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['print(5 + "a")', 'type.number_plus_str'],
   ['for i in range("5"):\n    pass', 'type.str_as_int'],
   ['def f(a):\n    return a\nf(1, 2)', 'type.arg_count'],
+  ['def heal(hp, bonus):\n    return hp + bonus\nheal(5)', 'type.arg_count'],
   ['x = None\nprint(x + 1)', 'type.none_value'],
   ['x = 5\nx()', 'type.not_callable', { what: 'int' }],
-  ['print([1, 2][5])', 'index.out_of_range'],
-  ['d = {"gems": 1}\nprint(d["gold"])', 'key.missing', { key: "'gold'" }],
+  ['print([1, 2][5])', 'index.out_of_range', { name: '[1, 2]', length: '2', last: '1', index: '5' }],
+  // Which list, how long, and which position (worked out without re-running any code).
+  [
+    'shelf = ["a", "b", "c"]\nprint(shelf[3])',
+    'index.out_of_range',
+    { name: 'shelf', length: '3', last: '2' },
+  ],
+  ['def f(xs):\n    return xs[len(xs)]\nf([1, 2])', 'index.out_of_range', { name: 'xs', index: '2' }, 2],
+  ['grid = [[1, 2], [3]]\nprint(grid[1][1])', 'index.out_of_range', { name: 'grid[1]', length: '1' }],
+  ['word = "owl"\nprint(word[-4])', 'index.out_of_range', { unit: 'characters', index: '-4' }],
+  ['shelf = []\nprint(shelf[0])', 'index.empty', { name: 'shelf', index: '0' }],
+  ['shelf = [1]\nshelf.pop()\nshelf.pop()', 'index.pop_empty', {}, 3],
+  ['i = 9\nprint([1, 2][i * 2])', 'index.generic'],
+  ['d = {"gems": 1}\nprint(d["gold"])', 'key.missing', { key: "'gold'", name: 'd', keys: "'gems'" }],
+  ['d = {}\nd["x"] += 1', 'key.empty', { key: "'x'", name: 'd' }],
+  ['d = {"a": 1}\nd.pop("b")', 'key.generic', { key: "'b'" }],
   ['print(1 / 0)', 'zero_division'],
+  [
+    'total = 9\nassert total == 10, "the total is wrong"',
+    'assert.failed',
+    { note: 'Its note says: "the total is wrong"' },
+    2,
+  ],
+  ['assert 1 > 2', 'assert.failed', { note: '' }],
   ['int("abc")', 'value.int_conversion', { text: "'abc'" }],
   ['float("x")', 'value.float_conversion'],
   ['[1].remove(2)', 'value.remove_missing'],
@@ -65,9 +90,12 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['import math\nmath.sqrt(-1)', 'value.generic'],
   ['x = [0] * (10**9)', 'limits.memory'],
   ['x = [0] * (2**40)', 'limits.memory'],
-  ['assert False', 'generic'],
+  ['raise LookupError("lost")', 'generic'],
   ['import time\ntime.sleep("1")', 'api.sleep_not_number'],
   ['import time\ntime.sleep(-1)', 'api.sleep_negative'],
+  // Fill quests: a gap left as it was, even where it isn't valid Python yet.
+  ['gold = ____\nprint(gold)', 'fill.gap_left', {}, 1],
+  ['gold = 7\nif gold ____ 10:\n    print("in")', 'fill.gap_left', {}, 2],
 ];
 
 const GRID = { kind: 'grid' as const, grid: 'H..' };
@@ -114,6 +142,23 @@ describe('error translation', () => {
         !tested.has(k) && !(k in ELSEWHERE) && !elsewhere.includes(`'${k}'`) && !world.includes(`'${k}'`),
     );
     expect(missing).toEqual([]);
+  });
+
+  it('has a template in content/errors.yaml for every key the code can produce (F-FBK-08)', () => {
+    const yaml = readFileSync(join(import.meta.dirname, '../../content/errors.yaml'), 'utf8');
+    const templates = new Set([...yaml.matchAll(/^([a-z_.]+):\s*$/gm)].map((m) => m[1]!));
+    const dirs = ['../../src/python/codeweald', '../../src/runtime'].map((d) => join(import.meta.dirname, d));
+    const produced = new Set(['generic', 'zero_division']);
+    for (const dir of dirs)
+      for (const file of readdirSync(dir)) {
+        const text = readFileSync(join(dir, file), 'utf8');
+        for (const m of text.matchAll(
+          /["']((?:syntax|indent|name|type|index|key|value|attribute|assert|limits|api|sandbox|stage|fill|import|input)\.[a-z_]+)["']/g,
+        ))
+          produced.add(m[1]!);
+      }
+    expect(produced.size).toBeGreaterThan(60);
+    expect([...produced].filter((k) => !templates.has(k))).toEqual([]);
   });
 
   it('turns a broken quest map into a clear error', () => {

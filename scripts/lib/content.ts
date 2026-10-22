@@ -8,7 +8,9 @@ import type { z } from 'zod';
 import {
   CourseSchema,
   ErrorsSchema,
+  BadgesSchema,
   GlossarySchema,
+  WorkshopSchema,
   ItemsSchema,
   parseQuest,
   RegionSchema,
@@ -16,6 +18,8 @@ import {
   type CourseFile,
   type ErrorsFile,
   type GlossaryFile,
+  type BadgesFile,
+  type WorkshopFile,
   type ItemsFile,
   type NormalQuestFile,
   type PhaseFile,
@@ -29,6 +33,7 @@ import {
   SIDE_QUEST_XP,
   type Course,
   type Phase,
+  type PredictTwin,
   type Quest,
   type QuestBody,
   type Region,
@@ -59,6 +64,8 @@ export interface LoadedContent {
   course: Located<CourseFile> | null;
   glossary: GlossaryFile;
   items: ItemsFile;
+  badges: BadgesFile;
+  workshop: WorkshopFile | null;
   errors: ErrorsFile;
   regions: (Located<RegionFile> & { dir: string })[];
   quests: Map<string, Located<QuestFile> & { regionDir: string }>;
@@ -137,6 +144,8 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
     course: null,
     glossary: [],
     items: [],
+    badges: [],
+    workshop: null,
     errors: {},
     regions: [],
     quests: new Map(),
@@ -147,6 +156,8 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
   if (course) out.course = { file: rel(courseFile), ...course };
   out.glossary = parseWith(join(root, 'glossary.yaml'), GlossarySchema, problems)?.data ?? [];
   out.items = parseWith(join(root, 'items.yaml'), ItemsSchema, problems)?.data ?? [];
+  out.badges = parseWith(join(root, 'badges.yaml'), BadgesSchema, problems)?.data ?? [];
+  out.workshop = parseWith(join(root, 'workshop.yaml'), WorkshopSchema, problems)?.data ?? null;
   out.errors = parseWith(join(root, 'errors.yaml'), ErrorsSchema, problems)?.data ?? {};
 
   const regionsDir = join(root, 'regions');
@@ -239,6 +250,12 @@ export function isCodeChecked(body: Body) {
   return CODE_CHECKED.has(body.type);
 }
 
+/** Whether a unit's programs import `random` (then each run needs a seed, §6.7). */
+export function usesRandom(body: Body): boolean {
+  const programs = [body.starter_code, body.solution ?? '', ...(body.starters ?? []).map((s) => s.code)];
+  return programs.some((code) => /^\s*(import\s+random\b|from\s+random\s+import)/m.test(code));
+}
+
 /** The program a unit's solution stands for (Parsons solutions are assembled from lines). */
 export function solutionCode(body: Body): string {
   if (body.type === 'parsons' && body.parsons) {
@@ -296,7 +313,9 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
         add(prose.file, `glossary link [[${term}]] has no entry in glossary.yaml`, prose.line);
     }
     const tier3 = prose.path.at(-2) === 'hints' && prose.path.at(-1) === 2;
-    if (prose.value.includes('____') && !tier3)
+    // The fill-quest error messages talk about gaps.
+    const aboutGaps = prose.file.endsWith('errors.yaml') && String(prose.path[0]).startsWith('fill.');
+    if (prose.value.includes('____') && !tier3 && !aboutGaps)
       add(prose.file, `____ gaps belong only in fill starters and the third hint`, prose.line);
   }
 
@@ -305,6 +324,53 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     if (sentences > 2)
       add('content/glossary.yaml', `"${g.term}": keep the definition to 2 sentences (it has ${sentences})`);
   });
+
+  content.workshop?.maps.forEach((m, i) => {
+    for (const message of gridProblems(m.stage as StageSpec))
+      add('content/workshop.yaml', `map ${i + 1} (${m.id}): ${message}`);
+  });
+
+  const badgeIds = new Set<string>();
+  const regionIds = new Set(content.regions.map((r) => r.data.id));
+  content.badges.forEach((b, i) => {
+    const at = `badge ${i + 1} (${b.id})`;
+    if (badgeIds.has(b.id)) add('content/badges.yaml', `${at}: the id is used twice`);
+    badgeIds.add(b.id);
+    const tr = b.trigger;
+    if ((tr.kind === 'boss_defeated' || tr.kind === 'pois_visited') && !regionIds.has(tr.region))
+      add('content/badges.yaml', `${at}: region "${tr.region}" does not exist`);
+    if (tr.kind === 'quest_completed' && !content.quests.has(tr.quest))
+      add('content/badges.yaml', `${at}: quest "${tr.quest}" does not exist`);
+  });
+  // Every region has a Region Restorer badge, and an Explorer badge if it has secret corners
+  // (F-PRG-06, F-PRG-07).
+  for (const region of content.regions) {
+    const r = region.data;
+    const has = (kind: 'boss_defeated' | 'pois_visited') =>
+      content.badges.some((b) => b.trigger.kind === kind && b.trigger.region === r.id);
+    if (!has('boss_defeated'))
+      add('content/badges.yaml', `region "${r.id}" needs a Region Restorer badge (trigger boss_defeated)`);
+    if (r.overworld.objects.some((o) => o.kind === 'poi') && !has('pois_visited'))
+      add(
+        'content/badges.yaml',
+        `region "${r.id}" has secret corners, so it needs an Explorer badge (trigger pois_visited)`,
+      );
+  }
+  // Speakers are looked up across every loaded region, so a character id used in two regions
+  // must be the same character (like Byte).
+  const characters = new Map<string, { region: string; name: string; sprite: string }>();
+  for (const region of content.regions) {
+    for (const [id, npc] of Object.entries(region.data.npcs)) {
+      const first = characters.get(id);
+      if (!first) characters.set(id, { region: region.data.id, name: npc.name, sprite: npc.sprite });
+      else if (first.name !== npc.name || first.sprite !== npc.sprite)
+        add(
+          region.file,
+          `npc id "${id}" is already ${first.name} in ${first.region}: give this character another id`,
+          region.locate(['npcs', id]),
+        );
+    }
+  }
 
   if (content.course) {
     const course = content.course;
@@ -329,6 +395,12 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     });
     if (quest.rewards.item && !items.has(quest.rewards.item))
       add(q.file, `reward item "${quest.rewards.item}" is not in items.yaml`, q.locate(['rewards', 'item']));
+    if (quest.rewards.badge && !badgeIds.has(quest.rewards.badge))
+      add(
+        q.file,
+        `reward badge "${quest.rewards.badge}" is not in badges.yaml`,
+        q.locate(['rewards', 'badge']),
+      );
     if (quest.type !== 'boss' && !quest.concept_card)
       add(q.file, 'concept_card is required (it is shown in the Spellbook)', q.locate(['type']));
   }
@@ -337,9 +409,12 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     const b = unit.body;
     const where = unit.label;
     const at = (...path: (string | number)[]) => unit.locate(path);
+    // A comment-only plan is checked by its order, not by running it.
+    const byOrder = b.type === 'parsons' && b.parsons?.check === 'order';
     if (isCodeChecked(b)) {
       if (b.type !== 'parsons' && !b.solution) add(unit.file, `${where}: a solution is required`, at('type'));
-      if (b.validators.length === 0) add(unit.file, `${where}: add at least one validator`, at('type'));
+      if (b.validators.length === 0 && !byOrder)
+        add(unit.file, `${where}: add at least one validator`, at('type'));
       if (b.wrong_solutions.length < 2)
         add(unit.file, `${where}: add at least 2 wrong_solutions`, at('wrong_solutions'));
     }
@@ -365,6 +440,79 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     });
     if (b.type !== 'fill' && b.starter_code.includes('____'))
       add(unit.file, `${where}: ____ gaps belong only in fill quests`, at('starter_code'));
+    const carried = 'carry_code' in b && b.carry_code;
+    if (b.type === 'fill' && !carried && !b.starter_code.includes('____'))
+      add(unit.file, `${where}: a fill quest's starter_code needs at least one ____ gap`, at('starter_code'));
+    if (b.locked && b.type !== 'fill')
+      add(unit.file, `${where}: locked: true only works in fill quests`, at('locked'));
+    // Without `seed:` every run gets a new random seed (§6.7), so a quest that uses random
+    // must fix one, or check several with hidden_tests mode: seed.
+    const seedTests = b.validators.some((v) => v.type === 'hidden_tests' && v.mode === 'seed');
+    // runs_ok checks the student's own runs, each with a new seed; the content check runs the
+    // solutions with several seeds too (the capstone's free part).
+    const freeRuns = b.validators.some((v) => v.type === 'runs_ok');
+    // An investigate quest may show chance at work ("run it 5 times and compare"), as long as
+    // no answer counts its output lines.
+    const showsChance =
+      b.type === 'investigate' && !b.questions?.some((q) => q.verify?.kind === 'output_lines');
+    if (usesRandom(b) && b.seed === undefined && !seedTests && !freeRuns && !showsChance)
+      add(
+        unit.file,
+        `${where}: the code uses random: add \`seed:\` so every run gives the same result, or test several seeds with hidden_tests mode: seed`,
+        at('type'),
+      );
+    const editsCode = ['fix', 'fill', 'modify', 'make'].includes(b.type);
+    if (b.duck && !editsCode)
+      add(
+        unit.file,
+        `${where}: the duck talks through code the student edits (fix, fill, modify, make)`,
+        at('duck'),
+      );
+    if (b.starters) {
+      if (!editsCode || b.type === 'fill')
+        add(unit.file, `${where}: starters work in fix, modify and make quests`, at('starters'));
+      if (b.starter_code)
+        add(
+          unit.file,
+          `${where}: with starters, leave starter_code out (the student picks one)`,
+          at('starters'),
+        );
+      if ('carry_code' in b && b.carry_code)
+        add(unit.file, `${where}: a phase that carries code can't offer starters`, at('starters'));
+      const ids = b.starters.map((st) => st.id);
+      if (new Set(ids).size !== ids.length)
+        add(unit.file, `${where}: starter ids must differ`, at('starters'));
+    }
+    if (b.sample_solutions.length && !isCodeChecked(b))
+      add(unit.file, `${where}: sample_solutions need a quest type that runs checks`, at('sample_solutions'));
+    if (b.parsons) {
+      const n = b.parsons.lines.length;
+      b.parsons.alternatives.forEach((alt, i) => {
+        const sorted = [...alt].sort((x, y) => x - y);
+        if (sorted.length !== n || sorted.some((v, j) => v !== j))
+          add(
+            unit.file,
+            `${where}: alternative ${i + 1} must list every line number from 0 to ${n - 1} once`,
+            at('parsons', 'alternatives', i),
+          );
+      });
+    }
+    b.validators.forEach((v, i) => {
+      if (v.type === 'runs_ok' && v.distinct_inputs && !b.interactive_input)
+        add(
+          unit.file,
+          `${where}: runs_ok with distinct_inputs needs interactive_input: true (otherwise every run gets the same inputs)`,
+          at('validators', i),
+        );
+      if (v.type === 'hidden_tests' && v.mode === 'stages')
+        v.cases.forEach((c, j) => {
+          const stageAt = at('validators', i, 'cases', j);
+          if (!c.stage) add(unit.file, `${where}: every stages case needs a stage`, stageAt);
+          else
+            for (const message of gridProblems(c.stage as StageSpec))
+              add(unit.file, `${where}: ${message}`, stageAt);
+        });
+    });
     for (const message of gridProblems(b.stage as StageSpec))
       add(unit.file, `${where}: ${message}`, at('stage', 'grid'));
     const mistakeIds = new Set(b.common_mistakes.map((m) => m.id));
@@ -395,6 +543,17 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     }
     if (content.quests.get(r.boss)?.data.type !== 'boss')
       add(region.file, `boss "${r.boss}" must be a boss quest`, at(['boss']));
+    // A quest that names an npc is handed out on the map; otherwise it goes on the Quest Board.
+    for (const qid of listed) {
+      const q = content.quests.get(qid);
+      if (!q?.data.npc || q.data.side_quest) continue;
+      if (!r.overworld.objects.some((o) => o.kind === 'npc' && o.id === q.data.npc && o.quest === qid))
+        add(
+          q.file,
+          `npc "${q.data.npc}" does not offer this quest on the map: give that npc's map object \`quest: ${qid}\`, or remove \`npc:\` to put the quest on the Quest Board`,
+          q.locate(['npc']),
+        );
+    }
     const regionUnits = units(content).filter((u) => content.quests.get(u.questId)?.data.region === r.id);
     if (!regionUnits.some((u) => u.body.type === 'fix'))
       add(region.file, 'every region needs at least one fix-the-bug quest', at(['quests']));
@@ -420,6 +579,9 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     });
     if (!r.overworld.objects.some((o) => o.kind === 'spawn'))
       add(region.file, 'the overworld needs a spawn object', at(['overworld', 'objects']));
+    // Side quests and quests without an npc are offered on the Quest Board (F-WLD-07).
+    if (!r.overworld.objects.some((o) => o.kind === 'board'))
+      add(region.file, 'the overworld needs a Quest Board (a `board` object)', at(['overworld', 'objects']));
     r.knowledge_check.items.forEach((it, i) => {
       if (it.kind === 'mcq' && it.answer >= it.options.length)
         add(
@@ -473,23 +635,30 @@ export function compileBody(body: Body, baked?: ValidatorSpec[]): QuestBody {
     goal: rich(body.goal),
     stage: body.stage as StageSpec,
     starterCode: body.starter_code,
+    locked: body.locked,
     validators: withIds(baked ?? (body.validators as ValidatorSpec[])),
     mistakes: body.common_mistakes,
     hints: body.hints.map(rich),
     inputs: body.inputs,
-    seed: body.seed ?? 0,
+    interactiveInput: body.interactive_input,
+    trackCoverage: body.track_coverage || body.validators.some((v) => v.type === 'branch_coverage'),
+    seed: body.seed ?? null,
     prompts: body.prompts
-      ? body.prompts.map((p) =>
-          p.kind === 'mcq'
+      ? body.prompts.map((p) => {
+          const twin = p.twin
+            ? ({ ...p.twin, question: rich(p.twin.question), explain: rich(p.twin.explain) } as PredictTwin)
+            : null;
+          return p.kind === 'mcq'
             ? {
                 kind: 'mcq',
                 question: rich(p.question),
                 options: p.options,
                 answer: p.answer,
                 explain: rich(p.explain),
+                twin,
               }
-            : { kind: 'text', question: rich(p.question), answer: p.answer, explain: rich(p.explain) },
-        )
+            : { kind: 'text', question: rich(p.question), answer: p.answer, explain: rich(p.explain), twin };
+        })
       : null,
     questions: body.questions
       ? body.questions.map((q) => {
@@ -511,6 +680,15 @@ export function compileBody(body: Body, baked?: ValidatorSpec[]): QuestBody {
       : null,
     jarShelf: body.jar_shelf ?? body.type !== 'predict',
     bonus: body.bonus.map((b) => ({ ...b, check: b.check as ValidatorSpec })),
+    duck: body.duck ? { intro: richOrNull(body.duck.intro), closing: rich(body.duck.closing) } : null,
+    starters: body.starters
+      ? body.starters.map((s) => ({
+          id: s.id,
+          title: s.title,
+          description: rich(s.description),
+          code: s.code,
+        }))
+      : null,
   };
 }
 
@@ -638,9 +816,23 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
     id: course.id,
     title: course.title,
     opening: course.opening.map((l) => ({ speaker: l.speaker, text: rich(l.text) })),
+    finale: course.finale.map((l) => ({ speaker: l.speaker, text: rich(l.text) })),
+    moreRegionsComing: course.more_regions_coming,
     regions: course.regions.map((r) => {
       const reg = content.regions.find((x) => x.data.id === r.id)!.data;
-      return { id: r.id, number: reg.number, name: reg.name, enabled: r.enabled, lessons: r.lessons };
+      // For the finale's credits: the people met there (Byte is everywhere) and its Bugs.
+      const npcs = Object.entries(reg.npcs).filter(([id]) => id !== 'byte');
+      return {
+        id: r.id,
+        number: reg.number,
+        name: reg.name,
+        enabled: r.enabled,
+        lessons: r.lessons,
+        pois: reg.pois,
+        fragment: reg.fragment.name,
+        cast: npcs.filter(([, n]) => !n.sprite.startsWith('bug_')).map(([, n]) => n.name),
+        bugs: npcs.filter(([, n]) => n.sprite.startsWith('bug_')).map(([, n]) => n.name),
+      };
     }),
     questOrder,
     questInfo: Object.fromEntries(
@@ -661,6 +853,13 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
           phases: q.type === 'boss' ? q.phases.map((p) => p.id) : [],
           sideQuest: q.side_quest,
           prerequisites: q.prerequisites,
+          npc: q.npc ?? null,
+          badge: q.rewards.badge ?? null,
+          // Bonus challenges, as the quest record stores them (phase/id in a boss).
+          bonus:
+            q.type === 'boss'
+              ? q.phases.flatMap((p) => p.bonus.map((b) => `${p.id}/${b.id}`))
+              : q.bonus.map((b) => b.id),
         },
       ]),
     ),
@@ -684,6 +883,22 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
         },
       ]),
     ),
+    workshop: {
+      maps: (content.workshop?.maps ?? []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        description: rich(m.description),
+        stage: m.stage as StageSpec,
+      })),
+      api: (content.workshop?.api ?? []).map((a) => ({ ...a, summary: rich(a.summary) })),
+    },
+    badges: content.badges.map((b) => ({
+      id: b.id,
+      name: b.name,
+      emoji: b.emoji,
+      description: rich(b.description),
+      trigger: b.trigger,
+    })),
     errors: Object.fromEntries(
       Object.entries(content.errors).map(([k, v]) => [
         k,

@@ -114,6 +114,9 @@ export function RestoreDialog({
           <button type="button" onClick={async () => onRestored(await installRestored(pending, 'keep'))}>
             {t.save.keepBoth}
           </button>
+          <button type="button" onClick={async () => onRestored(await installRestored(pending, 'merge'))}>
+            {t.save.merge}
+          </button>
         </div>
       </Modal>
     );

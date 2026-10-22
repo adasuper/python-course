@@ -19,6 +19,16 @@ export const t = {
     noProfiles: 'No adventurers on this computer yet.',
     deviceNote:
       'This computer might forget your progress when you sign out. Save your progress code at the end of each class!',
+    delete: 'Delete',
+    deleteLabel: (name: string) => `Delete ${name}`,
+    deleteHeading: (name: string) => `Delete ${name}?`,
+    deleteWarning: (name: string) =>
+      `This removes ${name} and all of their progress and code from this computer. It can't be undone.`,
+    deleteSaveFirst: 'Save a progress file first',
+    deleteSaved: 'Saved. Now you can delete safely.',
+    deleteConfirm: (name: string) => `Delete ${name}`,
+    deleteCancel: 'Keep it',
+    deleted: (name: string) => `${name} was deleted from this computer.`,
   },
   credits: { link: 'Credits', heading: 'Credits and licenses', back: 'Back' },
   creator: {
@@ -297,10 +307,13 @@ export const t = {
     openFile: 'Open a progress file',
     typo: 'That code has a typo — check the characters again.',
     badFile: "That file isn't a Codeweald progress file.",
+    changedFile:
+      "That file was changed or damaged, so it can't be loaded. Nothing on this computer was changed.",
     otherCourse: 'That code is from a different version of the course.',
     replaceOrKeep: 'You already have this adventurer on this computer.',
     replace: 'Replace it with the save',
     keepBoth: 'Keep both',
+    merge: 'Merge them (keep the best of both)',
     savePoint: 'Save point! Keep your progress safe.',
     restored: (name: string) => `Welcome back, ${name}!`,
   },

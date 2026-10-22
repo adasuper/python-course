@@ -256,7 +256,16 @@ describe('progress files', () => {
     expect(parsed.ok && parsed.file.profile.nickname).toBe('Newt');
     expect(parseProgressFile('not json')).toEqual({ ok: false, reason: 'not-json' });
     expect(parseProgressFile('{"format":"other"}')).toEqual({ ok: false, reason: 'not-codeweald' });
+    // A hand-edited file fails its checksum; without one (version 1), the schema catches it.
     expect(parseProgressFile(text.replace('"xp":0', '"xp":"lots"'))).toEqual({
+      ok: false,
+      reason: 'changed',
+    });
+    const unchecked = JSON.stringify({ ...JSON.parse(text), checksum: undefined }).replace(
+      '"xp":0',
+      '"xp":"lots"',
+    );
+    expect(parseProgressFile(unchecked)).toEqual({
       ok: false,
       reason: 'invalid',
     });

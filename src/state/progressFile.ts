@@ -3,7 +3,9 @@
 import { z } from 'zod';
 import type { Course } from '../content/types';
 import { CURRENT_SCHEMA, migrateProfile } from './migrations';
-import type { Profile } from './profile';
+import { checkNickname } from './nickname';
+import { hashText, type Profile } from './profile';
+import { MAX_PROGRAMS, type Program } from './storage';
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
@@ -67,15 +69,31 @@ const ProfileSchema = z.object({
   }),
 });
 
+const ProgramSchema = z.object({
+  id: z.string().max(64),
+  name: z.string().min(1).max(40),
+  code: z.string().max(50_000),
+  mapId: z.string().max(64),
+  savedOn: z.string().max(10),
+});
+
 const FileSchema = z.object({
   format: z.literal('codeweald-progress'),
-  version: z.literal(1),
+  // 2: Workshop programs and a checksum.
+  version: z.union([z.literal(1), z.literal(2)]),
   courseId: z.string().max(64),
   contentVersion: z.string().max(32),
   exportedOn: z.string().max(10),
   profile: ProfileSchema,
   drafts: z.record(z.string().max(120), z.string().max(50_000)),
+  programs: z.array(ProgramSchema).max(MAX_PROGRAMS).default([]),
+  checksum: z.string().max(16).optional(),
 });
+
+/** Catches a file that was damaged or edited by hand (F-OFF-07). */
+export function fileChecksum(profile: unknown, drafts: unknown, programs: unknown): string {
+  return hashText(JSON.stringify([profile, drafts, programs]));
+}
 
 export type ProgressFile = z.infer<typeof FileSchema>;
 
@@ -83,15 +101,18 @@ export function makeProgressFile(
   profile: Profile,
   drafts: Record<string, string>,
   course: Course,
+  programs: Program[] = [],
 ): ProgressFile {
   return {
     format: 'codeweald-progress',
-    version: 1,
+    version: 2,
     courseId: course.id,
     contentVersion: course.contentVersion,
     exportedOn: new Date().toISOString().slice(0, 10),
     profile,
     drafts,
+    programs,
+    checksum: fileChecksum(profile, drafts, programs),
   };
 }
 
@@ -102,7 +123,7 @@ export function fileName(profile: Profile): string {
 
 export type ParseResult =
   | { ok: true; file: ProgressFile }
-  | { ok: false; reason: 'too-big' | 'not-json' | 'not-codeweald' | 'invalid' };
+  | { ok: false; reason: 'too-big' | 'not-json' | 'not-codeweald' | 'invalid' | 'changed' };
 
 export function parseProgressFile(text: string): ParseResult {
   if (text.length > MAX_FILE_BYTES) return { ok: false, reason: 'too-big' };
@@ -119,15 +140,24 @@ export function parseProgressFile(text: string): ParseResult {
   ) {
     return { ok: false, reason: 'not-codeweald' };
   }
+  const file = raw as { profile?: unknown; drafts?: unknown; programs?: unknown; checksum?: unknown };
+  // Version 2 files carry a checksum of what they hold, taken before any upgrade.
+  if (
+    file.checksum !== undefined &&
+    file.checksum !== fileChecksum(file.profile, file.drafts, file.programs ?? [])
+  )
+    return { ok: false, reason: 'changed' };
   // Files saved by older versions of the game are upgraded first (F-SAV-03).
-  const file = raw as { profile?: unknown };
   try {
     if (file.profile) file.profile = migrateProfile(file.profile);
   } catch {
     return { ok: false, reason: 'invalid' };
   }
   const parsed = FileSchema.safeParse(file);
-  return parsed.success ? { ok: true, file: parsed.data as ProgressFile } : { ok: false, reason: 'invalid' };
+  if (!parsed.success) return { ok: false, reason: 'invalid' };
+  // The nickname must still pass the nickname rules, as if it had been typed in.
+  if (checkNickname(parsed.data.profile.nickname) !== null) return { ok: false, reason: 'invalid' };
+  return { ok: true, file: parsed.data as ProgressFile };
 }
 
 type PickerWindow = Window & {

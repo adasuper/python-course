@@ -36,8 +36,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | M2.5 Progression | ✅ Done |
 | M2.6 Spellbook reference | ✅ Done |
 | M2.7 Workshop | ✅ Done |
-| M2.8 Save polish | Next |
-| M2.9 Settings and a11y features | — |
+| M2.8 Save polish | ✅ Done |
+| M2.9 Settings and a11y features | Next |
 | M2.10 PWA basics | — |
 
 ### Done in Phase 2
@@ -156,6 +156,20 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   rest wait under "More spells".
 - Typed input is now one shared helper for quests and the Workshop.
 - Toasts no longer pile up: one save point at a time and at most three on screen.
+
+#### M2.8 Save polish
+
+- **Merge on import:** restoring an adventurer who is already here offers Replace, Keep both, or
+  **Merge** (keep the best of both: all completions, items and badges; the most XP, hints,
+  attempts and time).
+- **Progress files version 2** include Workshop programs and a checksum. A changed or damaged
+  file is refused kindly and nothing changes; so is a nickname that breaks the nickname rules.
+- **Delete a profile** from the title screen, with "Save a progress file first".
+- **Save codes across content versions:** a later course (new badges, new bonus challenges)
+  still reads older codes, and a code for a course with other quests is refused, not misread.
+  Fuzz tests cover save codes and damaged files.
+- **E2E:** export → empty browser → import restores progress and unfinished code; Merge; delete
+  with Save first; a damaged file.
 
 ## Phase 1 — Vertical slice ✅
 

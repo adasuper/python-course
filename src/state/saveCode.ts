@@ -89,13 +89,18 @@ export function encodeSaveCode(p: Profile, course: Course, choices: Choices, now
     ),
     4,
   );
-  // Version 2: bonus challenges done, per quest that has any (each with its own count, so a
-  // code still lines up if a later version of the course adds challenges)…
-  for (const id of course.questOrder) {
-    const bonus = (course.questInfo[id]?.bonus ?? []).slice(0, 7);
-    if (!bonus.length) continue;
-    w.write(bonus.length, 3);
-    for (const key of bonus) w.write(p.quests[id]?.bonus?.includes(key) ? 1 : 0, 1);
+  // Version 2: bonus challenges done. Only quests with one done are written, each with its
+  // place in the quest order and its number of challenges, so the code still reads right when
+  // a later version of the course adds challenges (new ones go at the end of a quest's list)…
+  const withBonus = course.questOrder
+    .map((id, index) => ({ id, index, keys: (course.questInfo[id]?.bonus ?? []).slice(0, 7) }))
+    .filter((q) => q.keys.some((key) => p.quests[q.id]?.bonus?.includes(key)))
+    .slice(0, 127);
+  w.write(withBonus.length, 7);
+  for (const q of withBonus) {
+    w.write(q.index, 8);
+    w.write(q.keys.length, 3);
+    for (const key of q.keys) w.write(p.quests[q.id]?.bonus?.includes(key) ? 1 : 0, 1);
   }
   // …and every earned badge, in badges.yaml order. Most could be worked out again from the
   // quests, but not all (Tinkerer, Error Reader…), so all are kept.
@@ -196,13 +201,14 @@ export function decodeSaveCode(code: string, course: Course, choices: Choices): 
     };
     const exported = new Date(EPOCH + days * 86_400_000).toISOString().slice(0, 10);
     if (version >= 2) {
-      for (const id of course.questOrder) {
-        if (!(course.questInfo[id]?.bonus ?? []).length) continue;
-        const keys = course.questInfo[id]!.bonus;
+      const withBonus = r.read(7);
+      for (let n = 0; n < withBonus; n++) {
+        const id = course.questOrder[r.read(8)];
+        const keys = id ? (course.questInfo[id]?.bonus ?? []) : [];
         const count = r.read(3);
         for (let i = 0; i < count; i++) {
           const done = r.read(1) === 1;
-          const rec = profile.quests[id];
+          const rec = id ? profile.quests[id] : undefined;
           if (done && rec && keys[i]) (rec.bonus ??= []).push(keys[i]!);
         }
       }

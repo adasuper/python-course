@@ -33,7 +33,7 @@ test('a new player completes Region 1 and keeps their progress after a reload', 
   await expect(page.locator('#check-score')).toHaveText(`You got ${items.length} of ${items.length}.`);
 
   await page.reload();
-  await page.getByRole('button', { name: /Clever Newt/ }).click();
+  await page.locator('.profile-button', { hasText: 'Clever Newt' }).click();
   await skipToOverworld(page);
   await page.locator('#quest-log-button').click();
   await expect(page.locator('#quest-log-button')).toContainText(

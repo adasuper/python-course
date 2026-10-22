@@ -42,6 +42,7 @@ const TEXT: [string, string][] = [
   ['warn', 'warn-bg'],
   ['err', 'parchment'],
   ['err', 'err-bg'],
+  ['parchment', 'err'],
   ['accent', 'parchment'],
   ['accent-ink', 'accent'],
   ['parchment', 'night'],

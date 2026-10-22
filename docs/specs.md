@@ -1300,14 +1300,22 @@ the profile.
 ### 12.3 Progress file (export / import)
 
 - File name `codeweald-<nickname>-<YYYY-MM-DD>.codeweald.json`: a JSON envelope
-  `{ format: "codeweald-progress", version, courseId, contentVersion, exportedOn, profile, drafts }`.
+  `{ format: "codeweald-progress", version, courseId, contentVersion, exportedOn, profile, drafts,
+  programs, checksum }`. Version 2 adds the Workshop `programs` and a `checksum` (FNV-1a of
+  `[profile, drafts, programs]` as written); version 1 files still import.
 - It holds everything, including the student's code.
 - **Import:** user-picked file only, ≤ 5 MB, Zod-validated, never rendered as HTML.
   - Unknown quest ids (from other content versions) are kept but ignored.
   - When the adventurer is already on this computer, the student chooses **Replace** or
     **Keep both**; otherwise it is added. A third option,
     **Merge**, keeps the best of both: union of completions, items and badges; max of XP,
-    hints, attempts and time.
+    hints, attempts and time. The local nickname, look and settings stay; local drafts win,
+    and missing ones are added; for Workshop programs the newer copy of each is kept
+    (`state/merge.ts`).
+  - A file whose checksum doesn't match ("changed or damaged"), or whose nickname breaks the
+    nickname rules, is refused with a friendly message, and nothing changes.
+- **Delete profile** (title screen): a confirmation names the profile and offers **Save a
+  progress file first**; focus starts on "Keep it".
 
 ### 12.4 Save code
 
@@ -1329,7 +1337,9 @@ an LMS text box. It needs no file handling.
     (3: 0, 1, 2, 3, 4–5, 6–9, 10–19, 20+) and time bucket (3: <2, 2–5, 5–10, 10–15, 15–20,
     20–30, 30–45, 45+ min)
   - knowledge-check best scores
-  - version 2: for each quest with bonus challenges, their count (3 bits) and which are done
+  - version 2: the quests with a bonus challenge done, each as its place in the quest order
+    (8 bits), its number of challenges (3) and which are done, so a later course version can
+    add challenges (at the end of a quest's list)
   - version 2: a bitset of earned badges in `badges.yaml` order (with its length first)
 
   Items are re-derived from completions. All earned badges are stored, because some can't be

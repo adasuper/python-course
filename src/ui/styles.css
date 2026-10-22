@@ -335,7 +335,13 @@ main:focus {
   gap: 0.5rem;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
+.profile-row {
+  display: flex;
+  gap: 0.3rem;
+  align-items: stretch;
+}
 .profile-button {
+  flex: 1;
   display: flex;
   gap: 0.6rem;
   align-items: center;
@@ -1438,4 +1444,10 @@ button.link {
 .api-list .code-block {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+button.danger {
+  background: var(--err);
+  color: var(--parchment);
+  border-color: var(--err);
 }

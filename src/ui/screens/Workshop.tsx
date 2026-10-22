@@ -27,6 +27,7 @@ import { CodeSize, Editor } from '../components/Editor';
 import { InputDialog } from '../components/InputDialog';
 import { JarShelf, OutputScroll, type OutLine } from '../components/Output';
 import { RichText } from '../components/RichText';
+import { playEffect } from '../audio';
 import { prefersReducedMotion } from '../flow';
 import { ErrorExplanation, errorTemplate } from '../quest/Feedback';
 import { ReplayControls } from '../quest/ReplayControls';
@@ -89,7 +90,11 @@ export function WorkshopScreen() {
     () =>
       new ReplayEngine(getWorldView(), {
         onState: setReplayState,
-        onAction: (i) => setReplayPos(i + 1),
+        onAction: (i, action) => {
+          setReplayPos(i + 1);
+          if (action.t === 'bonk') playEffect('bonk');
+          else if (action.t === 'pickup' && action.item) playEffect('pickup');
+        },
         onLine: setReplayLine,
         onOutput: (a) =>
           setOut((lines) => [

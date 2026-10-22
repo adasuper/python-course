@@ -186,3 +186,17 @@ test('Phase 2 quest types: fill, typed input, lamps, twin, bonus', async ({ page
   await expect(page.locator('.bonus')).toBeVisible();
   await scan(page, 'bonus challenges');
 });
+
+test('Settings, and the quest screen as tabs on a narrow screen', async ({ page }) => {
+  await newPlayer(page, 'Axe Settings');
+  await page.getByRole('button', { name: /Settings/ }).click();
+  await scan(page, 'settings');
+  await page.getByRole('checkbox', { name: 'High contrast' }).check();
+  await scan(page, 'settings, high contrast');
+  await page.setViewportSize({ width: 900, height: 700 });
+  await page.goto('./?dev#/dev/quest/r1-q4-notes-for-the-baker');
+  await expect(page.getByRole('tablist', { name: 'Quest panels' })).toBeVisible();
+  await scan(page, 'narrow quest screen');
+  await page.getByRole('tab', { name: /Stage and output/ }).click();
+  await scan(page, 'narrow quest screen, stage tab');
+});

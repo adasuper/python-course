@@ -22,6 +22,7 @@ export type Route =
   | { name: 'inventory' }
   | { name: 'item'; id: string }
   | { name: 'workshop' }
+  | { name: 'settings' }
   | { name: 'spellbook'; tab?: 'pages' | 'spells' | 'examples' | 'scenes' | 'glossary' }
   | { name: 'credits' };
 

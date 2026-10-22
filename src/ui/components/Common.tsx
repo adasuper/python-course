@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
 import type { PyRunner } from '../../runtime/pyRunner';
 import { announcement, dismissToast, regions, toasts } from '../../state/store';
+import { playEffect } from '../audio';
 
 const ART = `${import.meta.env.BASE_URL}assets/art/`;
 
@@ -79,6 +80,11 @@ export function Modal({
 }
 
 export function Toasts({ onCopyCode, onSaveFile }: { onCopyCode: () => void; onSaveFile: () => void }) {
+  // A little fanfare for a new badge or level (only with sound effects turned on).
+  const celebrations = toasts.value.filter((x) => x.kind === 'celebrate').at(-1)?.id;
+  useEffect(() => {
+    if (celebrations) playEffect('badge');
+  }, [celebrations]);
   return (
     <div class="toasts">
       {toasts.value.map((toast) => (

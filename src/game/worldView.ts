@@ -36,6 +36,8 @@ export interface OverworldOptions extends Look {
   start?: XY;
   onInteract(object: OverworldObject): void;
   onStep(position: XY): void;
+  /** A click or tap asked for a step that is blocked. */
+  onBlocked?(dir: Dir): void;
 }
 
 interface SheetIndex {
@@ -223,7 +225,28 @@ class OverworldScene extends Phaser.Scene {
     this.updateMarkers(this.opts.markers);
     this.layout();
     this.scale.on('resize', this.layout, this);
-    this.events.once('shutdown', () => this.scale.off('resize', this.layout, this));
+    this.input.on('pointerdown', this.onPointer, this);
+    this.events.once('shutdown', () => {
+      this.scale.off('resize', this.layout, this);
+      this.input.off('pointerdown', this.onPointer, this);
+    });
+  }
+
+  /** Click or tap to walk (F-WLD-05): one step toward the tile, or talk to a neighbour. */
+  private onPointer(pointer: Phaser.Input.Pointer) {
+    const at = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const [tx, ty] = [Math.floor(at.x / TILE), Math.floor(at.y / TILE)];
+    const [dx, dy] = [tx - this.pos[0], ty - this.pos[1]];
+    if (dx === 0 && dy === 0) return;
+    const dir: Dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+    const next = Math.abs(dx) + Math.abs(dy) === 1 ? this.objectsAt.get(`${tx},${ty}`) : undefined;
+    if (next && next.kind !== 'spawn' && next.kind !== 'poi' && !this.moving) {
+      this.facing = dir;
+      this.hero.setFrame(heroFrame(this, this.opts, dir, 0));
+      this.opts.onInteract(next);
+      return;
+    }
+    if (!this.tryMove(dir)) this.opts.onBlocked?.(dir);
   }
 
   private animateWater(layer: Phaser.Tilemaps.TilemapLayer, tiles: XY[]) {

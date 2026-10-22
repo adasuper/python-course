@@ -36,6 +36,20 @@ describe('migrations (F-SAV-03)', () => {
     expect(p.counters).toEqual({ realErrorViews: 4, workshopRuns: 0, duckChats: 0 });
   });
 
+  it('3 → 4 adds the new settings with their defaults, keeping the old ones', () => {
+    const v3 = MIGRATIONS[2]!(MIGRATIONS[1]!(v1Profile()));
+    (v3.settings as Record<string, unknown>).textScale = 1.5;
+    const p = MIGRATIONS[3]!(v3) as unknown as Profile;
+    expect(p.schemaVersion).toBe(4);
+    expect(p.settings).toMatchObject({
+      textScale: 1.5,
+      codeFont: 'atkinson',
+      shortcuts: true,
+      tts: { autoRead: false, rate: 1 },
+      audio: { music: 0, effects: 0 },
+    });
+  });
+
   it('runs the whole chain up to the current schema', () => {
     expect(migrateProfile(v1Profile()).schemaVersion).toBe(CURRENT_SCHEMA);
     const current = newProfile('New', 'avatar-1', 'moss', 'one');

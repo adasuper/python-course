@@ -64,6 +64,9 @@
 :root[data-font='system'] {
   --font-ui: system-ui, sans-serif;
 }
+:root[data-code-font='system'] {
+  --font-code: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+}
 
 :root[data-contrast='high'] {
   --night: #000;

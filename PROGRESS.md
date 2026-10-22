@@ -37,8 +37,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | M2.6 Spellbook reference | ✅ Done |
 | M2.7 Workshop | ✅ Done |
 | M2.8 Save polish | ✅ Done |
-| M2.9 Settings and a11y features | Next |
-| M2.10 PWA basics | — |
+| M2.9 Settings and a11y features | ✅ Done (manual screen-reader and voice checks pending) |
+| M2.10 PWA basics | Next |
 
 ### Done in Phase 2
 
@@ -170,6 +170,40 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   Fuzz tests cover save codes and damaged files.
 - **E2E:** export → empty browser → import restores progress and unfinished code; Merge; delete
   with Save first; a damaged file.
+
+#### M2.9 Settings and accessibility features
+
+- **One Settings screen** (HUD → ⚙️ Settings), saved with the adventurer and applied at once:
+  - text size 100–200%, font (Atkinson Hyperlegible Next, OpenDyslexic, system), code font,
+    high contrast
+  - reduced motion (follow the computer / on / off), replay speed
+  - read aloud: auto-read, voice, speed, "read code with its symbols named", and a Try it button
+  - sound sliders (all, music, effects; effects start off for quiet classrooms)
+  - letter shortcut keys on or off, avatar and colors, and Save progress
+- **Title-screen quick settings:** "Bigger text" and "High contrast" work before any adventurer
+  exists. They are remembered in this browser and become a new adventurer's first settings.
+- **Read aloud** on every dialogue line and on Byte's concept-scene lesson. It uses only voices
+  installed on the computer, so it works offline. Without one it says "Read-aloud needs an
+  installed voice." Code blocks are skipped unless "read code" is on. Speech stops when the
+  screen changes.
+- **Sound:** small effects (success, error, bump, pick-up, badge) and optional calm background
+  music. They are generated in the browser, so there are no audio files to download.
+- **Narrow screens** (≤ 1100 px, browser zoom, or 200% text): the quest panels become tabs
+  (Quest · Spellbook · Stage and output), and the Run button stays at the bottom of the
+  screen. Running shows the replay; Byte's feedback brings the Spellbook back. Skip links open
+  the right tab.
+- **Click or tap to walk:** clicking next to the hero steps there, and clicking a neighbour
+  talks to them.
+- **Shortcut keys** (W A S D, E, Q, L, and `.` in the replay) can be turned off; arrows, Enter
+  and Space always work.
+- Profile schema 4 (migration from 3) holds the new settings.
+- **Tests:** unit tests for read-aloud text, offline voices and quick settings. E2E: settings
+  apply and survive a reload; quick settings carry over; nothing scrolls sideways at 200%
+  text; narrow-screen tabs by keyboard; click-to-walk; shortcuts off; read aloud with and
+  without a voice; and a reduced-motion replay that starts no tweens. axe covers Settings
+  (both contrasts) and the narrow quest screen.
+- **Still to check by hand:** NVDA/ChromeVox on Settings and the quest tabs; real voices on a
+  Chromebook.
 
 ## Phase 1 — Vertical slice ✅
 
@@ -315,9 +349,6 @@ of them are now closed:
 ## Known issues
 
 - **Art direction:** this is the first look. Please react to the mood and palette (Q6).
-- **Narrow screens:** the quest screen stacks its panels vertically below 1100 px wide.
-  Tabs are planned for Phase 2.
-- **Settings:** there is no settings screen yet. Reduced motion follows the system setting.
 - **First load downloads Pyodide twice:** once for the progress bar, then again from the
   browser cache. The service worker in Phase 2 removes this.
 - **Main script size:** it is 556 KB gzipped (mostly Phaser and CodeMirror). Splitting it

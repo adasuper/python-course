@@ -832,8 +832,10 @@ once the region's core quests are done.
 └──────────────────────┴────────────────────────────────┴───────────────────────┘
 ```
 
-- At ≤ 1100 px wide the panels become tabs (Quest · Spellbook · Stage/Output), with a
-  persistent Run button.
+- At ≤ 1100 px wide (or at 200% text) the panels become tabs (Quest · Spellbook ·
+  Stage/Output), with a persistent Run button. All three panels stay mounted, so the editor
+  and the stage keep their state. Running a replay shows the Stage tab, and the feedback
+  brings back the Spellbook tab. The skip links open the tab they jump to.
 - The target screen is 1366×768, the most common school Chromebook resolution.
 - Skip links: "Skip to editor", "Skip to output".
 
@@ -1470,8 +1472,9 @@ or in-app teacher guide. Instructors still need the solutions to be ready for qu
 - Shortcut keys on/off.
 - Replay default speed.
 
-Settings are stored per profile. The title screen has its own quick text-size and contrast
-toggle, before any profile exists.
+Settings are stored per profile and apply at once (HUD → ⚙️ Settings). The title screen has
+its own quick text-size and contrast toggles before any profile exists. They are kept in
+`localStorage` (`codeweald:quick`) and become a new profile's first settings.
 
 ### 14.5 Text-to-speech
 

@@ -5,7 +5,8 @@ import { exportProfile } from '../../state/saving';
 import { announce, getStorage, go, profiles, storageMode, toast } from '../../state/store';
 import { Modal } from '../components/Common';
 import { RestoreDialog } from '../components/SaveDialogs';
-import { selectProfile } from '../flow';
+import { applySettings, selectProfile } from '../flow';
+import { loadQuick, nextScale, saveQuick } from '../quickPrefs';
 
 const ART = `${import.meta.env.BASE_URL}assets/art/`;
 
@@ -66,6 +67,7 @@ export function TitleScreen() {
           </button>
         </div>
       </section>
+      <QuickSettings />
       <p class="credits-link">
         <button type="button" class="ghost small" onClick={() => go({ name: 'credits' })}>
           {t.credits.link}
@@ -83,6 +85,40 @@ export function TitleScreen() {
         />
       )}
     </main>
+  );
+}
+
+/** Text size and contrast before anyone has a profile (F-A11-13). */
+function QuickSettings() {
+  const [prefs, setPrefs] = useState(loadQuick);
+  const change = (next: typeof prefs) => {
+    saveQuick(next);
+    setPrefs(next);
+    applySettings(null);
+  };
+  return (
+    <section aria-labelledby="quick" class="quick-settings">
+      <h2 id="quick" class="small-heading">
+        {t.settings.quick}
+      </h2>
+      <div class="row">
+        <button
+          type="button"
+          class="small"
+          onClick={() => change({ ...prefs, textScale: nextScale(prefs.textScale) })}
+        >
+          🔍 {t.settings.biggerText}: {Math.round((prefs.textScale ?? 1) * 100)}%
+        </button>
+        <button
+          type="button"
+          class="small"
+          aria-pressed={prefs.highContrast === true}
+          onClick={() => change({ ...prefs, highContrast: !prefs.highContrast })}
+        >
+          ◐ {t.settings.contrast}
+        </button>
+      </div>
+    </section>
   );
 }
 

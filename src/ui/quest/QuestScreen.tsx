@@ -7,6 +7,7 @@ import { completePhase, completeQuest, record } from '../../state/progress';
 import { course, getStorage, go, loadRegion, profile, regions, update } from '../../state/store';
 import { Hud } from '../screens/Overworld';
 import { QuestPlay } from './QuestPlay';
+import { questTab, type QuestTab } from './questTabs';
 
 export function QuestScreen({ questId }: { questId: string }) {
   const c = course.value!;
@@ -38,22 +39,30 @@ export function QuestScreen({ questId }: { questId: string }) {
 
 /** Skip links (F-A11-06). The editor may be a Parsons puzzle instead. */
 function SkipLinks() {
-  const jump = (e: Event, ...selectors: string[]) => {
-    const target = selectors.map((s) => document.querySelector<HTMLElement>(s)).find(Boolean);
-    if (!target) return;
+  const jump = (e: Event, tab: QuestTab | null, ...selectors: string[]) => {
     e.preventDefault();
-    if (!target.hasAttribute('tabindex') && !target.isContentEditable) target.tabIndex = -1;
-    target.focus();
+    // On a narrow screen the target may be on another tab: show it first.
+    if (tab) questTab.value = tab;
+    requestAnimationFrame(() => {
+      const target = selectors.map((s) => document.querySelector<HTMLElement>(s)).find(Boolean);
+      if (!target) return;
+      if (!target.hasAttribute('tabindex') && !target.isContentEditable) target.tabIndex = -1;
+      target.focus();
+    });
   };
   return (
     <>
-      <a class="skip-link" href="#main" onClick={(e) => jump(e, '#main')}>
+      <a class="skip-link" href="#main" onClick={(e) => jump(e, null, '#main')}>
         {t.skipToMain}
       </a>
-      <a class="skip-link" href="#code-editor" onClick={(e) => jump(e, '#code-editor', '.parsons button')}>
+      <a
+        class="skip-link"
+        href="#code-editor"
+        onClick={(e) => jump(e, 'work', '#code-editor', '.parsons button')}
+      >
         {t.quest.skipToEditor}
       </a>
-      <a class="skip-link" href="#output-body" onClick={(e) => jump(e, '#output-body')}>
+      <a class="skip-link" href="#output-body" onClick={(e) => jump(e, 'stage', '#output-body')}>
         {t.quest.skipToOutput}
       </a>
     </>

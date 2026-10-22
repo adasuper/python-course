@@ -74,6 +74,9 @@ export function Hud({ regionName }: { regionName: string }) {
         <button type="button" onClick={() => go({ name: 'inventory' })}>
           🎒 {t.hud.inventory}
         </button>
+        <button type="button" onClick={() => go({ name: 'settings' })}>
+          ⚙️ {t.hud.settings}
+        </button>
         <button type="button" class="ghost" onClick={() => void switchProfile()}>
           {t.hud.title}
         </button>
@@ -128,6 +131,7 @@ export function OverworldScreen() {
       start: p.location.at ?? undefined,
       onInteract: (object) => setTalk({ object }),
       onStep: (pos: XY) => onStep(pos),
+      onBlocked: (dir) => announce(`Can't go ${dir}.`),
     });
     worldEl.current?.focus();
   }, [region.id]);
@@ -154,6 +158,8 @@ export function OverworldScreen() {
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
+    // Letter shortcuts (WASD, E, Q, L) can be turned off in Settings; arrows and Enter stay.
+    if (e.key.length === 1 && /[a-z]/i.test(e.key) && profile.value?.settings.shortcuts === false) return;
     const dir = KEYS[e.key] ?? KEYS[e.key.toLowerCase()];
     const world = getWorldView();
     if (dir) {

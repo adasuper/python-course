@@ -4,6 +4,7 @@ import { copySaveCode, saveProgressFile } from '../state/saving';
 import { announce, route, saveDialogOpen, unsaved } from '../state/store';
 import { LiveRegion, Toasts } from './components/Common';
 import { SaveDialog } from './components/SaveDialogs';
+import { stopSpeaking } from './speech';
 import { QuestScreen } from './quest/QuestScreen';
 import { CheckScreen } from './screens/Check';
 import { CreditsScreen } from './screens/Credits';
@@ -12,6 +13,7 @@ import { CreatorScreen } from './screens/Creator';
 import { InventoryScreen, ItemScreen } from './screens/Inventory';
 import { SpellbookScreen } from './screens/Spellbook';
 import { WorkshopScreen } from './screens/Workshop';
+import { SettingsScreen } from './screens/Settings';
 import { OverworldScreen } from './screens/Overworld';
 import { StoryScreen } from './screens/Story';
 import { TitleScreen } from './screens/Title';
@@ -31,6 +33,8 @@ export function App() {
   }, []);
   useEffect(() => {
     document.title = r.name === 'quest' ? `${t.appName} — quest` : t.appName;
+    // Reading aloud stops when the student moves on (§14.5).
+    stopSpeaking();
   }, [r]);
 
   let screen;
@@ -68,6 +72,9 @@ export function App() {
       break;
     case 'item':
       screen = <ItemScreen key={r.id} id={r.id} />;
+      break;
+    case 'settings':
+      screen = <SettingsScreen />;
       break;
     case 'workshop':
       screen = <WorkshopScreen />;

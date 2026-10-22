@@ -60,6 +60,19 @@ const ProfileSchema = z.object({
     editorFontSize: z.number().min(10).max(32),
     highContrast: z.boolean(),
     font: z.enum(['atkinson', 'opendyslexic', 'system']),
+    codeFont: z.enum(['atkinson', 'system']),
+    shortcuts: z.boolean(),
+    tts: z.object({
+      autoRead: z.boolean(),
+      voice: z.string().max(200),
+      rate: z.number().min(0.5).max(2),
+      readCode: z.boolean(),
+    }),
+    audio: z.object({
+      master: z.number().min(0).max(1),
+      music: z.number().min(0).max(1),
+      effects: z.number().min(0).max(1),
+    }),
   }),
   lastSavedOutHash: z.string().max(16).nullable(),
   counters: z.object({

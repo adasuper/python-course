@@ -1451,3 +1451,54 @@ button.danger {
   color: var(--parchment);
   border-color: var(--err);
 }
+
+/* ----- Settings ----- */
+.settings-screen section.card {
+  margin-bottom: 0.8rem;
+}
+.setting {
+  margin: 0.5rem 0;
+  border: none;
+  padding: 0;
+}
+.setting legend {
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.small-choice {
+  padding: 0.3rem 0.6rem;
+}
+.slider {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.slider label {
+  min-width: 8rem;
+  font-weight: 700;
+}
+.quick-settings {
+  margin-top: 1rem;
+}
+.small-heading {
+  font-size: 1rem;
+  margin: 0 0 0.4rem;
+}
+
+/* ----- narrow quest screen: tabs (F-QST-03) ----- */
+.quest-grid.narrow {
+  grid-template-columns: 1fr;
+}
+.sticky-run {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--parchment);
+  border-top: 2px solid var(--line);
+  padding: 0.4rem 0.6rem;
+  margin-top: 0.6rem;
+}
+.sticky-run .run-bar {
+  margin: 0;
+}

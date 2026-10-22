@@ -8,23 +8,21 @@ export interface Tab<K extends string> {
   label: ComponentChildren;
 }
 
-export function Tabs<K extends string>({
+/** Just the tab list, for screens whose panels all stay mounted (hidden when not shown). */
+export function TabList<K extends string>({
   id,
   label,
   tabs,
   current,
   onSelect,
-  children,
+  panelId = () => `${id}-panel`,
 }: {
-  /** Prefix for the tab and panel ids. */
   id: string;
-  /** What the tab list is for (its accessible name). */
   label: string;
   tabs: Tab<K>[];
   current: K;
   onSelect(key: K): void;
-  /** The current tab's panel. */
-  children: ComponentChildren;
+  panelId?(key: K): string;
 }) {
   const refs = useRef(new Map<K, HTMLButtonElement>());
   const onKeyDown = (e: KeyboardEvent) => {
@@ -46,30 +44,53 @@ export function Tabs<K extends string>({
     refs.current.get(key)?.focus();
   };
   return (
+    <div role="tablist" aria-label={label} class="tab-list" onKeyDown={onKeyDown}>
+      {tabs.map((tab) => {
+        const selected = tab.key === current;
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            role="tab"
+            id={`${id}-tab-${tab.key}`}
+            aria-selected={selected}
+            aria-controls={panelId(tab.key)}
+            tabIndex={selected ? 0 : -1}
+            class={selected ? 'current' : ''}
+            ref={(el) => {
+              if (el) refs.current.set(tab.key, el);
+            }}
+            onClick={() => onSelect(tab.key)}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function Tabs<K extends string>({
+  id,
+  label,
+  tabs,
+  current,
+  onSelect,
+  children,
+}: {
+  /** Prefix for the tab and panel ids. */
+  id: string;
+  /** What the tab list is for (its accessible name). */
+  label: string;
+  tabs: Tab<K>[];
+  current: K;
+  onSelect(key: K): void;
+  /** The current tab's panel. */
+  children: ComponentChildren;
+}) {
+  return (
     <div class="tabs">
-      <div role="tablist" aria-label={label} class="tab-list" onKeyDown={onKeyDown}>
-        {tabs.map((tab) => {
-          const selected = tab.key === current;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              id={`${id}-tab-${tab.key}`}
-              aria-selected={selected}
-              aria-controls={`${id}-panel`}
-              tabIndex={selected ? 0 : -1}
-              class={selected ? 'current' : ''}
-              ref={(el) => {
-                if (el) refs.current.set(tab.key, el);
-              }}
-              onClick={() => onSelect(tab.key)}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      <TabList id={id} label={label} tabs={tabs} current={current} onSelect={onSelect} />
       <div
         role="tabpanel"
         id={`${id}-panel`}

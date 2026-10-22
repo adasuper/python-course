@@ -1,0 +1,32 @@
+# A walk that ends in a bump: for reduced-motion replay (F-API-13).
+id: r1-q91-garden-walk
+region: hearthvale-village
+title: Garden Walk
+type: make
+learning_outcome: Move the hero with a short program.
+csta: [2-AP-12]
+estimated_minutes: 5
+story_intro: Walk to the hedge.
+goal: Walk right until you bump the hedge.
+concept_card: Each line is one step of the plan.
+stage:
+  kind: grid
+  grid: |
+    #######
+    #H....#
+    #######
+  facing: right
+  legend:
+    '#': { tile: hedge, solid: true }
+    '.': { tile: grass }
+    H: { tile: grass, hero: true }
+starter_code: |
+  from codeweald import hero
+  hero.move("right", 5)
+solution: |
+  from codeweald import hero
+  hero.move("right", 4)
+validators:
+  - { type: state, hero_at: [5, 1] }
+hints: [Count the grass., Four steps., 'hero.move("right", ____)']
+story_outro: You reached the hedge.

@@ -1225,7 +1225,7 @@ Priority: Must · Phase: 2 · Spec: §14.2 (2.1.4), §14.4 · Brief: §1
 ### F-A11-13 — One settings screen
 As a Student, I want all my comfort settings in one place, saved to my profile, so that the game always fits me.
 **Acceptance criteria**
-- Settings includes text size, fonts, reduced motion, high contrast, audio (master, music, effects; effects off by default), TTS (on/off, voice, rate), shortcut keys, replay default speed, class code and save/export.
+- Settings includes text size, fonts, reduced motion, high contrast, audio (master, music, effects; effects off by default), TTS (on/off, voice, rate), shortcut keys, replay default speed and save/export.
 - Settings are stored per profile; the title screen has quick text-size and contrast toggles before any profile exists.
 
 Priority: Must · Phase: 2 · Spec: §14.4 · Brief: §1

@@ -37,6 +37,13 @@ export interface Settings {
   editorFontSize: number;
   highContrast: boolean;
   font: 'atkinson' | 'opendyslexic' | 'system';
+  codeFont: 'atkinson' | 'system';
+  /** Single-key shortcuts (WASD, Q, L, E, ".") (WCAG 2.1.4). Arrows and Enter always work. */
+  shortcuts: boolean;
+  /** Read aloud (§14.5). `voice` is a voice name; '' picks the first offline voice. */
+  tts: { autoRead: boolean; voice: string; rate: number; readCode: boolean };
+  /** Volumes from 0 to 1. Sound effects are off by default (§14.4). */
+  audio: { master: number; music: number; effects: number };
 }
 
 export interface Counters {
@@ -49,7 +56,7 @@ export interface Counters {
 }
 
 export interface Profile {
-  schemaVersion: 3;
+  schemaVersion: 4;
   id: string;
   nickname: string;
   avatarId: string;
@@ -78,6 +85,10 @@ export const DEFAULT_SETTINGS: Settings = {
   editorFontSize: 16,
   highContrast: false,
   font: 'atkinson',
+  codeFont: 'atkinson',
+  shortcuts: true,
+  tts: { autoRead: false, voice: '', rate: 1, readCode: false },
+  audio: { master: 0.8, music: 0, effects: 0 },
 };
 
 export function today(): string {
@@ -92,7 +103,7 @@ export function newProfile(
   defaults: Partial<Pick<Settings, 'textScale' | 'reducedMotion' | 'replaySpeed'>> = {},
 ): Profile {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     id: crypto.randomUUID(),
     nickname,
     avatarId,

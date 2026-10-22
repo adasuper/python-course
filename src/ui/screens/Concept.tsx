@@ -7,6 +7,7 @@ import { announce, getRunner, go, profile, regions, update, type Route } from '.
 import { LoadingPanel, Portrait } from '../components/Common';
 import { Editor } from '../components/Editor';
 import { OutputScroll, type OutLine } from '../components/Output';
+import { ReadAloud } from '../components/ReadAloud';
 import { RichText } from '../components/RichText';
 import { prefersReducedMotion } from '../flow';
 import { ReplayControls } from '../quest/ReplayControls';
@@ -122,6 +123,7 @@ export function ConceptScreen({ route }: { route: Extract<Route, { name: 'concep
               </li>
             ))}
           </ol>
+          <ReadAloud rich={[...scene.analogy, ...scene.lines.flatMap((l) => l.text)]} />
         </section>
         <section class="card" aria-labelledby="example-h">
           <h2 id="example-h">Worked example</h2>

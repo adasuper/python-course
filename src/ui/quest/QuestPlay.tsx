@@ -11,11 +11,13 @@ import { awardBonus, bonusDone, hintsShown, recordAttempt, useHint, type Reward 
 import { addRun, hasSessionValidators, sessionStatus } from '../../state/session';
 import { announce, config, course, getRunner, getStorage, profile, toast, update } from '../../state/store';
 import { LoadingPanel } from '../components/Common';
+import { TabList } from '../components/Tabs';
 import { CodeSize, Editor } from '../components/Editor';
 import { selectNextGap } from '../components/gapEditor';
 import { InputDialog } from '../components/InputDialog';
 import { JarShelf, OutputScroll, type OutLine } from '../components/Output';
 import { RichText } from '../components/RichText';
+import { playEffect } from '../audio';
 import { prefersReducedMotion } from '../flow';
 import { runWithInput } from '../runWithInput';
 import { ANNOTATE_FROM_REGION } from '../traceback';
@@ -25,6 +27,7 @@ import { Parsons } from './Parsons';
 import { checkOrder, orderFeedback, programFrom, type Block } from './parsonsModel';
 import { checkQuestion, predictionCorrect } from './answers';
 import { InvestigatePanel, PredictPanel, type QuestionState } from './Predict';
+import { panelProps, questTab, useNarrow, type QuestTab } from './questTabs';
 import { ReplayControls } from './ReplayControls';
 import { SessionPanel } from './SessionPanel';
 
@@ -54,6 +57,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   const hasStage = body.stage.kind !== 'none';
   const regionNumber = course.value!.regions.find((r) => r.id === quest.region)?.number ?? 0;
   const annotate = regionNumber >= ANNOTATE_FROM_REGION;
+  const narrow = useNarrow();
 
   const [code, setCode] = useState(starter);
   const [parsons, setParsons] = useState<{ scraps: Block[]; spell: Block[] } | null>(null);
@@ -96,7 +100,11 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     () =>
       new ReplayEngine(hasStage ? getWorldView() : NOOP_VIEW, {
         onState: setReplayState,
-        onAction: (i) => setReplayPos(i + 1),
+        onAction: (i, action) => {
+          setReplayPos(i + 1);
+          if (action.t === 'bonk') playEffect('bonk');
+          else if (action.t === 'pickup' && action.item) playEffect('pickup');
+        },
         onLine: setReplayLine,
         onOutput: (a) =>
           setOut((lines) => [
@@ -119,6 +127,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
 
   // Stage and saved draft.
   useEffect(() => {
+    questTab.value = 'work';
     if (hasStage) {
       const world = getWorldView();
       world.setReducedMotion(prefersReducedMotion());
@@ -256,7 +265,11 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     engine.setSpeed(speed);
     engine.load(res.actions);
     if (speed === 'instant' || res.actions.length === 0) await engine.skipToEnd();
-    else void engine.play();
+    else {
+      // On a narrow screen, show the replay; Byte's feedback brings the editor back.
+      questTab.value = 'stage';
+      void engine.play();
+    }
   };
 
   const ask = (prompt: string, output: string) =>
@@ -282,6 +295,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
 
   const reveal = (res: RunResult) => {
     setRevealed(true);
+    questTab.value = 'work';
     if (isInvestigate) {
       setHasRun(true);
       if (res.error) announceError(res);
@@ -323,12 +337,14 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   // A run error keeps focus where it is (usually the editor, so the student can fix the
   // marked line) and is announced politely instead (F-EDT-05).
   const announceError = (res: RunResult) => {
+    playEffect('error');
     const fb = res.validation?.feedback;
     const title = errorTemplate(res.error!).title;
     announce(`${t.quest.errorOnLine(res.error!.line, title)}${fb?.text ? ` ${fb.text}` : ''}`);
   };
 
   const finishPass = (finalCode: string, bonusIds: string[] = []) => {
+    playEffect('success');
     const r = onPassed(finalCode);
     const itemName = r.item ? (course.value!.items[r.item]?.name ?? r.item) : null;
     // Bonus challenges are checked on a passing run; their XP is given once (§9.4).
@@ -407,257 +423,282 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   const allAnswered = (body.prompts ?? []).every((_, i) => answers[i] !== undefined && answers[i] !== '');
   const ready = runner.status.value === 'ready' || runner.status.value === 'running';
 
+  const runBar = (
+    <div class="run-bar">
+      {isPredict && !locked ? (
+        <button
+          type="button"
+          class="primary"
+          disabled={!allAnswered}
+          onClick={() => {
+            setLocked(true);
+            announce('Prediction locked in. Now run the code to check.');
+            requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('button.run')?.focus());
+          }}
+        >
+          🔒 {t.predict.lockIn}
+        </button>
+      ) : (
+        <button
+          type="button"
+          class="primary run"
+          disabled={running || !ready}
+          onClick={() => void run()}
+          aria-keyshortcuts="Control+Enter"
+        >
+          {running ? t.quest.running : `▶ ${isPredict ? t.predict.runToCheck : t.quest.run}`}
+        </button>
+      )}
+      {!isPredict && body.type !== 'parsons' && (
+        <button
+          type="button"
+          class="ghost"
+          onClick={() => {
+            if (confirm(t.quest.resetConfirm)) setCode(starter);
+          }}
+        >
+          ↺ {t.quest.reset}
+        </button>
+      )}
+      {body.interactiveInput && body.inputs.length > 0 && (
+        <label class="check-label">
+          <input
+            type="checkbox"
+            checked={typeOwn}
+            onChange={(e) => setTypeOwn((e.target as HTMLInputElement).checked)}
+          />{' '}
+          ✍️ {t.quest.typeAnswers}
+        </label>
+      )}
+      {!ready && runner.status.value !== 'failed' && <span class="muted small-text">{t.loading}</span>}
+    </div>
+  );
+
+  const tabs: { key: QuestTab; label: string }[] = [
+    { key: 'quest', label: t.quest.tabQuest },
+    { key: 'work', label: t.quest.tabWork },
+    { key: 'stage', label: t.quest.tabStage },
+  ];
+
   return (
-    <div class="quest-grid">
-      <section class="quest-story card" aria-labelledby="story-h">
-        <h2 id="story-h" class="sr-only">
-          Story and goal
-        </h2>
-        <RichText rich={body.storyIntro} />
-        <div class="goal">
-          <strong>🎯 {t.quest.goal}:</strong> <RichText rich={body.goal} inline />
-        </div>
-        {passed && quest.conceptCard && (
-          <details class="concept-card" open>
-            <summary>📘 {t.quest.conceptCard}</summary>
-            <RichText rich={quest.conceptCard} />
-          </details>
-        )}
-        {(passed || unitDone) && body.bonus.length > 0 && (
-          <BonusList bonus={body.bonus} done={(id) => bonusDone(p, quest.id, id, phaseId)} />
-        )}
-        <Hints
-          hints={body.hints}
-          revealed={hintsRevealed}
-          onReveal={reveal3}
-          // Copying a whole example would undo the locked lines of a locked fill quest.
-          onCopy={body.locked ? undefined : (c) => setCode(c)}
+    <>
+      {narrow && (
+        <TabList
+          id="quest"
+          label={t.quest.panels}
+          tabs={tabs}
+          current={questTab.value}
+          onSelect={(key) => (questTab.value = key)}
+          panelId={(key) => `quest-panel-${key}`}
         />
-      </section>
-
-      <section class="quest-work card" aria-label="Your work">
-        {body.type === 'parsons' && body.parsons ? (
-          <Parsons spec={body.parsons} seed={unitKey} state={parsons} onChange={setParsons} />
-        ) : (
-          <div class="editor-wrap">
-            <Editor
-              value={isPredict ? body.starterCode : code}
-              readOnly={isPredict}
-              onChange={setCode}
-              onRun={() => void run()}
-              id="code-editor"
-              fontSize={p.settings.editorFontSize}
-              replayLine={replayLine}
-              error={editorError}
-              label={isPredict ? 'Code to read (read only)' : t.quest.editorLabel}
-              fill={isFill ? { starter: body.starterCode, locked: body.locked } : null}
-              onBlocked={showLocked}
-              viewRef={editorView}
-            />
-            <div class="editor-tools">
-              <p id="editor-help" class="muted small-text">
-                ⌨️ {t.quest.editorHelp}
-                {isFill && ` ${t.quest.gapHelp}`}
-                {body.locked && ` ${t.quest.lockedHelp}`}
-              </p>
-              {isFill && (
-                <button
-                  type="button"
-                  class="small"
-                  onClick={() => {
-                    const line = editorView.current ? selectNextGap(editorView.current) : null;
-                    announce(line ? t.quest.gapAt(line) : t.quest.noGaps);
-                  }}
-                >
-                  ⇥ {t.quest.nextGap}
-                </button>
-              )}
-              <CodeSize
-                size={p.settings.editorFontSize}
-                onChange={(n) => update((x) => void (x.settings.editorFontSize = n))}
-              />
-            </div>
+      )}
+      <div class={`quest-grid${narrow ? ' narrow' : ''}`}>
+        <section class="quest-story card" aria-labelledby="story-h" {...panelProps('quest', narrow)}>
+          <h2 id="story-h" class="sr-only">
+            Story and goal
+          </h2>
+          <RichText rich={body.storyIntro} />
+          <div class="goal">
+            <strong>🎯 {t.quest.goal}:</strong> <RichText rich={body.goal} inline />
           </div>
-        )}
-
-        {isPredict && body.prompts && (
-          <PredictPanel
-            prompts={body.prompts}
-            answers={answers}
-            locked={locked}
-            revealed={revealed}
-            output={result?.output ?? ''}
-            onAnswer={(i, v) => setAnswers((a) => Object.assign([...a], { [i]: v }))}
+          {passed && quest.conceptCard && (
+            <details class="concept-card" open>
+              <summary>📘 {t.quest.conceptCard}</summary>
+              <RichText rich={quest.conceptCard} />
+            </details>
+          )}
+          {(passed || unitDone) && body.bonus.length > 0 && (
+            <BonusList bonus={body.bonus} done={(id) => bonusDone(p, quest.id, id, phaseId)} />
+          )}
+          <Hints
+            hints={body.hints}
+            revealed={hintsRevealed}
+            onReveal={reveal3}
+            // Copying a whole example would undo the locked lines of a locked fill quest.
+            onCopy={body.locked ? undefined : (c) => setCode(c)}
           />
-        )}
+        </section>
 
-        <div class="run-bar">
-          {isPredict && !locked ? (
-            <button
-              type="button"
-              class="primary"
-              disabled={!allAnswered}
-              onClick={() => {
-                setLocked(true);
-                announce('Prediction locked in. Now run the code to check.');
-                requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('button.run')?.focus());
-              }}
-            >
-              🔒 {t.predict.lockIn}
-            </button>
+        <section class="quest-work card" aria-label="Your work" {...panelProps('work', narrow)}>
+          {body.type === 'parsons' && body.parsons ? (
+            <Parsons spec={body.parsons} seed={unitKey} state={parsons} onChange={setParsons} />
           ) : (
-            <button
-              type="button"
-              class="primary run"
-              disabled={running || !ready}
-              onClick={() => void run()}
-              aria-keyshortcuts="Control+Enter"
-            >
-              {running ? t.quest.running : `▶ ${isPredict ? t.predict.runToCheck : t.quest.run}`}
-            </button>
+            <div class="editor-wrap">
+              <Editor
+                value={isPredict ? body.starterCode : code}
+                readOnly={isPredict}
+                onChange={setCode}
+                onRun={() => void run()}
+                id="code-editor"
+                fontSize={p.settings.editorFontSize}
+                replayLine={replayLine}
+                error={editorError}
+                label={isPredict ? 'Code to read (read only)' : t.quest.editorLabel}
+                fill={isFill ? { starter: body.starterCode, locked: body.locked } : null}
+                onBlocked={showLocked}
+                viewRef={editorView}
+              />
+              <div class="editor-tools">
+                <p id="editor-help" class="muted small-text">
+                  ⌨️ {t.quest.editorHelp}
+                  {isFill && ` ${t.quest.gapHelp}`}
+                  {body.locked && ` ${t.quest.lockedHelp}`}
+                </p>
+                {isFill && (
+                  <button
+                    type="button"
+                    class="small"
+                    onClick={() => {
+                      const line = editorView.current ? selectNextGap(editorView.current) : null;
+                      announce(line ? t.quest.gapAt(line) : t.quest.noGaps);
+                    }}
+                  >
+                    ⇥ {t.quest.nextGap}
+                  </button>
+                )}
+                <CodeSize
+                  size={p.settings.editorFontSize}
+                  onChange={(n) => update((x) => void (x.settings.editorFontSize = n))}
+                />
+              </div>
+            </div>
           )}
-          {!isPredict && body.type !== 'parsons' && (
-            <button
-              type="button"
-              class="ghost"
-              onClick={() => {
-                if (confirm(t.quest.resetConfirm)) setCode(starter);
+
+          {isPredict && body.prompts && (
+            <PredictPanel
+              prompts={body.prompts}
+              answers={answers}
+              locked={locked}
+              revealed={revealed}
+              output={result?.output ?? ''}
+              onAnswer={(i, v) => setAnswers((a) => Object.assign([...a], { [i]: v }))}
+            />
+          )}
+
+          {!narrow && runBar}
+          {lockedNote && (
+            <p class="small-text note-locked" role="status">
+              🔒 {t.quest.lockedLine}
+            </p>
+          )}
+          {runNote && (
+            <p class="banner info" role="status">
+              {runNote}
+            </p>
+          )}
+          {usesSession && <SessionPanel status={progress} />}
+
+          {!ready && <LoadingPanel runner={runner} />}
+
+          <div ref={feedbackRef}>
+            {revealed && !isInvestigate && (
+              <Feedback
+                result={result}
+                passed={passed}
+                outro={outro}
+                reward={reward}
+                note={sessionNote(result)}
+                annotate={annotate}
+              >
+                {passed && afterPass}
+              </Feedback>
+            )}
+            {revealed && isInvestigate && result?.error && (
+              <Feedback result={result} passed={false} annotate={annotate} />
+            )}
+          </div>
+
+          {isInvestigate && body.questions && (
+            <InvestigatePanel
+              questions={body.questions}
+              states={questions}
+              enabled={hasRun}
+              onChange={(i, value) =>
+                setQuestions((qs) => qs.map((q, j) => (j === i ? { value, status: 'unanswered' } : q)))
+              }
+              onCheck={(i) => {
+                const q = body.questions![i]!;
+                const ok = checkQuestion(q, questions[i]!.value);
+                const next = questions.map((s, j) =>
+                  j === i ? { ...s, status: ok ? ('right' as const) : ('wrong' as const) } : s,
+                );
+                setQuestions(next);
+                update((x) => recordAttempt(x, quest.id, `${i}:${questions[i]!.value}`, ok));
+                if (next.every((s) => s.status === 'right')) finishPass(code);
               }}
-            >
-              ↺ {t.quest.reset}
-            </button>
+            />
           )}
-          {body.interactiveInput && body.inputs.length > 0 && (
-            <label class="check-label">
-              <input
-                type="checkbox"
-                checked={typeOwn}
-                onChange={(e) => setTypeOwn((e.target as HTMLInputElement).checked)}
-              />{' '}
-              ✍️ {t.quest.typeAnswers}
-            </label>
-          )}
-          {!ready && runner.status.value !== 'failed' && <span class="muted small-text">{t.loading}</span>}
-        </div>
-        {lockedNote && (
-          <p class="small-text note-locked" role="status">
-            🔒 {t.quest.lockedLine}
-          </p>
-        )}
-        {runNote && (
-          <p class="banner info" role="status">
-            {runNote}
-          </p>
-        )}
-        {usesSession && <SessionPanel status={progress} />}
-
-        {!ready && <LoadingPanel runner={runner} />}
-
-        <div ref={feedbackRef}>
-          {revealed && !isInvestigate && (
-            <Feedback
-              result={result}
-              passed={passed}
-              outro={outro}
-              reward={reward}
-              note={sessionNote(result)}
-              annotate={annotate}
-            >
-              {passed && afterPass}
+          {isInvestigate && passed && (
+            <Feedback result={result} passed outro={outro} reward={reward}>
+              {afterPass}
             </Feedback>
           )}
-          {revealed && isInvestigate && result?.error && (
-            <Feedback result={result} passed={false} annotate={annotate} />
-          )}
-        </div>
+        </section>
 
-        {isInvestigate && body.questions && (
-          <InvestigatePanel
-            questions={body.questions}
-            states={questions}
-            enabled={hasRun}
-            onChange={(i, value) =>
-              setQuestions((qs) => qs.map((q, j) => (j === i ? { value, status: 'unanswered' } : q)))
+        <section class="quest-stage card" aria-label="Quest map and output" {...panelProps('stage', narrow)}>
+          {hasStage && (
+            <>
+              <h2 class="panel-title">🗺️ {t.quest.stage}</h2>
+              <div
+                class="stage-holder"
+                ref={stageHolder}
+                role="img"
+                aria-label={`${t.quest.stage}. Use “${t.hud.describe}” to hear what is around the hero.`}
+              />
+              <div class="row">
+                <ReplayControls
+                  state={replayState}
+                  speed={speed}
+                  position={replayPos}
+                  length={engine.length}
+                  onPlay={() => void engine.play()}
+                  onPause={() => engine.pause()}
+                  onStep={() => void engine.step()}
+                  onRestart={() => void engine.restart()}
+                  onSkip={() => void engine.skipToEnd()}
+                  onSpeed={(s) => {
+                    setSpeed(s);
+                    engine.setSpeed(s);
+                    update((x) => void (x.settings.replaySpeed = s));
+                  }}
+                />
+                <button
+                  type="button"
+                  class="small ghost"
+                  onClick={() => announce(getWorldView().describeStage())}
+                >
+                  👂 {t.hud.describe}
+                </button>
+              </div>
+            </>
+          )}
+          <OutputScroll
+            lines={out}
+            tall={!hasStage}
+            onShowAll={
+              replayState === 'playing' || replayState === 'paused'
+                ? () => void engine.skipToEnd()
+                : undefined
             }
-            onCheck={(i) => {
-              const q = body.questions![i]!;
-              const ok = checkQuestion(q, questions[i]!.value);
-              const next = questions.map((s, j) =>
-                j === i ? { ...s, status: ok ? ('right' as const) : ('wrong' as const) } : s,
-              );
-              setQuestions(next);
-              update((x) => recordAttempt(x, quest.id, `${i}:${questions[i]!.value}`, ok));
-              if (next.every((s) => s.status === 'right')) finishPass(code);
+          />
+          {body.jarShelf && result && <JarShelf vars={result.vars} />}
+        </section>
+        {inputRequest && (
+          <InputDialog
+            prompt={inputRequest.prompt}
+            output={inputRequest.output}
+            onAnswer={(value) => {
+              inputRequest.resolve(value);
+              setInputRequest(null);
+            }}
+            onCancel={() => {
+              inputRequest.resolve(null);
+              setInputRequest(null);
             }}
           />
         )}
-        {isInvestigate && passed && (
-          <Feedback result={result} passed outro={outro} reward={reward}>
-            {afterPass}
-          </Feedback>
-        )}
-      </section>
-
-      <section class="quest-stage card" aria-label="Quest map and output">
-        {hasStage && (
-          <>
-            <h2 class="panel-title">🗺️ {t.quest.stage}</h2>
-            <div
-              class="stage-holder"
-              ref={stageHolder}
-              role="img"
-              aria-label={`${t.quest.stage}. Use “${t.hud.describe}” to hear what is around the hero.`}
-            />
-            <div class="row">
-              <ReplayControls
-                state={replayState}
-                speed={speed}
-                position={replayPos}
-                length={engine.length}
-                onPlay={() => void engine.play()}
-                onPause={() => engine.pause()}
-                onStep={() => void engine.step()}
-                onRestart={() => void engine.restart()}
-                onSkip={() => void engine.skipToEnd()}
-                onSpeed={(s) => {
-                  setSpeed(s);
-                  engine.setSpeed(s);
-                  update((x) => void (x.settings.replaySpeed = s));
-                }}
-              />
-              <button
-                type="button"
-                class="small ghost"
-                onClick={() => announce(getWorldView().describeStage())}
-              >
-                👂 {t.hud.describe}
-              </button>
-            </div>
-          </>
-        )}
-        <OutputScroll
-          lines={out}
-          tall={!hasStage}
-          onShowAll={
-            replayState === 'playing' || replayState === 'paused' ? () => void engine.skipToEnd() : undefined
-          }
-        />
-        {body.jarShelf && result && <JarShelf vars={result.vars} />}
-      </section>
-      {inputRequest && (
-        <InputDialog
-          prompt={inputRequest.prompt}
-          output={inputRequest.output}
-          onAnswer={(value) => {
-            inputRequest.resolve(value);
-            setInputRequest(null);
-          }}
-          onCancel={() => {
-            inputRequest.resolve(null);
-            setInputRequest(null);
-          }}
-        />
-      )}
-    </div>
+      </div>
+      {narrow && <div class="sticky-run">{runBar}</div>}
+    </>
   );
 }

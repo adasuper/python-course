@@ -45,7 +45,7 @@ export function Term({ term, children }: { term: string; children: preact.Compon
   );
 }
 
-function InlineNodes({ nodes }: { nodes: Inline[] }) {
+export function InlineNodes({ nodes }: { nodes: Inline[] }) {
   return (
     <>
       {nodes.map((n, i) => {

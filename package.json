@@ -42,7 +42,8 @@
     "idb-keyval": "6.3.0",
     "phaser": "4.2.1",
     "preact": "10.29.8",
-    "pyodide": "314.0.7"
+    "pyodide": "314.0.7",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
@@ -59,7 +60,6 @@
     "typescript-eslint": "8.72.0",
     "vite": "8.3.4",
     "vitest": "5.0.5",
-    "yaml": "2.9.1",
-    "zod": "4.6.7"
+    "yaml": "2.9.1"
   }
 }

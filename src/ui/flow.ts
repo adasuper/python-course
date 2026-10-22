@@ -2,6 +2,7 @@
 import { questState } from '../state/progress';
 import { newProfile, type Profile } from '../state/profile';
 import {
+  config,
   course,
   flushSave,
   getStorage,
@@ -22,7 +23,8 @@ export async function selectProfile(p: Profile) {
 
 export async function createProfile(nickname: string, avatarId: string, themeId: string) {
   const c = course.value!;
-  const p = newProfile(nickname.trim(), avatarId, themeId, c.regions[0]!.id);
+  // Deploy-time defaults from codeweald.config.json (F-DEP-02).
+  const p = newProfile(nickname.trim(), avatarId, themeId, c.regions[0]!.id, config.value.defaults);
   await getStorage().saveProfile(p);
   profiles.value = [...profiles.value, p];
   await selectProfile(p);

@@ -1087,3 +1087,24 @@ img.pixel,
   height: 200px;
   margin: 0.6rem 0;
 }
+.credits-screen .card {
+  max-width: 1000px;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.credits-screen table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0 1rem;
+}
+.credits-screen th,
+.credits-screen td {
+  border: 1px solid var(--line);
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.credits-link {
+  margin-top: 1rem;
+}

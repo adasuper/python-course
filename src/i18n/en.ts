@@ -20,6 +20,7 @@ export const t = {
     deviceNote:
       'This computer might forget your progress when you sign out. Save your progress code at the end of each class!',
   },
+  credits: { link: 'Credits', heading: 'Credits and licenses', back: 'Back' },
   creator: {
     heading: 'Create your Scriptwright',
     avatar: 'Choose your look',

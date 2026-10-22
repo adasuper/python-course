@@ -83,6 +83,7 @@ export function newProfile(
   avatarId: string,
   themeId: string,
   firstRegion: string,
+  defaults: Partial<Pick<Settings, 'textScale' | 'reducedMotion' | 'replaySpeed'>> = {},
 ): Profile {
   return {
     schemaVersion: 2,
@@ -98,7 +99,12 @@ export function newProfile(
     poisVisited: {},
     seen: { opening: false, regionIntros: [], conceptScenes: [] },
     location: { region: firstRegion, at: null, quest: null },
-    settings: { ...DEFAULT_SETTINGS },
+    settings: {
+      ...DEFAULT_SETTINGS,
+      ...(defaults.textScale !== undefined && { textScale: defaults.textScale }),
+      ...(defaults.reducedMotion !== undefined && { reducedMotion: defaults.reducedMotion }),
+      ...(defaults.replaySpeed !== undefined && { replaySpeed: defaults.replaySpeed }),
+    },
     counters: { realErrorViews: 0 },
     lastSavedOutHash: null,
   };

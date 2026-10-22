@@ -11,7 +11,7 @@ import {
   record,
   recordAttempt,
   regionUnlocked,
-  setKnowledgeCheckGates,
+  configureRules,
   useHint,
 } from '../../src/state/progress';
 import { shuffledOrder } from '../../src/ui/order';
@@ -26,6 +26,16 @@ describe('nickname filter', () => {
     'Cassie',
     'Button Moon',
     'Hello Kitty',
+    // False positives found in the Phase 1 audit:
+    'Bob',
+    'Bobcat',
+    'Buttons',
+    'Spicy Fox',
+    'Shiitake',
+    'Sexton',
+    'Pissarro',
+    'Scrap Fox',
+    'Homer',
   ])('allows %s', (n) => {
     expect(checkNickname(n)).toBeNull();
   });
@@ -37,6 +47,12 @@ describe('nickname filter', () => {
     ['Sh1t Lord', 'blocked'],
     ['F u c k y', 'blocked'],
     ['b1tch', 'blocked'],
+    ['fuuuck', 'blocked'],
+    // Separators found in the Phase 1 audit:
+    ['Sh-it', 'blocked'],
+    ['fu ck', 'blocked'],
+    ['Cr ap', 'blocked'],
+    ['Ma Sh It', 'blocked'],
   ])('rejects %s (%s)', (n, why) => {
     expect(checkNickname(n)).toBe(why);
   });
@@ -199,13 +215,26 @@ describe('progress rules (Phase 1 audit)', () => {
     const p = newProfile('Newt', 'avatar-1', 'moss', 'one');
     for (const ph of ['p1', 'p2']) completePhase(p, course, 'boss', ph, 'x');
     expect(regionUnlocked(p, course, 'two')).toBe(true);
-    setKnowledgeCheckGates(true);
+    configureRules({ knowledgeCheckGates: true, sideQuests: true });
     try {
       expect(regionUnlocked(p, course, 'two')).toBe(false);
       completeCheck(p, 'one', 2, 4);
       expect(regionUnlocked(p, course, 'two')).toBe(true);
     } finally {
-      setKnowledgeCheckGates(false);
+      configureRules({ knowledgeCheckGates: false, sideQuests: true });
+    }
+  });
+
+  it('starts new profiles with the deploy defaults, and can hide side quests (F-DEP-02)', () => {
+    const p = newProfile('Newt', 'avatar-1', 'moss', 'one', { textScale: 1.5, replaySpeed: 'instant' });
+    expect(p.settings).toMatchObject({ textScale: 1.5, replaySpeed: 'instant', reducedMotion: 'system' });
+    for (const ph of ['p1', 'p2']) completePhase(p, course, 'boss', ph, 'x');
+    expect(questState(p, course, 'side')).toBe('available');
+    configureRules({ knowledgeCheckGates: false, sideQuests: false });
+    try {
+      expect(questState(p, course, 'side')).toBe('locked');
+    } finally {
+      configureRules({ knowledgeCheckGates: false, sideQuests: true });
     }
   });
 

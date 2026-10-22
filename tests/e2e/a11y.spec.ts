@@ -28,6 +28,14 @@ test('title and character creator', async ({ page }) => {
   await scan(page, 'creator with error');
 });
 
+test('credits', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Credits' }).click();
+  await expect(page.getByRole('heading', { name: 'Credits and licenses' })).toBeFocused();
+  await expect(page.locator('.credits-screen table').first()).toBeVisible();
+  await scan(page, 'credits');
+});
+
 test('story, overworld, save dialog, inventory', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: /New adventurer/ }).click();

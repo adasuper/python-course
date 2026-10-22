@@ -6,6 +6,7 @@ import { LiveRegion, Toasts } from './components/Common';
 import { SaveDialog } from './components/SaveDialogs';
 import { QuestScreen } from './quest/QuestScreen';
 import { CheckScreen } from './screens/Check';
+import { CreditsScreen } from './screens/Credits';
 import { ConceptScreen } from './screens/Concept';
 import { CreatorScreen } from './screens/Creator';
 import { InventoryScreen } from './screens/Inventory';
@@ -62,6 +63,9 @@ export function App() {
       break;
     case 'inventory':
       screen = <InventoryScreen />;
+      break;
+    case 'credits':
+      screen = <CreditsScreen />;
       break;
   }
   return (

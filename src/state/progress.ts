@@ -6,11 +6,15 @@ import type { Marker } from '../game/worldView';
 import { emptyRecord, hashText, levelFor, today, type Profile, type QuestRecord } from './profile';
 
 let checkGates = false;
+let sideQuestsOn = true;
 
-/** Deploy setting `features.knowledgeCheckGates`: the next region also waits for the
- *  previous region's knowledge check (off by default; F-BOS-04). */
-export function setKnowledgeCheckGates(on: boolean) {
-  checkGates = on;
+/** Deploy settings from codeweald.config.json `features` (F-DEP-02):
+ *  - knowledgeCheckGates: the next region also waits for the previous region's knowledge
+ *    check (off by default; F-BOS-04)
+ *  - sideQuests: false hides every side quest */
+export function configureRules(features: { knowledgeCheckGates: boolean; sideQuests: boolean }) {
+  checkGates = features.knowledgeCheckGates;
+  sideQuestsOn = features.sideQuests;
 }
 
 export function regionUnlocked(p: Profile, course: Course, regionId: string, unlockedThrough = 0): boolean {
@@ -31,7 +35,7 @@ export function questState(p: Profile, course: Course, questId: string, unlocked
   if (!regionUnlocked(p, course, info.region, unlockedThrough)) return 'locked';
   const rec = p.quests[questId];
   if (rec?.status === 'completed') return 'completed';
-  if (info.sideQuest && !course.sideQuests) return 'locked';
+  if (info.sideQuest && !(course.sideQuests && sideQuestsOn)) return 'locked';
   if (!info.prerequisites.every((pre) => p.quests[pre]?.status === 'completed')) return 'locked';
   return rec ? 'in_progress' : 'available';
 }

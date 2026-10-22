@@ -55,6 +55,11 @@ export function TitleScreen() {
           </button>
         </div>
       </section>
+      <p class="credits-link">
+        <button type="button" class="ghost small" onClick={() => go({ name: 'credits' })}>
+          {t.credits.link}
+        </button>
+      </p>
       {restoring && (
         <RestoreDialog
           onClose={() => setRestoring(false)}

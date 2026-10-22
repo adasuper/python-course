@@ -114,6 +114,16 @@ export function recordAttempt(p: Profile, questId: string, code: string, passed:
   if (!passed && rec.status !== 'completed') rec.failedBeforePass++;
 }
 
+/** A predict quest's run: only the first try's predictions count toward accuracy (§9.2). */
+export function recordPredictions(p: Profile, questId: string, correct: boolean[]) {
+  const rec = record(p, questId);
+  rec.attempts++;
+  if (rec.predictionsTotal === undefined) {
+    rec.predictionsTotal = correct.length;
+    rec.predictionsCorrectFirstTry = correct.filter(Boolean).length;
+  }
+}
+
 /** Hints unlock in order, per quest, or per phase of a boss (F-FBK-11). */
 export function useHint(p: Profile, questId: string, tier: 1 | 2 | 3, phaseId?: string) {
   const rec = record(p, questId);

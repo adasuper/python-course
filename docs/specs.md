@@ -1158,8 +1158,9 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
   the quest it came from (with that quest's concept card once completed) and the glossary
   terms it uses.
 - Searchable (name and summary). Script Fragments and badges appear on separate shelves.
-- **Celebrations** (F-PRG-08): badges and level-ups pop up as dismissible toasts, announced in
-  the polite live region (messages that arrive together are joined). At most three toasts show
+- **Celebrations** (F-PRG-08): XP and items (on a quest pass), badges and level-ups pop up as
+  dismissible toasts, announced in the polite live region (messages that arrive together are
+  joined). At most three toasts show
   at once, and a new save point replaces the last one, so they never cover the game. The pop is one 0.5 s scale
   animation, never a flash, and reduced motion turns it off.
 

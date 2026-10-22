@@ -7,7 +7,15 @@ import { ReplayEngine, type ReplayState, type ReplayView, type Speed } from '../
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
 import type { RunRequest, RunResult, SessionRun } from '../../runtime/protocol';
-import { awardBonus, bonusDone, hintsShown, recordAttempt, useHint, type Reward } from '../../state/progress';
+import {
+  awardBonus,
+  bonusDone,
+  hintsShown,
+  recordAttempt,
+  recordPredictions,
+  useHint,
+  type Reward,
+} from '../../state/progress';
 import { addRun, hasSessionValidators, sessionStatus } from '../../state/session';
 import { announce, config, course, getRunner, getStorage, profile, toast, update } from '../../state/store';
 import { LoadingPanel } from '../components/Common';
@@ -304,21 +312,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     }
     if (isPredict) {
       const correct = (body.prompts ?? []).map((pr, i) => predictionCorrect(pr, answers[i], res.output));
-      update((x) => {
-        const rec = (x.quests[quest.id] ??= {
-          status: 'in_progress',
-          attempts: 0,
-          codeHashes: [],
-          failedBeforePass: 0,
-          hintsUsed: 0,
-          activeSeconds: 0,
-        });
-        rec.attempts++;
-        if (rec.predictionsTotal === undefined) {
-          rec.predictionsTotal = correct.length;
-          rec.predictionsCorrectFirstTry = correct.filter(Boolean).length;
-        }
-      });
+      update((x) => recordPredictions(x, quest.id, correct));
       finishPass(pendingCode.current);
       return;
     }
@@ -356,16 +350,12 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     const bonusText = bonus.xp ? t.quest.bonusGained(bonus.ids.length, bonus.xp) : '';
     setReward({ xp: r.xp, itemName, levelUp: bonus.levelUp ?? r.levelUp, bonusText });
     setPassed(true);
-    announce(
-      [
-        t.quest.passed,
-        r.xp ? t.quest.xpGained(r.xp) : '',
-        itemName ? t.quest.itemGained(itemName) : '',
-        bonusText,
-      ]
-        .filter(Boolean)
-        .join(' '),
-    );
+    announce([t.quest.passed, bonusText].filter(Boolean).join(' '));
+    // XP and items get a toast too (F-PRG-08); the toast's own announcement says them.
+    const gained = [r.xp ? t.quest.xpGained(r.xp) : '', itemName ? t.quest.itemGained(itemName) : '']
+      .filter(Boolean)
+      .join(' · ');
+    if (gained) toast('reward', gained, 6000, itemName ? '🎒' : '✨');
     focusFeedback();
     toast('save-point', t.save.savePoint, 8000);
   };

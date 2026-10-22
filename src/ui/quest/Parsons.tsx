@@ -3,44 +3,10 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ParsonsSpec } from '../../content/types';
 import { t } from '../../i18n/en';
 import { announce } from '../../state/store';
-
-export interface Block {
-  id: number;
-  text: string;
-  indent: number;
-}
+import { initialBlocks, type Block } from './parsonsModel';
 
 type ListName = 'scraps' | 'spell';
 const MAX_INDENT = 4;
-
-/** Deterministic shuffle, so every student sees the same puzzle (and tests are stable). */
-function shuffle<T>(items: T[], seed: string): T[] {
-  let h = 2166136261;
-  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i--) {
-    h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
-    const j = h % (i + 1);
-    [out[i], out[j]] = [out[j]!, out[i]!];
-  }
-  // Never start already solved.
-  if (out.every((x, i) => x === items[i]) && out.length > 1) out.push(out.shift()!);
-  return out;
-}
-
-export function initialBlocks(spec: ParsonsSpec, seed: string): Block[] {
-  const all = [...spec.lines, ...spec.distractors].map((line, id) => ({
-    id,
-    text: spec.indent ? line.trimStart() : line,
-    indent: 0,
-  }));
-  return shuffle(all, seed);
-}
-
-export function programFrom(spec: ParsonsSpec, spell: Block[]): string {
-  const body = spell.map((b) => (spec.indent ? '    '.repeat(b.indent) + b.text : b.text));
-  return [...spec.fixedTop, ...body].join('\n') + '\n';
-}
 
 export function Parsons({
   spec,

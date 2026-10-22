@@ -95,3 +95,81 @@ describe('investigate answers are proven (F-QA-04)', () => {
     expect(found).toContain('question 1: the program prints 3 line(s), but the answer is 4');
   });
 });
+
+describe('rules for the Phase 2 quest types (M2.1)', () => {
+  const q3 = `${R1}/quests/r1-q3-path-to-the-well.yaml`;
+  const q4 = `${R1}/quests/r1-q4-notes-for-the-baker.yaml`;
+  const q6 = `${R1}/quests/r1-q6-welcome-sign.yaml`;
+  let problems: Problem[];
+
+  beforeAll(() => {
+    const root = brokenCopy({
+      [q4]: (t) => t.replace(/^starter_code:/m, 'locked: true\nstarter_code:'),
+      [q6]: (t) =>
+        t.replace('type: make', 'type: fill').replace(
+          /^validators:\n/m,
+          [
+            'validators:',
+            '  - { type: runs_ok, min_runs: 3, distinct_inputs: true }',
+            '  - type: hidden_tests',
+            '    mode: stages',
+            '    cases:',
+            '      - { stage: { kind: grid, grid: "H.Z" } }',
+            '',
+          ].join('\n'),
+        ),
+      [q3]: (t) => t.replace('  indent: false', '  indent: false\n  alternatives: [[0, 1, 2]]'),
+    });
+    problems = crossCheck(loadContent(root), root);
+  });
+  const find = (re: RegExp) => problems.find((p) => re.test(p.message));
+
+  it('allows locked lines only in fill quests', () => {
+    expect(find(/r1-q4-notes-for-the-baker: locked: true only works in fill quests/)).toBeDefined();
+  });
+  it("needs a ____ gap in a fill quest's starter", () => {
+    expect(find(/r1-q6-welcome-sign: a fill quest's starter_code needs at least one ____ gap/)).toBeDefined();
+  });
+  it('needs typed input for runs_ok with distinct inputs', () => {
+    expect(find(/runs_ok with distinct_inputs needs interactive_input: true/)).toBeDefined();
+  });
+  it('checks the maps of hidden stages', () => {
+    expect(find(/r1-q6-welcome-sign: grid symbol "Z"/)).toBeDefined();
+  });
+  it('makes a Parsons alternative use every line once', () => {
+    expect(find(/alternative 1 must list every line number from 0 to 4 once/)).toBeDefined();
+  });
+});
+
+describe('order-checked Parsons and predict twins are proven (M2.1)', () => {
+  it('fails a "wrong" order that is really right, and a twin with the wrong answer', async () => {
+    const root = brokenCopy({
+      [`${R1}/quests/r1-q3-path-to-the-well.yaml`]: (t) =>
+        t
+          .replace('  indent: false', '  indent: false\n  check: order')
+          .replace('  - order: [1, 0, 2, 3, 4]\n    expect_mistake: bonked', '  - order: [0, 1, 2, 3, 4]\n    expect_feedback_contains: Not quite'),
+      [`${R1}/quests/r1-q1-first-steps.yaml`]: (t) =>
+        t.replace(
+          '    verify: { kind: none }\n',
+          [
+            '    verify: { kind: none }',
+            '    twin:',
+            '      kind: text',
+            '      code: print(2 + 2)',
+            '      question: What does this print?',
+            '      answer: "5"',
+            '      explain: Two plus two.',
+            '',
+          ].join('\n'),
+        ),
+    });
+    const content = loadContent(root);
+    expect(content.problems).toEqual([]);
+    const host = await getPyHost();
+    const q3 = checkUnit(host, units(content).find((u) => u.key === 'r1-q3-path-to-the-well')!);
+    expect(q3).toContain('wrong solution 1 is in a right order, but it should fail');
+    expect(q3).toContain('wrong solution 2: a check: order puzzle has no mistakes; use expect_feedback_contains');
+    const q1 = checkUnit(host, units(content).find((u) => u.key === 'r1-q1-first-steps')!);
+    expect(q1).toContain('prompt 2 twin: answer "5" ≠ real output "4\\n"');
+  });
+});

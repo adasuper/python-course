@@ -9,9 +9,14 @@ export interface DialogueLine {
   text: Rich;
 }
 
+/** A second, similar program to try after a wrong prediction (F-QST-05). */
+export type PredictTwin =
+  | { kind: 'mcq'; code: string; question: Rich; options: string[]; answer: number; explain: Rich }
+  | { kind: 'text'; code: string; question: Rich; answer: string; explain: Rich };
+
 export type PredictPrompt =
-  | { kind: 'mcq'; question: Rich; options: string[]; answer: number; explain: Rich }
-  | { kind: 'text'; question: Rich; answer: string; explain: Rich };
+  | { kind: 'mcq'; question: Rich; options: string[]; answer: number; explain: Rich; twin: PredictTwin | null }
+  | { kind: 'text'; question: Rich; answer: string; explain: Rich; twin: PredictTwin | null };
 
 export type InvestigateQuestion =
   | { kind: 'mcq'; question: Rich; options: string[]; answer: number; hint: Rich; explain: Rich | null }
@@ -37,10 +42,16 @@ export interface QuestBody {
   goal: Rich;
   stage: StageSpec;
   starterCode: string;
+  /** fill: only the lines with a ____ gap in the starter can be edited. */
+  locked: boolean;
   validators: ValidatorSpec[];
   mistakes: MistakeSpec[];
   hints: Rich[];
   inputs: string[];
+  /** Ask the player when the input queue runs out (Mode B, §6.5). */
+  interactiveInput: boolean;
+  /** Record line coverage, for branch_coverage. */
+  trackCoverage: boolean;
   seed: number;
   prompts: PredictPrompt[] | null;
   questions: InvestigateQuestion[] | null;

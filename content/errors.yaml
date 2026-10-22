@@ -328,6 +328,11 @@ stage.invalid:
   message: >-
     The quest map has a problem ({problem}). That's a bug in the quest, not in your code.
   tip: Tell your instructor which quest this was.
+fill.gap_left:
+  title: There's still a gap to fill
+  message: >-
+    Line {line} still has a `____` gap. Replace the `____` with your own code, then run it again.
+  tip: Gaps are highlighted in the Spellbook. The **Next gap** button jumps to the next one.
 sandbox.locked:
   title: That part of Python is locked
   message: >-

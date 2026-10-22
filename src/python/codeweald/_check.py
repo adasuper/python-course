@@ -6,6 +6,7 @@ hint ("You printed the answer, but the quest needs you to store it…").
 """
 
 import ast
+import hashlib
 import io
 import json
 import re
@@ -31,6 +32,8 @@ class Ctx:
         self.error = outcome.error
         self.world = outcome.world.snapshot() if outcome.world else {}
         self.namespace = outcome.namespace
+        # Earlier runs in this quest session plus this one, for session validators (§9.3).
+        self.session = []
         self._tree = None
         self._parsed = False
 
@@ -443,6 +446,106 @@ def v_custom(spec, ctx):
     return passed, {"hint": hint} if hint else {}
 
 
+# ----- session validators ------------------------------------------------------
+# They look across all of the student's runs in a quest session, not just the last one
+# (docs/specs.md §9.3). The main thread keeps the history (one summary per run, saved with
+# the draft) and sends it with each run.
+
+SESSION_VALIDATORS = frozenset({"branch_coverage", "runs_ok"})
+
+
+def branch_arms(tree, source):
+    """Every if/elif/else body (a "door") in the program, in source order.
+
+    Each arm is {id, kind, line, first}: `line` is where the door is written and `first` is
+    the first line of its body, which is the line coverage sees run.
+    """
+    if tree is None:
+        return []
+    lines = source.split("\n")
+
+    def is_elif(node):
+        return lines[node.lineno - 1].lstrip().startswith("elif")
+
+    elifs = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.If) and len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
+            if is_elif(node.orelse[0]):
+                elifs.add(id(node.orelse[0]))
+    heads = sorted(
+        (n for n in ast.walk(tree) if isinstance(n, ast.If) and id(n) not in elifs),
+        key=lambda n: (n.lineno, n.col_offset),
+    )
+    arms = []
+    for chain, head in enumerate(heads, start=1):
+        doors = []
+        node, kind = head, "if"
+        while True:
+            doors.append((kind, node.lineno, node.body[0].lineno))
+            orelse = node.orelse
+            if len(orelse) == 1 and id(orelse[0]) in elifs:
+                node, kind = orelse[0], "elif"
+                continue
+            if orelse:
+                first = orelse[0].lineno
+                # The AST has no line for `else:` itself; find it above the body.
+                written = range(first, node.body[-1].end_lineno, -1)
+                line = next((n for n in written if re.match(r"\s*else\s*:", lines[n - 1])), first)
+                doors.append(("else", line, first))
+            break
+        for n, (kind, line, first) in enumerate(doors, start=1):
+            arms.append({"id": f"{chain}.{n}", "kind": kind, "line": line, "first": first})
+    return arms
+
+
+def program_key(ctx):
+    """Two runs are "the same program" when their code has the same structure (comments and
+    spacing don't count)."""
+    text = ast.dump(ctx.tree) if ctx.tree is not None else ctx.source
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def session_summary(ctx):
+    """What the session history keeps about one run."""
+    arms = branch_arms(ctx.tree, ctx.source)
+    covered = ctx.outcome.lines or set()
+    return {
+        "program": program_key(ctx),
+        "ok": ctx.outcome.status == "ok",
+        "inputs": [str(v) for v in ctx.request.get("inputs") or []],
+        "shape": ",".join(f"{a['id']}{a['kind']}" for a in arms),
+        "lines": [a["line"] for a in arms],
+        "lit": [a["id"] for a in arms if a["first"] in covered],
+    }
+
+
+def v_branch_coverage(spec, ctx):
+    """Every door has run in at least one run of a program with the same doors."""
+    arms = branch_arms(ctx.tree, ctx.source)
+    shape = ",".join(f"{a['id']}{a['kind']}" for a in arms)
+    lit = set()
+    for run in ctx.session:
+        if run.get("shape") == shape:
+            lit.update(run.get("lit", []))
+    lamps = [{"id": a["id"], "kind": a["kind"], "line": a["line"], "lit": a["id"] in lit} for a in arms]
+    count = sum(1 for lamp in lamps if lamp["lit"])
+    want = spec.get("min", "all")
+    need = len(arms) if want == "all" else int(want)
+    return bool(arms) and count >= need, {"lamps": lamps, "lit": count, "need": need}
+
+
+def v_runs_ok(spec, ctx):
+    """This program finished without an error in enough of the student's runs."""
+    key = program_key(ctx)
+    runs = [r for r in ctx.session if r.get("program") == key and r.get("ok")]
+    if spec.get("distinct_inputs"):
+        count = len({tuple(r.get("inputs", [])) for r in runs})
+    else:
+        count = len(runs)
+    need = int(spec.get("min_runs", 3))
+    return count >= need, {"ok_runs": count, "need": need}
+
+
 VALIDATORS = {
     "output": v_output,
     "state": v_state,
@@ -451,6 +554,8 @@ VALIDATORS = {
     "style": v_style,
     "hidden_tests": v_hidden_tests,
     "custom": v_custom,
+    "branch_coverage": v_branch_coverage,
+    "runs_ok": v_runs_ok,
 }
 
 
@@ -520,6 +625,10 @@ def detect(rule, ctx, results):
 
 def evaluate(request, outcome):
     ctx = Ctx(request, outcome)
+    session = any(v["type"] in SESSION_VALIDATORS for v in request.get("validators", []))
+    summary = session_summary(ctx) if session else None
+    if session:
+        ctx.session = [*(request.get("session") or []), summary]
     ran_ok = outcome.status == "ok"
     results = [run_validator(spec, ctx) for spec in request.get("validators", [])] if ran_ok else []
     passed = ran_ok and all(r["passed"] for r in results)
@@ -545,4 +654,7 @@ def evaluate(request, outcome):
             ok = run_validator({"id": b["id"], **b["check"]}, ctx)["passed"]
             if ok:
                 bonus.append(b["id"])
-    return {"passed": passed, "results": results, "feedback": feedback, "bonus": bonus}
+    report = {"passed": passed, "results": results, "feedback": feedback, "bonus": bonus}
+    if summary is not None:
+        report["session"] = summary
+    return report

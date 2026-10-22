@@ -1,0 +1,20 @@
+# A comment-only plan, checked by its order (Parsons check: order, M2.1).
+id: r1-q93-plan-the-trip
+region: hearthvale-village
+title: Plan the Trip
+type: parsons
+learning_outcome: Arrange the steps of a plan in order before writing any code.
+csta: [2-AP-10]
+estimated_minutes: 5
+story_intro: Plan your trip to the well, one step at a time.
+goal: Put the plan in order.
+concept_card: A plan written as comments helps you write the code later.
+parsons:
+  lines:
+    - '# pack a lunch'
+    - '# walk to the well'
+    - '# say hello to the miller'
+  indent: false
+  check: order
+hints: [What do you do first?, Pack before you walk., '# pack ____']
+story_outro: A good plan!

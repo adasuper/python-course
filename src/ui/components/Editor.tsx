@@ -23,8 +23,10 @@ import {
   lineNumbers,
   type DecorationSet,
 } from '@codemirror/view';
+import type { MutableRef } from 'preact/hooks';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/en';
+import { externalChange, gapHighlight, lockedLines } from './gapEditor';
 
 // The line the replay is on, and the line of a run error. Each gets a background and a
 // gutter symbol (▶ / ✖), so neither relies on color alone (F-API-10, F-EDT-05).
@@ -113,6 +115,12 @@ interface Props {
   error?: EditorError | null;
   label?: string;
   id?: string;
+  /** Fill quests: highlight ____ gaps; with `locked`, only gap lines can change. */
+  fill?: { starter: string; locked: boolean } | null;
+  /** Called when the student tries to change a locked line. */
+  onBlocked?: () => void;
+  /** Gives the parent the editor view (for "Next gap"). */
+  viewRef?: MutableRef<EditorView | null>;
 }
 
 const theme = EditorView.theme({
@@ -128,6 +136,13 @@ const theme = EditorView.theme({
   '.cm-marks-gutter .cm-gutterElement': { padding: '0 2px', textAlign: 'center' },
   '.cm-mark-replay': { color: 'var(--accent)' },
   '.cm-mark-error': { color: 'var(--err)', fontWeight: 'bold' },
+  '.cm-gap': {
+    backgroundColor: 'var(--code-replay)',
+    outline: '2px dashed var(--accent)',
+    outlineOffset: '-1px',
+    borderRadius: '2px',
+  },
+  '.cm-gap-line': { boxShadow: 'inset 3px 0 0 var(--accent)' },
 });
 
 export function Editor({
@@ -140,11 +155,14 @@ export function Editor({
   error = null,
   label,
   id,
+  fill = null,
+  onBlocked,
+  viewRef,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
-  const callbacks = useRef({ onChange, onRun });
-  callbacks.current = { onChange, onRun };
+  const callbacks = useRef({ onChange, onRun, onBlocked });
+  callbacks.current = { onChange, onRun, onBlocked };
   const readOnlyConf = useRef(new Compartment());
   const sizeConf = useRef(new Compartment());
 
@@ -180,11 +198,17 @@ export function Editor({
         if (u.docChanged) callbacks.current.onChange?.(u.state.doc.toString());
       }),
     ];
+    if (fill) extensions.push(gapHighlight);
+    if (fill?.locked) extensions.push(lockedLines(fill.starter, () => callbacks.current.onBlocked?.()));
     view.current = new EditorView({
       parent: host.current!,
       state: EditorState.create({ doc: value, extensions }),
     });
-    return () => view.current?.destroy();
+    if (viewRef) viewRef.current = view.current;
+    return () => {
+      view.current?.destroy();
+      if (viewRef) viewRef.current = null;
+    };
   }, []);
 
   // Outside changes (reset, hint copy, loading a draft). This must be a layout effect: a
@@ -193,7 +217,10 @@ export function Editor({
   useLayoutEffect(() => {
     const v = view.current;
     if (v && v.state.doc.toString() !== value) {
-      v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: value } });
+      v.dispatch({
+        changes: { from: 0, to: v.state.doc.length, insert: value },
+        annotations: externalChange.of(true),
+      });
     }
   }, [value]);
 

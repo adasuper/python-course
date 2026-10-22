@@ -1,10 +1,33 @@
 // Shared steps for end-to-end tests: play quests through the real UI using the
 // content's own reference solutions.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, type Page } from '@playwright/test';
-import { loadContent, solutionCode, type Body } from '../../scripts/lib/content';
-import type { BossQuestFile, NormalQuestFile } from '../../src/content/schema';
+import { parse } from 'yaml';
+import { compileQuest, loadContent, solutionCode, type Body } from '../../scripts/lib/content';
+import { NormalQuestSchema, type BossQuestFile, type NormalQuestFile } from '../../src/content/schema';
+import type { Quest } from '../../src/content/types';
 
 export const content = loadContent();
+
+/** Opens a quest from tests/e2e/fixtures, for quest types the real content doesn't use
+ *  yet. It goes through the same schema and compiler as content/. */
+export async function openFixture(page: Page, name: string): Promise<Quest> {
+  const raw = parse(readFileSync(join(import.meta.dirname, 'fixtures', `${name}.yaml`), 'utf8')) as unknown;
+  const quest = compileQuest(NormalQuestSchema.parse(raw), new Map());
+  await page.goto('./?dev');
+  await page.waitForFunction(() => '__codewealdTest' in window);
+  await page.evaluate(
+    (q) =>
+      (
+        window as unknown as { __codewealdTest: { openQuest(q: unknown): Promise<void> } }
+      ).__codewealdTest.openQuest(q),
+    quest,
+  );
+  await expect(page.locator('#quest-title')).toHaveText(quest.title);
+  await waitForPython(page);
+  return quest;
+}
 
 export function quest(id: string) {
   const q = content.quests.get(id);
@@ -52,7 +75,7 @@ export async function setCode(page: Page, code: string) {
   await page.keyboard.insertText(code);
 }
 
-async function waitForPython(page: Page) {
+export async function waitForPython(page: Page) {
   await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
 }
 

@@ -1,11 +1,19 @@
 // Runs every quest's solutions through the real Python runtime (docs/specs.md §18.3).
 // Shared by `npm run validate-content` and tests/content/quests.test.ts.
-import type { RegionFile } from '../../src/content/schema';
-import type { RunResult, StageSpec, ValidatorSpec } from '../../src/runtime/protocol';
+import { SESSION_VALIDATOR_TYPES, type RegionFile } from '../../src/content/schema';
+import type { ParsonsSpec } from '../../src/content/types';
+import type { BonusSpec, RunResult, SessionRun, StageSpec, ValidatorSpec } from '../../src/runtime/protocol';
+import { blocksFor, checkOrder, orderFeedback } from '../../src/ui/quest/parsonsModel';
 import { isCodeChecked, needsBaking, parsonsProgram, solutionCode, type Body, type Unit } from './content';
 import type { PyHost } from './pyHost';
 
-export function runBody(host: PyHost, body: Body, code: string, validators: ValidatorSpec[]): RunResult {
+export function runBody(
+  host: PyHost,
+  body: Body,
+  code: string,
+  validators: ValidatorSpec[],
+  session?: SessionRun[],
+): RunResult {
   return host.run({
     code,
     stage: body.stage as StageSpec,
@@ -14,7 +22,22 @@ export function runBody(host: PyHost, body: Body, code: string, validators: Vali
     validators,
     mistakes: body.common_mistakes,
     bonus: [],
+    coverage: body.track_coverage || validators.some((v) => v.type === 'branch_coverage'),
+    ...(session ? { session } : {}),
   });
+}
+
+/** The Parsons block of a quest file, shaped as the game reads it. */
+export function parsonsSpec(body: Body): ParsonsSpec {
+  const p = body.parsons!;
+  return {
+    lines: p.lines,
+    distractors: p.distractors,
+    fixedTop: p.fixed_top,
+    indent: p.indent,
+    check: p.check,
+    alternatives: p.alternatives,
+  };
 }
 
 /** Hidden-test expectations come from running the solution (D11). */
@@ -52,13 +75,57 @@ const norm = (s: string) =>
 export function checkUnit(host: PyHost, unit: Unit): string[] {
   const problems: string[] = [];
   const body = unit.body;
-  const { validators, problem } = bakeValidators(host, body);
+  const { validators: all, problem } = bakeValidators(host, body);
   if (problem) return [problem];
+  // One run can't satisfy a session validator (they look across many runs), so these
+  // single-run checks leave them out; the shape of the solution is checked below.
+  const validators = all.filter((v) => !SESSION_VALIDATOR_TYPES.includes(v.type));
+
+  if (body.type === 'parsons' && body.parsons?.check === 'order') {
+    const spec = parsonsSpec(body);
+    for (const [i, wrong] of body.wrong_solutions.entries()) {
+      const result = checkOrder(spec, blocksFor(spec, wrong.order ?? []));
+      if (result.ok) problems.push(`wrong solution ${i + 1} is in a right order, but it should fail`);
+      const needle = wrong.expect_feedback_contains;
+      if (!result.ok && needle && !orderFeedback(result.rightPrefix).includes(needle))
+        problems.push(
+          `wrong solution ${i + 1} feedback should contain "${needle}" but got "${orderFeedback(result.rightPrefix)}"`,
+        );
+      if (wrong.expect_mistake)
+        problems.push(
+          `wrong solution ${i + 1}: a check: order puzzle has no mistakes; use expect_feedback_contains`,
+        );
+    }
+    return problems;
+  }
 
   if (isCodeChecked(body)) {
     const solution = runBody(host, body, solutionCode(body), validators);
     if (!solution.validation?.passed)
       problems.push(`the reference solution does not pass: ${describe(solution)}`);
+    const coverage = all.filter((v) => v.type === 'branch_coverage');
+    if (coverage.length) {
+      const run = runBody(host, body, solutionCode(body), coverage, []);
+      const lamps = (run.validation?.results[0]?.detail.lamps as unknown[] | undefined) ?? [];
+      if (!lamps.length) problems.push('branch_coverage: the solution has no if/elif/else doors to light');
+    }
+
+    // A broken bonus check would stop the student's run, so try each one on the solution.
+    for (const bonus of body.bonus) {
+      try {
+        host.run({
+          code: solutionCode(body),
+          stage: body.stage as StageSpec,
+          inputs: body.inputs,
+          validators,
+          bonus: [bonus as BonusSpec],
+        });
+      } catch (error) {
+        problems.push(
+          `bonus "${bonus.id}": the check crashes (${String(error).split('\n').at(-2) ?? error})`,
+        );
+      }
+    }
 
     for (const [i, wrong] of body.wrong_solutions.entries()) {
       const code = wrong.code ?? parsonsProgram(body, wrong.order ?? []);
@@ -98,6 +165,31 @@ export function checkUnit(host: PyHost, unit: Unit): string[] {
   if (body.type === 'predict') {
     const run = runBody(host, body, body.starter_code, []);
     if (run.error) problems.push(`the predict code errors: ${describe(run)}`);
+    for (const [i, p] of (body.prompts ?? []).entries()) {
+      const twin = p.twin;
+      if (!twin) continue;
+      const tried = runBody(host, body, twin.code, []);
+      const real = norm(tried.output);
+      if (tried.error) problems.push(`prompt ${i + 1} twin: the code errors: ${describe(tried)}`);
+      else if (twin.kind === 'text' && norm(twin.answer) !== real)
+        problems.push(
+          `prompt ${i + 1} twin: answer ${JSON.stringify(twin.answer)} ≠ real output ${JSON.stringify(tried.output)}`,
+        );
+      else if (twin.kind === 'mcq') {
+        if (twin.answer >= twin.options.length)
+          problems.push(`prompt ${i + 1} twin: answer index out of range`);
+        else if (norm(twin.options[twin.answer]!) !== real)
+          problems.push(
+            `prompt ${i + 1} twin: the marked answer is not the real output ${JSON.stringify(tried.output)}`,
+          );
+        twin.options.forEach((o, j) => {
+          if (j !== twin.answer && norm(o) === real)
+            problems.push(`prompt ${i + 1} twin: option ${j + 1} is also correct`);
+        });
+      }
+      if (norm(twin.code) === norm(body.starter_code))
+        problems.push(`prompt ${i + 1} twin: use a different program from the quest's own code`);
+    }
     for (const [i, p] of (body.prompts ?? []).entries()) {
       if (p.kind === 'text' && norm(p.answer) !== norm(run.output)) {
         problems.push(

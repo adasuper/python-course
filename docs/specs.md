@@ -397,6 +397,10 @@ quests).** When the queue is empty and `interactiveInput` is true:
 The cost is that a program with N inputs runs N+1 times. Student programs are tiny, so this
 is milliseconds. There is a cap of 20 interactive inputs per run.
 
+In a quest with `interactive_input: true`, the player types the answers. If the quest also has
+an `inputs` queue, a "Let me type the answers" checkbox (on by default) switches between the
+two; `validate-content` and hidden tests always use the queue.
+
 **Rejected for v1: SharedArrayBuffer + `Atomics.wait`.** It needs cross-origin isolation
 (COOP/COEP headers). GitHub Pages cannot set headers. The `coi-serviceworker` workaround
 forces an extra reload and can break behind school filtering proxies, and some managed
@@ -623,10 +627,10 @@ locked ──(prerequisites met)──► available ──(opened)──► in_p
 
 | Type | What the student does | UI specifics | Completes when |
 |---|---|---|---|
-| `predict` | Reads code; predicts output by choosing (MCQ) or typing | Read-only editor; prediction box; "Lock in prediction" → Run | Every prompt is answered and the code has run. Correctness is recorded for mastery data. When a prediction is wrong, Byte shows a side-by-side "predicted vs. actual" view with the YAML `explain` text. An optional "twin" prompt lets them try again. |
+| `predict` | Reads code; predicts output by choosing (MCQ) or typing | Read-only editor; prediction box; "Lock in prediction" → Run | Every prompt is answered and the code has run. Correctness is recorded for mastery data. When a prediction is wrong, Byte shows a side-by-side "predicted vs. actual" view (for MCQ: the chosen option and the right one) with the YAML `explain` text. An optional `twin` (a similar program with its own question) lets them try again; its answer is proven against the real output at build time. |
 | `investigate` | Runs given code, answers questions | Questions: MCQ, number, short text (accepted-answers list), or "change X and run, what happens?" | All questions answered correctly (unlimited retries, per-question hints). |
 | `fix` | Repairs buggy code | Story says how many bugs ("This spell has 2 glitches") | All validators pass. |
-| `fill` | Completes gaps | Gaps marked `____` render as highlighted widgets. Optional `locked: true` makes non-gap lines read-only (CodeMirror read-only ranges). | All validators pass. |
+| `fill` | Completes gaps | Gaps marked `____` are highlighted, and a "Next gap" button selects the next one. Optional `locked: true` makes every line without a gap read-only (a CodeMirror change filter); a gap line can grow into several lines. Typing on a locked line shows "That line is locked". Running with a gap left gives the friendly `fill.gap_left` error, even where the gap isn't valid Python yet. The tier-3 hint can't be copied into a locked editor. | All validators pass. |
 | `parsons` | Orders and indents shuffled lines | Two lists, "Spell scraps" and "Your spell", plus optional distractors. Keyboard model in §14.3. | `check: run` (default): the assembled program passes validators, and any correct order is accepted. `check: order`: the order matches the solution or a listed alternative; used for comment-only plans (Region 11 blueprint). |
 | `modify` | Changes working code to meet a new requirement | Starter is a working program | All validators pass (usually behavior + "still uses a loop"-type AST checks). |
 | `make` | Writes code from (near) scratch | Minimal starter | All validators pass. |
@@ -649,12 +653,23 @@ message (§9.4).
 | `custom` | `python: \|` a `check(ctx)` function | Escape hatch. `ctx` has `.source .tree .output .lines .vars .world .run(vars=, inputs=, seed=, stage=) .call(name, *args)`. Returns `Pass()` or `Fail("hint")`. |
 
 `hidden_tests` also supports `mode: stages`, which re-runs the program on **hidden maps**
-(`cases: [{ grid: | … }]`). Use it, for example, to check that a `world.look()` loop solves
-any cave, not just the visible one.
+(`cases: [{ stage: { kind: grid, grid: | … } }]`). Use it, for example, to check that a
+`world.look()` loop solves any cave, not just the visible one. Each hidden map gets the same
+map checks as a visible one (§10.4).
 
-**Session validators** (`scope: session`) look across *all of the student's runs* in this quest
-or phase, not just the last one. The main thread keeps a small run history per quest session
-(line coverage, status, inputs used) and saves it with the draft.
+**Session validators** (`scope: session`, the default for these types) look across *all of the
+student's runs* in this quest or phase, not just the last one. After each run Python sends a
+small summary (which program it was, whether it finished, the inputs used, the program's
+`if`/`elif`/`else` "doors" and which of them ran). The main thread keeps the newest 30 in the
+draft record and sends them with the next run, and Python checks the session validators over
+them. Two runs count as the same program when their code has the same structure (comments
+and spacing don't matter). Lamps carry over between runs of programs with the same doors, so a
+student may light them by changing a variable or by typing different answers. The quest screen
+shows the lamps ("if on line 2: lit") and the count of finished runs. A quest that uses
+`branch_coverage` records coverage automatically (`track_coverage` turns it on explicitly).
+One run can't pass a session validator, so `validate-content` leaves them out of its
+single-run checks. Instead it checks that the solution has doors to light, and that
+`runs_ok` with `distinct_inputs` is only used with `interactive_input: true`.
 
 | `type` | Fields | Checks |
 |---|---|---|
@@ -707,6 +722,12 @@ The solution itself never ships in the app; instructors read it in the generated
 2. Validators failed → the first matching mistake in YAML order; else the first failing
    validator's `fail_hint`; else a generic "Not quite yet — try a hint?"
 3. All pass → success text (`story_outro`), rewards, and any earned bonus.
+
+**Bonus challenges** (`bonus:`) are checked only on a passing run. Once a quest is passed, its
+challenges are listed in the story panel ("✓ Done" / "○ Not yet"), so the student can change
+the code and run again to try them. Each challenge gives its XP once (per phase in a boss),
+recorded in the quest record's `bonus` list. `validate-content` runs every bonus check on the
+reference solution, so a broken check is caught before it can stop a student's run.
 
 ### 9.5 Hints
 
@@ -944,6 +965,7 @@ bonus:
 | `concept_card` | ✔ (non-boss) | Shown in the Spellbook after completion |
 | `stage` | ✔ | §7.2 |
 | `starter_code` | ✔ | (`predict`/`investigate`: the code shown) |
+| `locked` | — | `fill` only: lines without a `____` gap can't be edited (§9.2) |
 | `solution` | ✔ | Must pass all validators |
 | `validators` | ✔ | ≥ 1 (not for `predict`/`investigate`, which use `prompts`/`questions`) |
 | `common_mistakes` | — | §9.4 |
@@ -953,9 +975,9 @@ bonus:
 | `bonus` | — | Optional challenges, extra XP |
 | `inputs`, `interactive_input` | — | §6.5 |
 | `seed` | — | Fixed seed for `random` |
-| `prompts` | `predict` | `[{ kind: mcq\|text, question, options?, answer, explain }]` |
+| `prompts` | `predict` | `[{ kind: mcq\|text, question, options?, answer, explain, twin? }]`; a `twin` is `{ kind, code, question, options?, answer, explain }` |
 | `questions` | `investigate` | `[{ kind: mcq\|number\|text, question, answer \| accept: [...], hint }]` |
-| `parsons` | `parsons` | `{ lines: [...], distractors: [...], indent: true }` (indent levels are written into `lines`) |
+| `parsons` | `parsons` | `{ lines: [...], distractors: [...], fixed_top: [...], indent: true, check: run\|order, alternatives: [[…]] }` (indent levels are written into `lines`; `alternatives` are other accepted orders for `check: order`, each listing every line number once) |
 | `phases` | `boss` | §9.6 |
 | `side_quest` | — | Default `false` |
 | `api_extras` | — | Extra API helpers for this quest |
@@ -980,7 +1002,11 @@ bonus:
   - regions ≥ 3 have ≥ 1 quest whose `retrieval` names an earlier region
   - every boss has 2–4 phases
   - knowledge checks have 3–5 items
-  - `____` gaps appear only in `fill` starters and tier-3 hints
+  - `____` gaps appear only in `fill` starters and tier-3 hints, and every `fill` starter has one
+  - `locked: true` only in `fill` quests
+  - Parsons `alternatives` list every line once; a `check: order` puzzle needs no validators
+  - `runs_ok` with `distinct_inputs` needs `interactive_input: true`
+  - every hidden map (`hidden_tests` `mode: stages`) passes the map checks
 
 ### 10.5 Region file and other content files
 
@@ -1056,7 +1082,9 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 - In dev, run `npm run content` after editing YAML; the dev server reloads the compiled JSON.
   `/?dev#/dev/quest/<quest-id>` (or `/?dev#/dev/check/<region-id>`) opens any quest or
   knowledge check directly, with a throwaway "Dev Tester" profile. It only works with the
-  `?dev` flag, so it never appears in normal play.
+  `?dev` flag, so it never appears in normal play. With `?dev`, end-to-end tests can also open
+  a compiled quest from `tests/e2e/fixtures/` (`window.__codewealdTest.openQuest`). That is how
+  quest types the content doesn't use yet are tested through the real UI.
 
 ---
 
@@ -1089,7 +1117,7 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
 - **XP defaults by type** (overridable in YAML): predict 20 · investigate 25 · fill 30 ·
   parsons 30 · fix 35 · modify 40 · make 50 · boss phase 40 (+ 50 on defeat) · side quest
   40 · knowledge check 20 (first completion).
-- Bonus challenges award +10–20 XP.
+- Bonus challenges award +10–20 XP, once per challenge (§9.4).
 - XP is granted once per quest. **XP never decreases.**
 - **Level curve:** the cumulative XP for level *n* is `25·n·(n−1)`, so L2 = 50, L3 = 150,
   L5 = 500 and L10 = 2,250. With the curriculum map's 66 core quests, 39 boss phases, 18
@@ -1534,6 +1562,9 @@ CI fails if any quest lacks a passing solution or has fewer than 2 wrong solutio
 3. **Keyboard-only:** one full quest using only the keyboard (no `click()`), including
    leaving the editor with Esc+Tab.
 4. **Parsons keyboard flow.**
+4a. **Phase 2 quest types** (`tests/e2e/questTypes.spec.ts`, using fixture quests): fill gaps
+   and locked lines, typed input (Mode B) with session lamps, Parsons `check: order`, predict
+   twins, and bonus challenges.
 5. **Offline:** load, wait for "ready offline", `context.setOffline(true)`, reload, play a
    quest.
 6. **No third-party requests:** a request listener asserts same-origin only.

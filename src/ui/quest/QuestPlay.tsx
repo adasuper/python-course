@@ -1,31 +1,35 @@
 // One playable unit: a quest, or one phase of a boss (docs/specs.md §9).
+import type { EditorView } from '@codemirror/view';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Quest, QuestBody } from '../../content/types';
 import { narrate } from '../../game/narration';
 import { ReplayEngine, type ReplayState, type ReplayView, type Speed } from '../../game/replay';
 import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
-import type { RunRequest, RunResult } from '../../runtime/protocol';
-import { hintsShown, recordAttempt, useHint, type Reward } from '../../state/progress';
+import type { RunRequest, RunResult, SessionRun } from '../../runtime/protocol';
+import { awardBonus, bonusDone, hintsShown, recordAttempt, useHint, type Reward } from '../../state/progress';
+import { addRun, hasSessionValidators, sessionStatus } from '../../state/session';
 import { announce, config, course, getRunner, getStorage, profile, toast, update } from '../../state/store';
 import { LoadingPanel } from '../components/Common';
 import { CodeSize, Editor } from '../components/Editor';
+import { selectNextGap } from '../components/gapEditor';
+import { InputDialog } from '../components/InputDialog';
 import { JarShelf, OutputScroll, type OutLine } from '../components/Output';
 import { RichText } from '../components/RichText';
 import { prefersReducedMotion } from '../flow';
-import { errorTemplate, Feedback, type RewardView } from './Feedback';
+import { BonusList, errorTemplate, Feedback, type RewardView } from './Feedback';
 import { Hints } from './Hints';
-import { Parsons, programFrom, type Block } from './Parsons';
-import {
-  checkQuestion,
-  InvestigatePanel,
-  PredictPanel,
-  predictionCorrect,
-  type QuestionState,
-} from './Predict';
+import { Parsons } from './Parsons';
+import { checkOrder, orderFeedback, programFrom, type Block } from './parsonsModel';
+import { checkQuestion, predictionCorrect } from './answers';
+import { InvestigatePanel, PredictPanel, type QuestionState } from './Predict';
 import { ReplayControls } from './ReplayControls';
+import { SessionPanel } from './SessionPanel';
 
 const NOOP_VIEW: ReplayView = { apply: async () => {}, reset: () => {} };
+
+/** Mode B asks at most this many times per run (§6.5). */
+const MAX_TYPED_INPUTS = 20;
 
 export interface UnitProps {
   quest: Quest;
@@ -44,6 +48,10 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   const runner = getRunner();
   const isPredict = body.type === 'predict';
   const isInvestigate = body.type === 'investigate';
+  const isFill = body.type === 'fill';
+  // A comment-only plan is checked by its order, not by running it (§9.2).
+  const byOrder = body.type === 'parsons' && body.parsons?.check === 'order';
+  const usesSession = hasSessionValidators(body.validators);
   const hasStage = body.stage.kind !== 'none';
 
   const [code, setCode] = useState(starter);
@@ -64,6 +72,20 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     (body.questions ?? []).map(() => ({ value: '', status: 'unanswered' })),
   );
   const [hasRun, setHasRun] = useState(false);
+  // Mode B input: the player types the answers when the program asks (§6.5).
+  const [typeOwn, setTypeOwn] = useState(true);
+  const asking = body.interactiveInput && (typeOwn || body.inputs.length === 0);
+  const [inputRequest, setInputRequest] = useState<{
+    prompt: string;
+    output: string;
+    resolve(value: string | null): void;
+  } | null>(null);
+  const [runNote, setRunNote] = useState<string | null>(null);
+  // Session validators look at every run in this quest session (§9.3).
+  const [session, setSession] = useState<SessionRun[]>([]);
+  const sessionRef = useRef<SessionRun[]>([]);
+  const [lockedNote, setLockedNote] = useState(false);
+  const editorView = useRef<EditorView | null>(null);
   const stageHolder = useRef<HTMLDivElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const pendingCode = useRef('');
@@ -103,16 +125,18 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
       void world.showStage(body.stage, { avatar: p.avatarId, theme: p.themeId });
     }
     void getStorage()
-      .draft(p.id, unitKey)
+      .draftWithSession(p.id, unitKey)
       .then((draft) => {
         if (draft === undefined) return;
+        sessionRef.current = draft.session;
+        setSession(draft.session);
         if (body.type === 'parsons') {
           try {
-            setParsons(JSON.parse(draft) as { scraps: Block[]; spell: Block[] });
+            setParsons(JSON.parse(draft.code) as { scraps: Block[]; spell: Block[] });
           } catch {
             /* ignore old drafts */
           }
-        } else if (!isPredict) setCode(draft);
+        } else if (!isPredict) setCode(draft.code);
       });
     return () => engine.cancel();
   }, [unitKey]);
@@ -122,12 +146,13 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
   const unsavedDraft = useRef<string | null>(null);
   const saveDraftNow = () => {
     if (unsavedDraft.current === null) return;
-    void getStorage().saveDraft(p.id, unitKey, unsavedDraft.current);
+    void getStorage().saveDraft(p.id, unitKey, unsavedDraft.current, sessionRef.current);
     unsavedDraft.current = null;
   };
+  const draftValue = () => (body.type === 'parsons' ? (parsons ? JSON.stringify(parsons) : null) : code);
   useEffect(() => {
     if (isPredict) return;
-    const value = body.type === 'parsons' ? (parsons ? JSON.stringify(parsons) : null) : code;
+    const value = draftValue();
     if (value === null) return;
     unsavedDraft.current = value;
     const timer = setTimeout(saveDraftNow, 1000);
@@ -187,14 +212,15 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     setRunning(true);
     setRevealed(false);
     setResult(null);
-    const checks = !isPredict && !isInvestigate;
+    setRunNote(null);
+    const checks = !isPredict && !isInvestigate && !byOrder;
     const exec = config.value.execution;
     const request: RunRequest = {
       mode: 'quest',
       code: codeToRun,
       stage: body.stage,
-      inputs: body.inputs,
-      interactiveInput: false,
+      inputs: asking ? [] : body.inputs,
+      interactiveInput: asking,
       seed: body.seed,
       validators: checks ? body.validators : [],
       mistakes: checks ? body.mistakes : [],
@@ -204,15 +230,60 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
         maxActions: exec.maxActions,
         maxOutputChars: exec.maxOutputChars,
       },
+      coverage: body.trackCoverage,
+      ...(usesSession ? { session: sessionRef.current } : {}),
     };
     runner.setTimeoutMs(exec.timeoutSeconds * 1000);
-    const res = await runner.run(request);
+    let res = await runner.run(request);
+    // Mode B: ask the player, then run again from the top with the answer added. The seed
+    // is the same, so the program reaches the same point and carries on (§6.5).
+    while (res.status === 'needs-input') {
+      const value =
+        request.inputs.length < MAX_TYPED_INPUTS ? await ask(res.needsInput?.prompt ?? '', res.output) : null;
+      if (value === null) {
+        const note = request.inputs.length < MAX_TYPED_INPUTS ? t.quest.inputStopped : t.quest.inputTooMany;
+        setRunning(false);
+        setRunNote(note); // shown in a role="status" banner, which announces it
+        return;
+      }
+      request.inputs = [...request.inputs, value];
+      res = await runner.run(request);
+    }
+    if (byOrder) res = withOrderCheck(res);
+    const summary = res.validation?.session;
+    if (summary) {
+      sessionRef.current = addRun(sessionRef.current, summary);
+      setSession(sessionRef.current);
+      unsavedDraft.current = draftValue();
+      saveDraftNow();
+    }
     setRunning(false);
     setResult(res);
     engine.setSpeed(speed);
     engine.load(res.actions);
     if (speed === 'instant' || res.actions.length === 0) await engine.skipToEnd();
     else void engine.play();
+  };
+
+  const ask = (prompt: string, output: string) =>
+    new Promise<string | null>((resolve) => setInputRequest({ prompt, output, resolve }));
+
+  /** `check: order`: right or wrong comes from the order of the lines, not the run. */
+  const withOrderCheck = (res: RunResult): RunResult => {
+    const { ok, rightPrefix } = checkOrder(body.parsons!, parsons?.spell ?? []);
+    return {
+      ...res,
+      // A half-built plan may not even be valid Python; that's not what's being checked.
+      error: ok ? res.error : null,
+      validation: {
+        passed: ok,
+        results: [],
+        feedback: ok
+          ? { source: 'success' }
+          : { source: 'validator', id: 'order', text: orderFeedback(rightPrefix) },
+        bonus: [],
+      },
+    };
   };
 
   const reveal = (res: RunResult) => {
@@ -244,7 +315,7 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     }
     const ok = Boolean(res.validation?.passed);
     update((x) => recordAttempt(x, quest.id, pendingCode.current, ok));
-    if (ok) finishPass(pendingCode.current);
+    if (ok) finishPass(pendingCode.current, res.validation?.bonus ?? []);
     else if (res.error) {
       setPassed(false);
       announceError(res);
@@ -263,13 +334,23 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
     announce(`${t.quest.errorOnLine(res.error!.line, title)}${fb?.text ? ` ${fb.text}` : ''}`);
   };
 
-  const finishPass = (finalCode: string) => {
+  const finishPass = (finalCode: string, bonusIds: string[] = []) => {
     const r = onPassed(finalCode);
     const itemName = r.item ? (course.value!.items[r.item]?.name ?? r.item) : null;
-    setReward({ xp: r.xp, itemName, levelUp: r.levelUp });
+    // Bonus challenges are checked on a passing run; their XP is given once (§9.4).
+    const earned = body.bonus.filter((b) => bonusIds.includes(b.id));
+    let bonus = { xp: 0, ids: [] as string[], levelUp: null as number | null };
+    if (earned.length) update((x) => (bonus = awardBonus(x, quest.id, earned, phaseId)));
+    const bonusText = bonus.xp ? t.quest.bonusGained(bonus.ids.length, bonus.xp) : '';
+    setReward({ xp: r.xp, itemName, levelUp: bonus.levelUp ?? r.levelUp, bonusText });
     setPassed(true);
     announce(
-      [t.quest.passed, r.xp ? t.quest.xpGained(r.xp) : '', itemName ? t.quest.itemGained(itemName) : '']
+      [
+        t.quest.passed,
+        r.xp ? t.quest.xpGained(r.xp) : '',
+        itemName ? t.quest.itemGained(itemName) : '',
+        bonusText,
+      ]
         .filter(Boolean)
         .join(' '),
     );
@@ -279,9 +360,24 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
 
   const focusFeedback = () => requestAnimationFrame(() => document.getElementById('feedback')?.focus());
 
+  // When only session validators are left, say how far along the student is (§9.3).
+  const progress = sessionStatus(session, body.validators);
+  const sessionNote = (res: RunResult | null) => {
+    const failing = res?.validation?.results.filter((r) => !r.passed) ?? [];
+    if (!failing.length || failing.some((r) => r.type !== 'branch_coverage' && r.type !== 'runs_ok'))
+      return null;
+    const notes: string[] = [t.quest.sessionNotYet];
+    if (progress.lamps)
+      notes.push(t.quest.lampsLit(progress.lamps.filter((l) => l.lit).length, progress.lampsNeeded));
+    if (progress.okRuns !== null) notes.push(t.quest.runsOk(progress.okRuns, progress.runsNeeded));
+    return notes.join(' ');
+  };
+
   const feedbackSummary = (res: RunResult) => {
     const fb = res.validation?.feedback;
     if (fb?.text) return fb.text;
+    const note = sessionNote(res);
+    if (note) return note;
     if (res.error)
       return `${errorTemplate(res.error).title}${res.error.line ? `, ${t.quest.lineLabel(res.error.line)}` : ''}.`;
     return t.quest.generic;
@@ -302,6 +398,18 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
         }
       : null;
 
+  const unitDone = phaseId
+    ? Boolean(p.quests[quest.id]?.phasesDone?.includes(phaseId))
+    : p.quests[quest.id]?.status === 'completed';
+
+  // Typing on a locked line does nothing, so say why (briefly).
+  const lockedTimer = useRef<ReturnType<typeof setTimeout>>();
+  const showLocked = () => {
+    setLockedNote(true);
+    clearTimeout(lockedTimer.current);
+    lockedTimer.current = setTimeout(() => setLockedNote(false), 3000);
+  };
+
   const allAnswered = (body.prompts ?? []).every((_, i) => answers[i] !== undefined && answers[i] !== '');
   const ready = runner.status.value === 'ready' || runner.status.value === 'running';
 
@@ -321,7 +429,16 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
             <RichText rich={quest.conceptCard} />
           </details>
         )}
-        <Hints hints={body.hints} revealed={hintsRevealed} onReveal={reveal3} onCopy={(c) => setCode(c)} />
+        {(passed || unitDone) && body.bonus.length > 0 && (
+          <BonusList bonus={body.bonus} done={(id) => bonusDone(p, quest.id, id, phaseId)} />
+        )}
+        <Hints
+          hints={body.hints}
+          revealed={hintsRevealed}
+          onReveal={reveal3}
+          // Copying a whole example would undo the locked lines of a locked fill quest.
+          onCopy={body.locked ? undefined : (c) => setCode(c)}
+        />
       </section>
 
       <section class="quest-work card" aria-label="Your work">
@@ -339,11 +456,28 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
               replayLine={replayLine}
               error={editorError}
               label={isPredict ? 'Code to read (read only)' : t.quest.editorLabel}
+              fill={isFill ? { starter: body.starterCode, locked: body.locked } : null}
+              onBlocked={showLocked}
+              viewRef={editorView}
             />
             <div class="editor-tools">
               <p id="editor-help" class="muted small-text">
                 ⌨️ {t.quest.editorHelp}
+                {isFill && ` ${t.quest.gapHelp}`}
+                {body.locked && ` ${t.quest.lockedHelp}`}
               </p>
+              {isFill && (
+                <button
+                  type="button"
+                  class="small"
+                  onClick={() => {
+                    const line = editorView.current ? selectNextGap(editorView.current) : null;
+                    announce(line ? t.quest.gapAt(line) : t.quest.noGaps);
+                  }}
+                >
+                  ⇥ {t.quest.nextGap}
+                </button>
+              )}
               <CodeSize
                 size={p.settings.editorFontSize}
                 onChange={(n) => update((x) => void (x.settings.editorFontSize = n))}
@@ -399,14 +533,41 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
               ↺ {t.quest.reset}
             </button>
           )}
+          {body.interactiveInput && body.inputs.length > 0 && (
+            <label class="check-label">
+              <input
+                type="checkbox"
+                checked={typeOwn}
+                onChange={(e) => setTypeOwn((e.target as HTMLInputElement).checked)}
+              />{' '}
+              ✍️ {t.quest.typeAnswers}
+            </label>
+          )}
           {!ready && runner.status.value !== 'failed' && <span class="muted small-text">{t.loading}</span>}
         </div>
+        {lockedNote && (
+          <p class="small-text note-locked" role="status">
+            🔒 {t.quest.lockedLine}
+          </p>
+        )}
+        {runNote && (
+          <p class="banner info" role="status">
+            {runNote}
+          </p>
+        )}
+        {usesSession && <SessionPanel status={progress} />}
 
         {!ready && <LoadingPanel runner={runner} />}
 
         <div ref={feedbackRef}>
           {revealed && !isInvestigate && (
-            <Feedback result={result} passed={passed} outro={outro} reward={reward}>
+            <Feedback
+              result={result}
+              passed={passed}
+              outro={outro}
+              reward={reward}
+              note={sessionNote(result)}
+            >
               {passed && afterPass}
             </Feedback>
           )}
@@ -486,6 +647,20 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
         />
         {body.jarShelf && result && <JarShelf vars={result.vars} />}
       </section>
+      {inputRequest && (
+        <InputDialog
+          prompt={inputRequest.prompt}
+          output={inputRequest.output}
+          onAnswer={(value) => {
+            inputRequest.resolve(value);
+            setInputRequest(null);
+          }}
+          onCancel={() => {
+            inputRequest.resolve(null);
+            setInputRequest(null);
+          }}
+        />
+      )}
     </div>
   );
 }

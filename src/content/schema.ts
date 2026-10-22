@@ -122,6 +122,27 @@ const HiddenTestsValidator = z.strictObject({
 
 const CustomValidator = z.strictObject({ ...Common, type: z.literal('custom'), python: z.string() });
 
+// Session validators look across all of the student's runs in a quest, not just the last
+// one (docs/specs.md §9.3).
+const Session = { scope: z.literal('session').default('session') };
+
+const BranchCoverageValidator = z.strictObject({
+  ...Common,
+  ...Session,
+  type: z.literal('branch_coverage'),
+  min: z.union([z.literal('all'), z.number().int().min(1)]).default('all'),
+});
+
+const RunsOkValidator = z.strictObject({
+  ...Common,
+  ...Session,
+  type: z.literal('runs_ok'),
+  min_runs: z.number().int().min(1).default(3),
+  distinct_inputs: z.boolean().default(false),
+});
+
+export const SESSION_VALIDATOR_TYPES: readonly string[] = ['branch_coverage', 'runs_ok'];
+
 export const ValidatorSchema = z.discriminatedUnion('type', [
   OutputValidator,
   StateValidator,
@@ -130,6 +151,8 @@ export const ValidatorSchema = z.discriminatedUnion('type', [
   StyleValidator,
   HiddenTestsValidator,
   CustomValidator,
+  BranchCoverageValidator,
+  RunsOkValidator,
 ]);
 
 export const DETECTOR_NAMES = [
@@ -197,6 +220,26 @@ const Verify = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('none') }),
 ]);
 
+/** A second, similar program to try after a wrong prediction (F-QST-05). Its answer is
+ *  checked against what the program really prints. */
+const Twin = z.discriminatedUnion('kind', [
+  z.strictObject({
+    kind: z.literal('mcq'),
+    code: z.string(),
+    question: z.string(),
+    options: z.array(z.string()).min(3, 'Give at least 2 wrong options'),
+    answer: z.number().int().min(0),
+    explain: z.string(),
+  }),
+  z.strictObject({
+    kind: z.literal('text'),
+    code: z.string(),
+    question: z.string(),
+    answer: z.string(),
+    explain: z.string(),
+  }),
+]);
+
 const PredictPrompt = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal('mcq'),
@@ -205,8 +248,15 @@ const PredictPrompt = z.discriminatedUnion('kind', [
     answer: z.number().int().min(0),
     explain: z.string(),
     verify: Verify.default({ kind: 'output' }),
+    twin: Twin.optional(),
   }),
-  z.strictObject({ kind: z.literal('text'), question: z.string(), answer: z.string(), explain: z.string() }),
+  z.strictObject({
+    kind: z.literal('text'),
+    question: z.string(),
+    answer: z.string(),
+    explain: z.string(),
+    twin: Twin.optional(),
+  }),
 ]);
 
 /** How validate-content proves an investigate answer against the real program (F-QA-04). */
@@ -274,12 +324,18 @@ const QuestBody = {
   goal: z.string(),
   stage: StageSchema.default({ kind: 'none' }),
   starter_code: z.string().default(''),
+  // fill: only the lines with a ____ gap can be edited.
+  locked: z.boolean().default(false),
   solution: z.string().optional(),
   validators: z.array(ValidatorSchema).default([]),
   common_mistakes: z.array(MistakeSchema).default([]),
   wrong_solutions: z.array(WrongSolution).default([]),
   hints: Hints,
   inputs: z.array(z.coerce.string()).default([]),
+  // Ask the player when the input queue runs out (Mode B, §6.5).
+  interactive_input: z.boolean().default(false),
+  // Record line coverage for branch_coverage (on by default when that validator is used).
+  track_coverage: z.boolean().default(false),
   seed: z.number().int().optional(),
   prompts: z.array(PredictPrompt).optional(),
   questions: z.array(InvestigateQuestion).optional(),

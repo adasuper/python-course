@@ -3,6 +3,7 @@ import '@fontsource/atkinson-hyperlegible-next/700.css';
 import '@fontsource/atkinson-hyperlegible-mono/400.css';
 import '@fontsource/opendyslexic/400.css';
 import { render } from 'preact';
+import type { Quest } from './content/types';
 import { PyRunner } from './runtime/pyRunner';
 import { loadConfig } from './state/config';
 import { Storage } from './state/storage';
@@ -10,12 +11,14 @@ import { newProfile } from './state/profile';
 import {
   attachServices,
   config,
+  course,
   flushSave,
   go,
   loadCourse,
   loadRegion,
   profile,
   profiles,
+  regions,
 } from './state/store';
 import { App } from './ui/App';
 import { applySettings } from './ui/flow';
@@ -48,28 +51,70 @@ async function boot() {
 /** Authors and tests can open any quest or knowledge check directly:
  *  /?dev#/dev/quest/<quest-id> or /?dev#/dev/check/<region-id> (specs §10.6). */
 async function openDevQuest() {
+  if (!new URLSearchParams(location.search).has('dev')) return;
+  exposeTestHooks();
   const match = /^#\/dev\/(quest|check)\/(.+)$/.exec(location.hash);
-  if (!match || !new URLSearchParams(location.search).has('dev')) return;
+  if (!match) return;
   const target = decodeURIComponent(match[2]!);
   const course = loadCourse();
   const regionId = match[1] === 'check' ? target : course.questInfo[target]?.region;
   if (!regionId || !course.regions.some((r) => r.id === regionId)) return;
+  useDevProfile();
+  await loadRegion(regionId);
+  go(match[1] === 'check' ? { name: 'check', regionId } : { name: 'quest', questId: target });
+}
+
+/** End-to-end tests play quest types that the real content doesn't have yet by handing
+ *  the game a compiled quest (tests/e2e/fixtures). Only with ?dev. */
+function exposeTestHooks() {
+  (window as unknown as { __codewealdTest: unknown }).__codewealdTest = {
+    async openQuest(quest: Quest) {
+      const c = course.value ?? loadCourse();
+      const regionId = c.regions[0]!.id;
+      const region = await loadRegion(regionId);
+      const fixture = { ...quest, region: regionId };
+      regions.value = {
+        ...regions.value,
+        [regionId]: { ...region, questData: { ...region.questData, [quest.id]: fixture } },
+      };
+      course.value = {
+        ...c,
+        questInfo: {
+          ...c.questInfo,
+          [quest.id]: {
+            region: regionId,
+            type: quest.type,
+            title: quest.title,
+            item: null,
+            xp: quest.rewards.xp,
+            phases: quest.type === 'boss' ? quest.phases.map((ph) => ph.id) : [],
+            sideQuest: false,
+            prerequisites: [],
+          },
+        },
+      };
+      useDevProfile();
+      go({ name: 'quest', questId: quest.id });
+    },
+  };
+}
+
+function useDevProfile() {
+  const c = course.value ?? loadCourse();
   if (!profile.value) {
     const existing = profiles.value.find((p) => p.nickname === 'Dev Tester');
     if (existing) profile.value = existing;
     else {
-      const p = newProfile('Dev Tester', 'avatar-1', 'tide', course.regions[0]!.id);
+      const p = newProfile('Dev Tester', 'avatar-1', 'tide', c.regions[0]!.id);
       p.seen = {
         opening: true,
-        regionIntros: course.regions.map((r) => r.id),
-        conceptScenes: course.regions.map((r) => r.id),
+        regionIntros: c.regions.map((r) => r.id),
+        conceptScenes: c.regions.map((r) => r.id),
       };
       profiles.value = [...profiles.value, p];
       profile.value = p;
     }
   }
-  await loadRegion(regionId);
-  go(match[1] === 'check' ? { name: 'check', regionId } : { name: 'quest', questId: target });
 }
 
 void boot();

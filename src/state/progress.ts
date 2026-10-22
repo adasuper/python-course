@@ -149,6 +149,31 @@ export function completePhase(
   return { xp, item: null, levelUp: levelFor(p.xp) > before ? levelFor(p.xp) : null, bossDefeated: false };
 }
 
+/** Bonus challenges (§9.4): extra XP once per challenge, never taken away. In a boss, each
+ *  phase's challenges are kept apart. Returns the XP gained now and which challenges were
+ *  new. */
+export function awardBonus(
+  p: Profile,
+  questId: string,
+  earned: { id: string; xp: number }[],
+  phaseId?: string,
+): { xp: number; ids: string[]; levelUp: number | null } {
+  const rec = record(p, questId);
+  rec.bonus ??= [];
+  const before = levelFor(p.xp);
+  const fresh = earned.filter((b) => !rec.bonus!.includes(bonusKey(b.id, phaseId)));
+  for (const b of fresh) rec.bonus.push(bonusKey(b.id, phaseId));
+  const xp = fresh.reduce((sum, b) => sum + b.xp, 0);
+  p.xp += xp;
+  return { xp, ids: fresh.map((b) => b.id), levelUp: levelFor(p.xp) > before ? levelFor(p.xp) : null };
+}
+
+export const bonusKey = (id: string, phaseId?: string) => (phaseId ? `${phaseId}/${id}` : id);
+
+export function bonusDone(p: Profile, questId: string, id: string, phaseId?: string): boolean {
+  return Boolean(p.quests[questId]?.bonus?.includes(bonusKey(id, phaseId)));
+}
+
 export function completeCheck(p: Profile, regionId: string, score: number, total: number): number {
   const prev = p.checks[regionId];
   p.checks[regionId] = {

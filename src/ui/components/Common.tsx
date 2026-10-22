@@ -31,9 +31,11 @@ export function Modal({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const first = ref.current?.querySelector<HTMLElement>(
-      'input, textarea, button, [href], [tabindex]:not([tabindex="-1"])',
-    );
+    const first =
+      ref.current?.querySelector<HTMLElement>('[data-autofocus]') ??
+      ref.current?.querySelector<HTMLElement>(
+        'input, textarea, button, [href], [tabindex]:not([tabindex="-1"])',
+      );
     first?.focus();
     return () => previous?.focus?.();
   }, []);

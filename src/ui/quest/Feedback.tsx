@@ -2,7 +2,7 @@
 import { useState } from 'preact/hooks';
 import { fillRich, parseRich } from '../../content/richtext';
 import { t } from '../../i18n/en';
-import type { PyErrorInfo, RunResult } from '../../runtime/protocol';
+import type { BonusSpec, PyErrorInfo, RunResult } from '../../runtime/protocol';
 import { course, update } from '../../state/store';
 import { RichText } from '../components/RichText';
 
@@ -61,6 +61,34 @@ export interface RewardView {
   xp: number;
   itemName: string | null;
   levelUp: number | null;
+  /** "Bonus challenge complete! +15 XP", when one was earned on this run. */
+  bonusText: string;
+}
+
+/** Optional extra challenges, shown once the quest is passed (§9.4). */
+export function BonusList({ bonus, done }: { bonus: BonusSpec[]; done(id: string): boolean }) {
+  return (
+    <section class="bonus" aria-labelledby="bonus-h">
+      <h2 id="bonus-h" class="panel-title">
+        ⭐ {t.quest.bonusHeading}
+      </h2>
+      <p class="muted small-text">{t.quest.bonusHelp}</p>
+      <ul class="bonus-list">
+        {bonus.map((b) => {
+          const ok = done(b.id);
+          return (
+            <li key={b.id} class={ok ? 'done' : ''}>
+              <span class={`bonus-status ${ok ? 'ok' : ''}`}>
+                {ok ? `✓ ${t.quest.bonusEarned}` : `○ ${t.quest.bonusOpen}`}
+              </span>{' '}
+              <RichText rich={parseRich(b.description)} inline />{' '}
+              <span class="xp-tag">{t.quest.bonusXp(b.xp)}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
 }
 
 export function Feedback({
@@ -68,12 +96,15 @@ export function Feedback({
   passed,
   outro,
   reward,
+  note,
   children,
 }: {
   result: RunResult | null;
   passed: boolean;
   outro?: import('../../content/richtext').Rich | null;
   reward?: RewardView | null;
+  /** Shown instead of the generic "not quite" (e.g. progress on session validators). */
+  note?: string | null;
   children?: preact.ComponentChildren;
 }) {
   if (!result) return null;
@@ -89,6 +120,7 @@ export function Feedback({
             {reward.xp > 0 && <li>✨ {t.quest.xpGained(reward.xp)}</li>}
             {reward.itemName && <li>🎒 {t.quest.itemGained(reward.itemName)}</li>}
             {reward.levelUp && <li>⭐ {t.quest.levelUp(reward.levelUp)}</li>}
+            {reward.bonusText && <li>🌟 {reward.bonusText}</li>}
           </ul>
         )}
         {children}
@@ -106,7 +138,7 @@ export function Feedback({
       {fb?.text && <RichText rich={parseRich(fb.text)} />}
       {fb?.source === 'mistake' && result.error && <ErrorExplanation error={result.error} />}
       {showError && <ErrorExplanation error={result.error!} />}
-      {!fb?.text && !result.error && <p>{t.quest.generic}</p>}
+      {!fb?.text && !result.error && <p>{note ?? t.quest.generic}</p>}
       <p class="muted">{t.quest.tryAgain}</p>
       {children}
     </section>

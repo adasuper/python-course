@@ -109,6 +109,42 @@ export const t = {
     timeout: 'Byte stopped your code',
     restarting: 'Byte is re-warming the spellbook…',
     lineLabel: (n: number) => `line ${n}`,
+    // fill quests
+    gapHelp: 'Gaps look like ____. Replace each one with your code.',
+    lockedHelp: 'Only the lines with a gap can be changed. The other lines are locked.',
+    lockedLine: 'That line is locked. Only the lines with a gap can change.',
+    nextGap: 'Next gap',
+    noGaps: 'No gaps left. Run your code!',
+    gapAt: (line: number) => `Gap on line ${line}.`,
+    // session validators
+    sessionHeading: 'Your runs so far',
+    lamps: 'Lamps: light one for every door',
+    lampsNone: 'Run your program to see its lamps.',
+    lampsHelp:
+      'A lamp lights up when that part of your if/elif/else runs. Run your program with different answers to light them all.',
+    lamp: (kind: string, line: number, lit: boolean) =>
+      `${kind} on line ${line}: ${lit ? 'lit' : 'not lit yet'}`,
+    lampsLit: (lit: number, total: number) => `${lit} of ${total} lamps lit.`,
+    runsOk: (n: number, need: number) => `Runs without a crash: ${Math.min(n, need)} of ${need}.`,
+    runsOkDistinct: 'Each run needs different answers.',
+    sessionNotYet: 'Keep going: run your program again.',
+    // interactive input (Mode B)
+    typeAnswers: 'Let me type the answers',
+    inputHeading: 'Your program is asking',
+    inputLabel: (prompt: string) => (prompt.trim() ? prompt.trim() : 'Type your answer'),
+    inputSoFar: 'Printed so far:',
+    inputSubmit: 'Send',
+    inputCancel: 'Stop the program',
+    inputHelp: 'Press Enter to send. Esc stops the program.',
+    inputStopped: 'You stopped the program.',
+    inputTooMany: 'That is a lot of questions! Byte stopped the program after 20 answers.',
+    // bonus challenges
+    bonusHeading: 'Bonus challenges',
+    bonusHelp: 'Optional. Change your code and run it again to try them.',
+    bonusEarned: 'Done',
+    bonusOpen: 'Not yet',
+    bonusXp: (xp: number) => `+${xp} XP`,
+    bonusGained: (n: number, xp: number) => `Bonus challenge${n > 1 ? 's' : ''} complete! +${xp} XP`,
   },
   replay: {
     controls: 'Replay controls',
@@ -128,6 +164,11 @@ export const t = {
     different: 'The real result was different. Look closely at why!',
     yourAnswer: 'Your prediction',
     realAnswer: 'What really happened',
+    rightAnswer: 'The right answer',
+    tryTwin: 'Try a twin',
+    twinHeading: 'Twin challenge: a program that looks a lot like the first one',
+    twinCheck: 'Check my prediction',
+    twinCode: 'Twin program (read only)',
   },
   investigate: {
     runFirst: 'Run the code first, then answer the questions.',
@@ -151,6 +192,9 @@ export const t = {
     right: 'Indent more',
     swap: 'Move to the other list',
     empty: 'Empty. Move lines here.',
+    orderWrong: 'Not quite. Look again at which line should come first.',
+    orderPartly: (n: number) =>
+      `Not quite. The first ${n === 1 ? 'line is' : `${n} lines are`} in the right place. Check the line after ${n === 1 ? 'it' : 'them'}.`,
   },
   check: {
     heading: (region: string) => `Review riddles: ${region}`,

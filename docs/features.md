@@ -679,8 +679,9 @@ Priority: Must · Phase: 1 · Spec: §9.2 · Brief: §3.3, §4
 ### F-QST-08 — Fill-the-gap quests
 As a Student, I want to fill in missing pieces of a spell, so that I can focus on the new idea.
 **Acceptance criteria**
-- `____` gaps render as highlighted, labelled widgets in the editor.
-- With `locked: true`, non-gap lines are read-only (CodeMirror read-only ranges) and say so to screen readers.
+- `____` gaps are highlighted in the editor, and a "Next gap" button selects the next one.
+- With `locked: true`, lines without a gap can't be changed (a CodeMirror change filter). The editor's description says so to screen readers, and typing on a locked line shows and announces "That line is locked".
+- Running with a gap left explains it kindly (`fill.gap_left`), with its line.
 - The quest completes when all validators pass.
 
 Priority: Must · Phase: 2 · Spec: §9.2 · Brief: §3.3

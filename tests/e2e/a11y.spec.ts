@@ -1,7 +1,7 @@
 // Brief §7: axe-core checks on the main screens (WCAG 2.1 AA rules).
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { newPlayer } from './helpers';
+import { newPlayer, openFixture } from './helpers';
 
 async function scan(page: Page, label: string) {
   const results = await new AxeBuilder({ page: page as never })
@@ -93,4 +93,38 @@ test('knowledge check', async ({ page }) => {
   await scan(page, 'knowledge check');
   await page.getByRole('button', { name: 'Check my answers' }).click();
   await scan(page, 'knowledge check results');
+});
+
+test('Phase 2 quest types: fill, typed input, lamps, twin, bonus', async ({ page }) => {
+  await openFixture(page, 'fill');
+  await page.getByRole('button', { name: /^▶ Run$/ }).click();
+  await expect(page.locator('#feedback')).toContainText("There's still a gap");
+  await scan(page, 'fill quest with a gap error');
+
+  await openFixture(page, 'doors');
+  await page.getByRole('button', { name: /^▶ Run$/ }).click();
+  const box = page.getByRole('textbox', { name: 'Pick a door (1 or 2):' });
+  await expect(box).toBeFocused();
+  await scan(page, 'input dialog');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('list', { name: /Lamps/ })).toBeVisible();
+  await scan(page, 'session lamps');
+
+  await openFixture(page, 'twin');
+  await page.getByRole('radio', { name: '23', exact: true }).check();
+  await page.getByRole('button', { name: /Lock in/ }).click();
+  await page.getByRole('button', { name: /Run to check/ }).click();
+  await page.getByRole('button', { name: /Try a twin/ }).click();
+  await scan(page, 'predict twin');
+
+  // A new query string, so this is a real page load (a hash change alone isn't).
+  await page.goto('./?dev&bonus#/dev/quest/r1-side1-banner-painter');
+  await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
+  await page.getByRole('textbox', { name: /Spellbook/ }).click();
+  await page.keyboard.press('ControlOrMeta+A');
+  await page.keyboard.insertText('# banner\nprint("**")\nprint("**")\nprint("**")\nprint("**")\n');
+  await page.getByRole('button', { name: /^▶ Run$/ }).click();
+  await expect(page.locator('.bonus')).toBeVisible();
+  await scan(page, 'bonus challenges');
 });

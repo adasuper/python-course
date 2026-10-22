@@ -68,6 +68,9 @@ const CASES: [string, string, Record<string, string>?, number?][] = [
   ['assert False', 'generic'],
   ['import time\ntime.sleep("1")', 'api.sleep_not_number'],
   ['import time\ntime.sleep(-1)', 'api.sleep_negative'],
+  // Fill quests: a gap left as it was, even where it isn't valid Python yet.
+  ['gold = ____\nprint(gold)', 'fill.gap_left', {}, 1],
+  ['gold = 7\nif gold ____ 10:\n    print("in")', 'fill.gap_left', {}, 2],
 ];
 
 const GRID = { kind: 'grid' as const, grid: 'H..' };

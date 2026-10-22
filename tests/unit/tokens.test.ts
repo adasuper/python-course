@@ -37,6 +37,7 @@ const TEXT: [string, string][] = [
   ['ink-muted', 'parchment-2'],
   ['ok', 'parchment'],
   ['ok', 'ok-bg'],
+  ['ink', 'ok-bg'],
   ['warn', 'parchment'],
   ['warn', 'warn-bg'],
   ['err', 'parchment'],

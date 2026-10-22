@@ -1,6 +1,6 @@
 # Progress
 
-## Current phase: 1 — Vertical slice ✅ (ready for review)
+## Current phase: 2 — Core loop polish (in progress)
 
 **Live site:** <https://adasuper.github.io/python-course/> (deployed from `main`).
 
@@ -24,6 +24,55 @@ npm run preview          # then open http://localhost:4173 in Chrome or Edge
    **Continue from a save** on the title screen.
 
 To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path-to-the-well`.
+
+### Phase 2 milestones
+
+| Milestone | Status |
+|---|---|
+| M2.1 All quest types | ✅ Done |
+| M2.2 Accessible Parsons (complete) | Next |
+| M2.3 Full error translation | — |
+| M2.4 Feedback engine | — |
+| M2.5 Progression | — |
+| M2.6 Spellbook reference | — |
+| M2.7 Workshop | — |
+| M2.8 Save polish | — |
+| M2.9 Settings and a11y features | — |
+| M2.10 PWA basics | — |
+
+### Done in Phase 2
+
+#### M2.1 All quest types
+
+- **Fill quests:** `____` gaps are highlighted, and a **Next gap** button selects the next
+  one. With `locked: true`, only the lines that had a gap can change (a gap line may grow into
+  several lines); typing elsewhere shows "That line is locked". Running with a gap left gives a
+  friendly "There's still a gap to fill" with its line, even where the gap isn't valid Python
+  yet. Region 2 brings the first real fill quests.
+- **Typed input in quests (Mode B):** with `interactive_input: true` the program asks the
+  player in a dialog (focus in the text box, Enter sends, Esc stops), then runs again from the
+  top with the answer. Up to 20 answers per run.
+- **Session validators:** `branch_coverage` ("light a lamp for every door") and `runs_ok`
+  ("finish 3 runs without a crash, with different answers") look across the student's runs.
+  The newest 30 runs are saved with the draft. The quest screen shows the lamps and the run
+  count.
+- **Parsons `check: order`:** comment-only plans pass by their order (or a listed
+  alternative), with a hint about how many lines are already right.
+- **Predict:** a wrong multiple-choice prediction now shows "your prediction" beside "the right
+  answer", and a prompt can offer an optional **twin** program to try again.
+- **Hidden maps** (`hidden_tests` `mode: stages`) are tested, and their maps are checked like
+  visible ones.
+- **Bonus challenges:** listed once a quest is passed; each gives its XP once. Region 1's
+  Banner Painter has the first one ("a framed banner", +15 XP).
+- **Content checks:** fill starters need a gap; `locked` only in fill; Parsons alternatives use
+  every line once; `runs_ok` with different answers needs typed input; every twin answer and
+  bonus check is run against the real program.
+- **Tests:** 328 Vitest tests in 22 files and 30 Playwright tests. New end-to-end tests play
+  fill, typed input with lamps, order-checked Parsons, twins and bonus challenges by keyboard,
+  using fixture quests (`tests/e2e/fixtures/`) that open through the `?dev` test hook, plus axe
+  on each new screen.
+
+## Phase 1 — Vertical slice ✅
 
 ### Done in Phase 1
 
@@ -164,16 +213,7 @@ of them are now closed:
   confirm or cut.
 - **Overworld maps** are ASCII grids in `region.yaml` instead of Tiled files.
 
-### Next: Phase 2 — Core loop polish
-
-- the `fill` quest type and the remaining validators (session checks, hidden maps)
-- the full error table and named detectors
-- XP/levels/badges with celebrations; inventory notebook and Spellbook pages
-- the Workshop sandbox with interactive `input()`
-- the settings screen (text size, fonts, high contrast, reduced motion, text-to-speech)
-- import Merge; PWA/offline
-
-### Known issues
+## Known issues
 
 - **Art direction:** this is the first look. Please react to the mood and palette (Q6).
 - **Narrow screens:** the quest screen stacks its panels vertically below 1100 px wide.
@@ -185,5 +225,8 @@ of them are now closed:
   could speed up the first screen.
 - **CSTA wording:** the descriptions are paraphrased. Verify them verbatim against
   csteachers.org (unreachable from the build environment).
+- **Bonus challenges and save codes:** the save code doesn't record which bonus challenges are
+  done yet, so after restoring from a save code they can be earned again. The progress file
+  keeps them. The new save-code format in M2.5 fixes this.
 - **Public answers:** the repository is now public, so anyone can read the solutions in
   `content/` and `docs/solutions.md`. The deployed game itself contains no solution code.

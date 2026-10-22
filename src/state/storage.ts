@@ -2,6 +2,7 @@
 // IndexedDB first, then localStorage, then memory (with a "can't save" banner).
 import { createStore, del, get, keys, set, type UseStore } from 'idb-keyval';
 import { migrateProfile } from './migrations';
+import type { SessionRun } from '../runtime/protocol';
 import type { Profile } from './profile';
 
 export type StorageMode = 'indexeddb' | 'localstorage' | 'memory';
@@ -103,8 +104,20 @@ export class Storage {
     return draftCode(await this.kv.get<unknown>(`draft:${profileId}:${key}`));
   }
 
-  saveDraft(profileId: string, key: string, code: string) {
-    const record: DraftRecord = { schemaVersion: 1, code };
+  /** The draft and the quest session's run history (for session validators, §9.3). */
+  async draftWithSession(
+    profileId: string,
+    key: string,
+  ): Promise<{ code: string; session: SessionRun[] } | undefined> {
+    const value = await this.kv.get<unknown>(`draft:${profileId}:${key}`);
+    const code = draftCode(value);
+    if (code === undefined) return undefined;
+    const session = (value as Partial<DraftRecord>).session;
+    return { code, session: Array.isArray(session) ? session : [] };
+  }
+
+  saveDraft(profileId: string, key: string, code: string, session?: SessionRun[]) {
+    const record: DraftRecord = { schemaVersion: 1, code, ...(session?.length ? { session } : {}) };
     return this.kv.set(`draft:${profileId}:${key}`, record);
   }
 
@@ -132,6 +145,8 @@ export class Storage {
 interface DraftRecord {
   schemaVersion: 1;
   code: string;
+  /** Recent runs in this quest session, newest last (only quests with session validators). */
+  session?: SessionRun[];
 }
 
 export function draftCode(value: unknown): string | undefined {

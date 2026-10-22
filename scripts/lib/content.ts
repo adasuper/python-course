@@ -29,6 +29,7 @@ import {
   SIDE_QUEST_XP,
   type Course,
   type Phase,
+  type PredictTwin,
   type Quest,
   type QuestBody,
   type Region,
@@ -296,7 +297,9 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
         add(prose.file, `glossary link [[${term}]] has no entry in glossary.yaml`, prose.line);
     }
     const tier3 = prose.path.at(-2) === 'hints' && prose.path.at(-1) === 2;
-    if (prose.value.includes('____') && !tier3)
+    // The fill-quest error messages talk about gaps.
+    const aboutGaps = prose.file.endsWith('errors.yaml') && String(prose.path[0]).startsWith('fill.');
+    if (prose.value.includes('____') && !tier3 && !aboutGaps)
       add(prose.file, `____ gaps belong only in fill starters and the third hint`, prose.line);
   }
 
@@ -337,9 +340,12 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     const b = unit.body;
     const where = unit.label;
     const at = (...path: (string | number)[]) => unit.locate(path);
+    // A comment-only plan is checked by its order, not by running it.
+    const byOrder = b.type === 'parsons' && b.parsons?.check === 'order';
     if (isCodeChecked(b)) {
       if (b.type !== 'parsons' && !b.solution) add(unit.file, `${where}: a solution is required`, at('type'));
-      if (b.validators.length === 0) add(unit.file, `${where}: add at least one validator`, at('type'));
+      if (b.validators.length === 0 && !byOrder)
+        add(unit.file, `${where}: add at least one validator`, at('type'));
       if (b.wrong_solutions.length < 2)
         add(unit.file, `${where}: add at least 2 wrong_solutions`, at('wrong_solutions'));
     }
@@ -365,6 +371,39 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     });
     if (b.type !== 'fill' && b.starter_code.includes('____'))
       add(unit.file, `${where}: ____ gaps belong only in fill quests`, at('starter_code'));
+    const carried = 'carry_code' in b && b.carry_code;
+    if (b.type === 'fill' && !carried && !b.starter_code.includes('____'))
+      add(unit.file, `${where}: a fill quest's starter_code needs at least one ____ gap`, at('starter_code'));
+    if (b.locked && b.type !== 'fill')
+      add(unit.file, `${where}: locked: true only works in fill quests`, at('locked'));
+    if (b.parsons) {
+      const n = b.parsons.lines.length;
+      b.parsons.alternatives.forEach((alt, i) => {
+        const sorted = [...alt].sort((x, y) => x - y);
+        if (sorted.length !== n || sorted.some((v, j) => v !== j))
+          add(
+            unit.file,
+            `${where}: alternative ${i + 1} must list every line number from 0 to ${n - 1} once`,
+            at('parsons', 'alternatives', i),
+          );
+      });
+    }
+    b.validators.forEach((v, i) => {
+      if (v.type === 'runs_ok' && v.distinct_inputs && !b.interactive_input)
+        add(
+          unit.file,
+          `${where}: runs_ok with distinct_inputs needs interactive_input: true (otherwise every run gets the same inputs)`,
+          at('validators', i),
+        );
+      if (v.type === 'hidden_tests' && v.mode === 'stages')
+        v.cases.forEach((c, j) => {
+          const stageAt = at('validators', i, 'cases', j);
+          if (!c.stage) add(unit.file, `${where}: every stages case needs a stage`, stageAt);
+          else
+            for (const message of gridProblems(c.stage as StageSpec))
+              add(unit.file, `${where}: ${message}`, stageAt);
+        });
+    });
     for (const message of gridProblems(b.stage as StageSpec))
       add(unit.file, `${where}: ${message}`, at('stage', 'grid'));
     const mistakeIds = new Set(b.common_mistakes.map((m) => m.id));
@@ -473,23 +512,30 @@ export function compileBody(body: Body, baked?: ValidatorSpec[]): QuestBody {
     goal: rich(body.goal),
     stage: body.stage as StageSpec,
     starterCode: body.starter_code,
+    locked: body.locked,
     validators: withIds(baked ?? (body.validators as ValidatorSpec[])),
     mistakes: body.common_mistakes,
     hints: body.hints.map(rich),
     inputs: body.inputs,
+    interactiveInput: body.interactive_input,
+    trackCoverage: body.track_coverage || body.validators.some((v) => v.type === 'branch_coverage'),
     seed: body.seed ?? 0,
     prompts: body.prompts
-      ? body.prompts.map((p) =>
-          p.kind === 'mcq'
+      ? body.prompts.map((p) => {
+          const twin = p.twin
+            ? ({ ...p.twin, question: rich(p.twin.question), explain: rich(p.twin.explain) } as PredictTwin)
+            : null;
+          return p.kind === 'mcq'
             ? {
                 kind: 'mcq',
                 question: rich(p.question),
                 options: p.options,
                 answer: p.answer,
                 explain: rich(p.explain),
+                twin,
               }
-            : { kind: 'text', question: rich(p.question), answer: p.answer, explain: rich(p.explain) },
-        )
+            : { kind: 'text', question: rich(p.question), answer: p.answer, explain: rich(p.explain), twin };
+        })
       : null,
     questions: body.questions
       ? body.questions.map((q) => {

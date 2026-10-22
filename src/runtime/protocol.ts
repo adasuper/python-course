@@ -77,6 +77,30 @@ export interface RunRequest {
   bonus: BonusSpec[];
   limits?: Partial<Limits>;
   coverage?: boolean;
+  /** Earlier runs in this quest session, for session validators (§9.3). */
+  session?: SessionRun[];
+}
+
+/** What a quest session remembers about one run (session validators, §9.3). */
+export interface SessionRun {
+  /** Same value = same program (comments and spacing don't count). */
+  program: string;
+  ok: boolean;
+  inputs: string[];
+  /** The program's if/elif/else doors, e.g. "1.1if,1.2else". */
+  shape: string;
+  /** The line each door is written on, in the same order. */
+  lines: number[];
+  /** The doors that ran. */
+  lit: string[];
+}
+
+/** A branch_coverage lamp: one if/elif/else door and whether it has run yet. */
+export interface Lamp {
+  id: string;
+  kind: 'if' | 'elif' | 'else';
+  line: number;
+  lit: boolean;
 }
 
 export interface PyErrorInfo {
@@ -123,6 +147,8 @@ export interface ValidationReport {
   results: ValidatorResult[];
   feedback: { source: FeedbackSource; id?: string; text?: string };
   bonus: string[];
+  /** This run's summary, when the quest has session validators. */
+  session?: SessionRun;
 }
 
 export type RunStatus =

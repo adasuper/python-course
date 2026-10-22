@@ -139,6 +139,130 @@ describe('hidden tests', () => {
   });
 });
 
+describe('hidden tests on hidden maps (mode: stages)', () => {
+  // A loop that walks until it sees the wall solves any corridor, not just the visible one.
+  const sol =
+    'from codeweald import hero, world\nwhile world.look() != "wall":\n    hero.move("right")\nhero.say("done")';
+  const spec: ValidatorSpec = {
+    type: 'hidden_tests',
+    id: 'caves',
+    mode: 'stages',
+    compare: ['state'],
+    cases: [{ stage: { kind: 'grid', grid: 'H....#' } }, { stage: { kind: 'grid', grid: 'H.#' } }],
+  };
+  const visible = { kind: 'grid' as const, grid: 'H...#' };
+
+  it('bakes the hero position on each hidden map', () => {
+    const baked = py.bake({ code: sol, stage: visible, validators: [spec] }).validators!;
+    const cases = (baked[0] as unknown as { cases: { expect: { state: { hero: number[] } } }[] }).cases;
+    expect(cases.map((c) => c.expect.state.hero)).toEqual([
+      [4, 0],
+      [1, 0],
+    ]);
+  });
+
+  it('passes a general loop and catches steps counted for the visible map only', () => {
+    const baked = py.bake({ code: sol, stage: visible, validators: [spec] }).validators!;
+    expect(check(sol, baked, [], { stage: visible }).passed).toBe(true);
+    const counted = 'from codeweald import hero\nhero.move("right", 3)\nhero.say("done")';
+    const v = check(counted, baked, [], { stage: visible });
+    expect(v.passed).toBe(false);
+    expect(v.results[0]?.detail).toEqual({ failed_cases: [0, 1] });
+  });
+});
+
+describe('session validators (scope: session)', () => {
+  const game = [
+    'answer = input("Pick a door: ")',
+    'if answer == "1":',
+    '    print("Gold!")',
+    'elif answer == "2":',
+    '    print("A dragon!")',
+    'else:',
+    '    # nothing here',
+    '    print("Empty room.")',
+  ].join('\n');
+  type Session = NonNullable<ReturnType<PyHost['run']>['validation']>['session'];
+  const play = (code: string, validators: ValidatorSpec[], answers: string[]) => {
+    let session: NonNullable<Session>[] = [];
+    let last: ReturnType<PyHost['run']> | null = null;
+    for (const answer of answers) {
+      last = py.run({ code, validators, inputs: [answer], coverage: true, session });
+      session = [...session, last.validation!.session!];
+    }
+    return { last: last!, session };
+  };
+
+  it('branch_coverage lights a lamp for every door that has run', () => {
+    const v: ValidatorSpec[] = [{ type: 'branch_coverage', id: 'doors', min: 'all' }];
+    const { last, session } = play(game, v, ['1', '3']);
+    expect(last.validation!.passed).toBe(false);
+    expect(last.validation!.results[0]!.detail).toMatchObject({
+      lit: 2,
+      need: 3,
+      lamps: [
+        { id: '1.1', kind: 'if', line: 2, lit: true },
+        { id: '1.2', kind: 'elif', line: 4, lit: false },
+        { id: '1.3', kind: 'else', line: 6, lit: true },
+      ],
+    });
+    expect(session[0]).toMatchObject({
+      ok: true,
+      inputs: ['1'],
+      shape: '1.1if,1.2elif,1.3else',
+      lines: [2, 4, 6],
+    });
+    const more = py.run({ code: game, validators: v, inputs: ['2'], coverage: true, session });
+    expect(more.validation!.passed).toBe(true);
+  });
+
+  it('min: a number needs only that many doors', () => {
+    const { last } = play(game, [{ type: 'branch_coverage', min: 2 }], ['1', '2']);
+    expect(last.validation!.passed).toBe(true);
+  });
+
+  it('only counts runs of a program with the same doors', () => {
+    const v: ValidatorSpec[] = [{ type: 'branch_coverage' }];
+    const { session } = play(game, v, ['1', '2']);
+    // Adding an elif makes a new set of doors, so the old lamps don't count for it.
+    const bigger = game.replace('else:', 'elif answer == "3":\n    print("Stairs")\nelse:');
+    const r = py.run({ code: bigger, validators: v, inputs: ['9'], coverage: true, session });
+    expect(r.validation!.results[0]!.detail).toMatchObject({ lit: 1, need: 4 });
+    // A changed comment or condition keeps the same doors.
+    const edited = game.replace('# nothing here', '# empty').replace('"2"', '"two"');
+    const same = py.run({ code: edited, validators: v, inputs: ['x'], coverage: true, session });
+    expect(same.validation!.passed).toBe(true);
+  });
+
+  it('a program without any if fails branch_coverage', () => {
+    const r = py.run({ code: 'print(1)', validators: [{ type: 'branch_coverage' }], coverage: true });
+    expect(r.validation!.passed).toBe(false);
+  });
+
+  it('runs_ok counts finished runs of the same program, with different inputs if asked', () => {
+    const v: ValidatorSpec[] = [{ type: 'runs_ok', min_runs: 3, distinct_inputs: true }];
+    expect(play(game, v, ['1', '1', '2']).last.validation!.results[0]!.detail).toEqual({
+      ok_runs: 2,
+      need: 3,
+    });
+    expect(play(game, v, ['1', '2', '3']).last.validation!.passed).toBe(true);
+    const plain = play(game, [{ type: 'runs_ok', min_runs: 3 }], ['1', '1', '1']);
+    expect(plain.last.validation!.passed).toBe(true);
+    // A crash doesn't count, and neither do runs of an earlier version of the program.
+    const crashy = 'answer = input()\nprint(10 / int(answer))';
+    const { session } = play(crashy, v, ['0', '5']);
+    expect(session.map((r) => r.ok)).toEqual([false, true]);
+    const fixed = crashy.replace('10 /', '10 //');
+    const r = py.run({ code: fixed, validators: v, inputs: ['2'], session });
+    expect(r.validation!.results[0]!.detail).toEqual({ ok_runs: 1, need: 3 });
+  });
+
+  it('only adds a session summary when the quest has session validators', () => {
+    const r = py.run({ code: 'print(1)', validators: [{ type: 'output', expect: '1' }] });
+    expect(r.validation!.session).toBeUndefined();
+  });
+});
+
 describe('mistakes and feedback selection', () => {
   it('matches an error-key mistake before showing the raw translation', () => {
     const v = check(

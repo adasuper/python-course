@@ -1108,3 +1108,89 @@ img.pixel,
 .credits-link {
   margin-top: 1rem;
 }
+
+/* ----- M2.1: fill gaps, typed input, session lamps, bonus challenges, twins ----- */
+.note-locked {
+  color: var(--warn);
+  font-weight: 700;
+  margin: 0.2rem 0;
+}
+.check-label {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+.input-so-far {
+  background: #1d1726;
+  color: #f4ecff;
+  border-radius: 6px;
+  padding: 0.5rem;
+  max-height: 10rem;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.modal form label {
+  display: block;
+  font-weight: 700;
+  margin: 0.5rem 0 0.2rem;
+}
+.modal form input[type='text'] {
+  width: 100%;
+  font-family: var(--font-code);
+  font-size: 1.05rem;
+}
+.session {
+  background: var(--parchment-2);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+  margin: 0.5rem 0;
+}
+.lamps {
+  list-style: none;
+  padding: 0;
+  margin: 0.3rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+}
+.lamps li {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+}
+.lamps li.lit {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  font-weight: 700;
+}
+.bonus-list {
+  list-style: none;
+  padding: 0;
+}
+.bonus-list li {
+  margin: 0.3rem 0;
+}
+.bonus-status {
+  font-weight: 700;
+}
+.bonus-status.ok {
+  color: var(--ok);
+}
+.xp-tag {
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.twin {
+  margin: 0.4rem 0 0.8rem;
+  border: 2px dashed var(--accent);
+}
+.twin h3 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+.twin .code-block {
+  white-space: pre;
+  overflow: auto;
+}

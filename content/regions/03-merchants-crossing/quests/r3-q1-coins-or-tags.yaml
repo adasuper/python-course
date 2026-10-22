@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-q1-coins-or-tags
+region: merchants-crossing
+title: Coins or Price Tags?
+type: predict
+npc: tally
+learning_outcome: Predict the result of + and * when the values are ints, floats, or strings.
+csta: [2-AP-11, 2-DA-07]
+estimated_minutes: 6
+vocabulary: [integer, float, string, data type]
+
+story_intro: |
+  Tally Brightcoin polishes a coin until it shines. "Welcome to my money table! Rule one: a coin is not a price tag."
+
+  `5` is a number you can count. Python calls it an [[integer]]. `3.5` has a dot, so it's a [[float]]. But `"5"` in quotes is a [[string]]: just a picture of a number, like a price tag.
+goal: Read the program and predict what it prints. Then run it to check.
+concept_card: |
+  Every value has a **data type**. `5` is an int (a whole number), `3.5` is a float (it has a dot), and `"5"` is a string (text).
+  - `+` adds numbers, but it glues strings together: `"2" + "3"` is `23`.
+  - `/` always gives a float: `6 / 2` is `3.0`.
+  - `*` repeats a string: `"ha" * 3` is `hahaha`.
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_moneychanger, name: Tally Brightcoin }
+
+starter_code: |
+  print(2 + 3)
+  print("2" + "3")
+  print(7 / 2)
+  print(6 / 2)
+  print("ha" * 3)
+
+prompts:
+  - kind: mcq
+    question: What will the Scroll of Output show?
+    options:
+      - |
+        5
+        5
+        3.5
+        3
+        ha ha ha
+      - |
+        5
+        23
+        3.5
+        3.0
+        hahaha
+      - |
+        5
+        23
+        3.5
+        3
+        hahaha
+      - |
+        23
+        5
+        3
+        3.0
+        ha3
+    answer: 1
+    explain: >-
+      `2 + 3` adds two coins: 5. `"2" + "3"` glues two price tags: `23`. `/` always gives a float, so `7 / 2`
+      is `3.5` and `6 / 2` is `3.0`. And `"ha" * 3` repeats the text three times.
+    twin:
+      kind: mcq
+      code: |
+        print(4 + 4)
+        print("4" + "4")
+        print(9 / 3)
+        print("na" * 4)
+      question: Try a twin! What does this program print?
+      options:
+        - |
+          8
+          44
+          3.0
+          nananana
+        - |
+          8
+          8
+          3
+          nananana
+        - |
+          8
+          44
+          3
+          na4
+      answer: 0
+      explain: "`4 + 4` is 8, but `\"4\" + \"4\"` glues two strings: `44`. `9 / 3` is the float `3.0`. And `\"na\" * 4` repeats the text."
+  - kind: mcq
+    question: Which lines work with text instead of numbers?
+    options:
+      - Lines 2 and 5
+      - Lines 1 and 3
+      - Only line 4
+    answer: 0
+    verify: { kind: none }
+    explain: Lines 2 and 5 use strings in quotes, like `"2"` and `"ha"`. Text in quotes is never counted like coins.
+
+hints:
+  - Look for quotes. A value in quotes is text, even when it looks like a number.
+  - "`+` adds two numbers, but it glues two strings together. `/` always gives an answer with a dot, even when it divides evenly."
+  - |
+    Work out one line at a time:
+    ```text
+    2 + 3      -> 5
+    "2" + "3"  -> ____
+    7 / 2      -> 3.5
+    6 / 2      -> 3.0
+    "ha" * 3   -> hahaha
+    ```
+
+story_outro: |
+  Tally grins. "You can tell coins from price tags! You'd make a fine money-changer. Terrible at haggling, I bet, but fine."

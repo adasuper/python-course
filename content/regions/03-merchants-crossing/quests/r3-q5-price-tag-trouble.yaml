@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-q5-price-tag-trouble
+region: merchants-crossing
+title: Price Tag Trouble
+type: fix
+npc: bea
+learning_outcome: Fix a TypeError by converting between text and numbers with int() and str().
+csta: [2-AP-11, 2-AP-17]
+estimated_minutes: 8
+prerequisites: [r3-q4-asking-the-customer]
+vocabulary: [convert, data type, error message]
+rewards: { item: scales-of-conversion }
+inputs: ["4"]
+interactive_input: true
+
+story_intro: |
+  Bea Barrow waves a turnip at you. "Turnips cost 2 silver each. Wren wants 4. My till said 44 silver! When I poked it, it crashed!"
+
+  A value's [[data type]] matters. `"4" * 2` repeats the text, so you get `44`. And `+` can't glue a number onto words. This spell has **2 bugs**. Fix one, run it again, and read what happens next.
+goal: "Fix both bugs, so 4 turnips cost 8 silver and the till prints `Total: 8 silver`."
+concept_card: |
+  `int()` turns text into a whole number: `int("4")` is `4`. `str()` turns a number into text: `str(8)` is `"8"`.
+  Convert the answer from `input()` before you do math. Convert a number back to text before you glue it to words with `+`.
+  ```python
+  total = int("4") * 2
+  print("Total: " + str(total))
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_customer, name: Wren }
+    - { sprite: npc_turnip_seller, name: Bea Barrow }
+
+starter_code: |
+  price = 2
+  turnips = input("How many turnips? ")
+  total = turnips * price
+  print("Total: " + total + " silver")
+
+solution: |
+  price = 2
+  turnips = int(input("How many turnips? "))
+  total = turnips * price
+  print("Total: " + str(total) + " silver")
+
+validators:
+  - id: customers
+    type: hidden_tests
+    mode: inputs
+    compare: [output]
+    fail_hint: Check the till for other customers too. 1 turnip should cost 2 silver.
+    cases:
+      - { inputs: ["4"] }
+      - { inputs: ["1"] }
+      - { inputs: ["15"] }
+
+common_mistakes:
+  - id: glue-number
+    detect: { kind: error, key: type.str_plus_number }
+    feedback: >-
+      Bug found! `total` is a number now, and `+` can't glue a number onto words. Turn it back
+      into text with `str(total)`. (An f-string works too!)
+  - id: text-times-number
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            return isinstance(ctx.vars.get("total"), str)
+    feedback: >-
+      The total is still text! `input()` hands back text, so `"4" * 2` repeats it: `44`. Wrap
+      `input(...)` in `int(...)` so `turnips` is a real number.
+  - id: wrong-words
+    detect: { kind: validator_failed, id: customers }
+    feedback: >-
+      No more errors, nice! But the Scroll doesn't match. It should say `Total: 8 silver` for 4
+      turnips. Keep the question `How many turnips? ` the same, too.
+
+wrong_solutions:
+  - expect_mistake: glue-number
+    note: Only the first bug is fixed, so the second one shows up.
+    code: |
+      price = 2
+      turnips = int(input("How many turnips? "))
+      total = turnips * price
+      print("Total: " + total + " silver")
+  - expect_mistake: text-times-number
+    note: Only the print line is fixed.
+    code: |
+      price = 2
+      turnips = input("How many turnips? ")
+      total = turnips * price
+      print("Total: " + str(total) + " silver")
+  - expect_mistake: wrong-words
+    code: |
+      price = 2
+      turnips = int(input("How many turnips? "))
+      total = turnips * price
+      print("Total: " + str(total) + "silver")
+
+hints:
+  - Run it and read the Scroll. Is 44 silver right for 4 turnips at 2 silver each?
+  - "`input()` hands back text. Wrap it in `int(...)` so `turnips` is a number. Then Python complains about line 4: turn `total` back into text with `str(total)`."
+  - |
+    ```python
+    price = 2
+    turnips = int(input("How many turnips? "))
+    total = turnips * price
+    print("Total: " + ____ + " silver")
+    ```
+
+story_outro: |
+  "Total: 8 silver." Bea hugs her till, and a turnip rolls out of her apron. You earned the **Scales of Conversion**: text on one side, numbers on the other, always in balance.

@@ -48,3 +48,14 @@
   emoji: 🧭
   description: You found every secret corner of Hearthvale.
   trigger: { kind: pois_visited, region: hearthvale-village }
+# Region 3: Merchant's Crossing
+- id: restorer-merchants-crossing
+  name: "Region Restorer: Merchant's Crossing"
+  emoji: ⚖️
+  description: You beat the Haggling Bug and brought fair prices back to Merchant's Crossing.
+  trigger: { kind: boss_defeated, region: merchants-crossing }
+- id: explorer-merchants-crossing
+  name: "Explorer: Merchant's Crossing"
+  emoji: 🧭
+  description: You found all the secret spots in Merchant's Crossing.
+  trigger: { kind: pois_visited, region: merchants-crossing }

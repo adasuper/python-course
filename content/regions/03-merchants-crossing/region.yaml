@@ -1,0 +1,223 @@
+# yaml-language-server: $schema=../../../schema/region.schema.json
+# Region 3: Merchant's Crossing. Numbers (int and float), the math operators + - * / // %,
+# the order of operations, input(), and int() and str(). See docs/curriculum-map.md.
+id: merchants-crossing
+number: 3
+name: Merchant's Crossing
+concepts:
+  - int and float
+  - "+ - * / // %"
+  - order of operations
+  - input()
+  - int() and str()
+
+intro:
+  - speaker: byte
+    text: Welcome to Merchant's Crossing! Four roads meet here, and so do a LOT of shoppers.
+  - speaker: byte
+    text: Since the Great Script shattered, prices have gone wild. This morning, one turnip cost 4,000 gold!
+  - speaker: byte
+    text: A sneaky Bug is "helping" with the math. Talk to the merchants with a **!** above their heads. Bring your counting brain.
+
+# The market map. One character is one tile. See docs/specs.md §11.1 for the legend.
+overworld:
+  grid: |
+    TTTTTTTTTTTTTT=TTTTTTTTTTTTTTT
+    T"...,......TT=TT..RRRRRRR...T
+    T.a.a.a.a.a.b.=....RRRRRRR.o.T
+    T.............=...uWwWdWwWx..T
+    T.a.a.a.a.a...=========...u..T
+    T.............=.........,....T
+    T.."...A..XMM:::MMU.........bT
+    T,....."..:::::::::."....,...T
+    T.........l::::::S:..........T
+    ==========:::::::::===========
+    T.........::::::::l..........T
+    T.-----...:::::::::..RRRRR.b.T
+    T.......u.UM:::::MX..RRRRR...T
+    T..Y..........=......WwdwW...T
+    T,..........,.==========.....T
+    T.tttttt.b....=.......sssssssT
+    T.tttttt..T...=.."....ssscrssT
+    T.tttttt..."..=....,..sssssssT
+    T.............=.......sssssssT
+    TTTTTTTTTTTTTT=TTTTTTTTTTTTTTT
+  legend:
+    a: { tile: grass, over: apple_tree, solid: true }
+    A: { tile: grass, over: apple_cart, solid: true }
+    Y: { tile: grass, over: market_stall, solid: true }
+    X: { tile: cobble, over: crate, solid: true }
+    U: { tile: cobble, over: barrel, solid: true }
+    x: { tile: grass, over: crate, solid: true }
+    u: { tile: grass, over: barrel, solid: true }
+    c: { tile: sand, over: crate, solid: true }
+    r: { tile: sand, over: barrel, solid: true }
+    S: { tile: cobble, over: merchant_scale, solid: true }
+    l: { tile: cobble, over: lamp_post, solid: true }
+    t: { tile: turnip_patch, solid: true }
+  objects:
+    - { kind: spawn, at: [2, 9] }
+    - { kind: npc, id: byte, at: [3, 8] }
+    - { kind: npc, id: tally, at: [13, 8], quest: r3-q1-coins-or-tags }
+    - { kind: npc, id: pippin, at: [8, 6], quest: r3-q2-sharing-apples }
+    - { kind: npc, id: marta, at: [22, 5], quest: r3-q3-the-merchants-formula }
+    - { kind: npc, id: hattie, at: [4, 13], quest: r3-q4-asking-the-customer }
+    - { kind: npc, id: bea, at: [5, 14], quest: r3-q5-price-tag-trouble }
+    - { kind: npc, id: tuppence, at: [23, 15], quest: r3-q6-receipt-writer }
+    - { kind: npc, id: hagglebug, at: [16, 8], quest: r3-boss-haggling-bug }
+    - { kind: npc, id: wren, at: [20, 10] }
+    - { kind: npc, id: dunes, at: [25, 17] }
+    - { kind: board, at: [12, 10] }
+    - { kind: sign, at: [15, 10], text: "Merchant's Crossing. Fair prices only! (Bugs not welcome.)" }
+    - { kind: sign, at: [1, 10], text: "West: back to Hearthvale Village." }
+    - { kind: sign, at: [13, 3], text: "North: the long climb to Clocktower Peaks. Bring snacks." }
+    - { kind: sign, at: [15, 15], text: "South: the caravan camp. Camels have the right of way." }
+    - { kind: poi, id: orchard-nook, at: [1, 1] }
+    - { kind: poi, id: pie-shop-garden, at: [28, 1] }
+    - { kind: poi, id: turnip-corner, at: [1, 18] }
+    - { kind: poi, id: camel-rest, at: [28, 17] }
+    - { kind: exit, at: [29, 9], text: "The road to Forked Road Forest." }
+
+npcs:
+  byte:
+    name: Byte
+    sprite: byte
+    greeting: Merchant's Crossing! Hold on to your coins, apprentice. And your snacks.
+  tally:
+    name: Tally Brightcoin
+    sprite: npc_moneychanger
+    greeting: A coin is not a price tag. Want me to show you the difference?
+  pippin:
+    name: Granny Pippin
+    sprite: npc_apple_seller
+    greeting: Apples! Shared fairly! Well, they were, until a Bug ate my abacus beads.
+  marta:
+    name: Marta Crust
+    sprite: npc_pie_merchant
+    greeting: Four pies for 10 silver?! My till has lost its mind. And my money!
+  hattie:
+    name: Hattie Honeycomb
+    sprite: npc_honey_seller
+    greeting: Honey! Five silver a jar! How many do you... oh, I always forget to ask.
+  bea:
+    name: Bea Barrow
+    sprite: npc_turnip_seller
+    greeting: Turnips! Get your turnips! Only... 44 silver? Who wrote this till? A goat?
+  tuppence:
+    name: Clerk Tuppence
+    sprite: npc_clerk
+    greeting: Receipts, receipts! I need a receipt writer. The parrot quit.
+  hagglebug:
+    name: Hagglebug
+    sprite: bug_hagglebug
+    greeting: Haggle-haggle! Seven silver? I say seven HUNDRED! Hee hee!
+  wren:
+    name: Wren
+    sprite: npc_customer
+    greeting: I'm saving up for honey. Math is hard when a Bug keeps changing the prices!
+  dunes:
+    name: Captain Dunes
+    sprite: npc_caravan_driver
+    greeting: My camels are fast, but my trip times are a mess. Check the Quest Board later!
+
+concept_scene:
+  title: Coins and price tags
+  analogy: >-
+    `"5"` in quotes is a price tag: just a picture of a number. `5` without quotes is real
+    coins you can count. `int()` turns a tag into coins, and `str()` turns coins back into a
+    tag. `//` and `%` are like sharing apples: `//` is how many each friend gets, and `%` is
+    what's left over.
+  lines:
+    - speaker: byte
+      text: Python has different kinds of values. Text in quotes is a [[string]]. A whole number like `5` is an [[integer]]. A number with a dot, like `3.5`, is a [[float]].
+    - speaker: byte
+      text: The math [[operators|operator]] are `+ - * /`. Two more are great for sharing. `//` gives whole shares, and `%` gives the [[remainder]].
+    - speaker: byte
+      text: Careful! `%` is NOT percent. It means "what's left over". I learned that the hard way. Long story. It involves a pie.
+    - speaker: byte
+      text: Watch this example. 17 apples, 5 friends. Who gets what?
+  worked_example:
+    stage: { kind: none }
+    code: |
+      apples = 17
+      friends = 5
+      print(apples // friends)   # 3 apples each
+      print(apples % friends)    # 2 left over
+      price = int("4")           # price tag -> coins
+      print(price * 3)           # 12
+    explain:
+      - line: 1
+        text: We start with 17 apples and 5 friends.
+      - line: 3
+        text: "`//` shares the apples out. Each friend gets 3 whole apples."
+      - line: 4
+        text: "`%` finds the leftovers: 2 apples. (Byte will take care of those.)"
+      - line: 5
+        text: "`int()` turns the price tag `\"4\"` into the number 4."
+      - line: 6
+        text: Now it's a real number, so `4 * 3` is 12.
+
+quests:
+  - r3-q1-coins-or-tags
+  - r3-q2-sharing-apples
+  - r3-q3-the-merchants-formula
+  - r3-q4-asking-the-customer
+  - r3-q5-price-tag-trouble
+  - r3-q6-receipt-writer
+boss: r3-boss-haggling-bug
+side_quests:
+  - r3-side1-penny-puzzle
+  - r3-side2-caravan-clock
+
+knowledge_check:
+  items:
+    - kind: predict
+      question: What will this print?
+      code: |
+        print(17 // 5)
+        print(17 % 5)
+      answer: |
+        3
+        2
+      explain: "`17 // 5` is how many whole 5s fit into 17: 3. `17 % 5` is what's left over: 2."
+    - kind: mcq
+      question: What kind of value does `input()` hand back?
+      options:
+        - Text (a string), even when you type a number
+        - A whole number (an int)
+        - A number with a dot (a float)
+      answer: 0
+      explain: "`input()` always hands back text. Use `int()` to turn it into a number."
+    - kind: predict
+      question: What will this print?
+      code: |
+        print(2 + 3 * 4)
+      answer: "14"
+      explain: Python multiplies before it adds. `3 * 4` is 12, and 2 + 12 is 14.
+    - kind: mcq
+      question: This line gives a TypeError. Which line fixes it?
+      code: |
+        print("Total: " + 5)
+      options:
+        - 'print("Total: " + str(5))'
+        - 'print("Total: " + int(5))'
+        - 'print("Total: " * 5)'
+      answer: 0
+      explain: "`+` can't glue a number onto text. `str(5)` turns the number into text first."
+    - kind: predict
+      question: What will this print?
+      code: |
+        print("3" + "4")
+      answer: "34"
+      explain: These are strings in quotes, so `+` glues them together. It doesn't add them.
+
+fragment:
+  id: fragment-numbers
+  name: "Script Fragment: Numbers"
+  description: The piece of the Great Script that counts and measures.
+
+pois:
+  - orchard-nook
+  - pie-shop-garden
+  - turnip-corner
+  - camel-rest

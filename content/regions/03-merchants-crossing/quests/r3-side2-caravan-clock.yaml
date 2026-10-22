@@ -1,0 +1,131 @@
+# yaml-language-server: $schema=../../../../schema/quest.schema.json
+id: r3-side2-caravan-clock
+region: merchants-crossing
+title: The Caravan Clock
+type: make
+side_quest: true
+learning_outcome: Use // and % to turn a number of minutes into hours and minutes.
+csta: [2-AP-11]
+estimated_minutes: 8
+prerequisites: [r3-boss-haggling-bug]
+vocabulary: [floor division, remainder, input]
+inputs: ["135"]
+interactive_input: true
+
+story_intro: |
+  A note on the Quest Board says: *"WANTED: a trip clock for my caravan. My camels count in minutes. My customers count in hours. — Captain Dunes"*
+
+  The captain tells you how long a trip is, in minutes. There are 60 minutes in an hour. Use `//` to find the whole hours, and `%` to find the minutes left over. A trip of 135 minutes is 2 hours 15 minutes.
+goal: Ask for the trip length with `input()`. Store the whole hours in `hours` and the leftover minutes in `mins`. Then print them like `2 hours 15 minutes`.
+concept_card: |
+  `//` and `%` can split one amount into big parts and small parts. Minutes turn into hours and minutes. Silver turns into gold and silver.
+  ```python
+  hours = 135 // 60   # 2
+  mins = 135 % 60     # 15
+  ```
+
+stage:
+  kind: npc
+  cast:
+    - { sprite: npc_caravan_driver, name: Captain Dunes }
+
+starter_code: |
+  # There are 60 minutes in one hour.
+
+solution: |
+  # There are 60 minutes in one hour.
+  trip = int(input("How many minutes is the trip? "))
+  hours = trip // 60
+  mins = trip % 60
+  print(f"{hours} hours {mins} minutes")
+
+validators:
+  - id: split
+    type: ast
+    require: [FloorDiv, Mod]
+    fail_hint: Use `//` for the whole hours and `%` for the minutes left over.
+  - id: trips
+    type: hidden_tests
+    mode: inputs
+    compare: ["vars:hours", "vars:mins"]
+    fail_hint: "Check other trips too: 60 minutes is exactly 1 hour, and 59 minutes is 0 hours and 59 minutes."
+    cases:
+      - { inputs: ["135"] }
+      - { inputs: ["60"] }
+      - { inputs: ["59"] }
+      - { inputs: ["600"] }
+      - { inputs: ["61"] }
+  - id: clock-line
+    type: custom
+    fail_hint: "Print the time like this: `2 hours 15 minutes`."
+    python: |
+      def check(ctx):
+          line = f"{ctx.vars.get('hours')} hours {ctx.vars.get('mins')} minutes"
+          if line in [text.strip() for text in ctx.lines]:
+              return Pass()
+          return Fail("Print the time like this: `2 hours 15 minutes`.")
+
+common_mistakes:
+  - id: no-convert
+    detect: { kind: error, key: type.number_plus_str }
+    feedback: >-
+      The trip length is still text, so Python can't do math with it. Wrap `input(...)` in
+      `int(...)` to turn it into a number.
+  - id: used-slash
+    detect: { kind: code_regex, pattern: "(?<!/)/(?!/)\\s*60\\b" }
+    feedback: >-
+      `/` gives a number with a dot, like 2.25 hours. Use `//` to get whole hours.
+  - id: missing-names
+    detect:
+      kind: custom
+      python: |
+        def detect(ctx):
+            return "hours" not in ctx.vars or "mins" not in ctx.vars
+    feedback: >-
+      Store the whole hours in `hours`. Store the minutes left over in `mins`.
+  - id: not-split
+    detect: { kind: validator_failed, id: split }
+    feedback: Split the trip with `//` for the hours and `%` for the minutes left over.
+  - id: wrong-time
+    detect: { kind: validator_failed, id: trips }
+    feedback: >-
+      Some trips come out wrong. `trip // 60` is the whole hours, and `trip % 60` is the minutes
+      left over.
+  - id: wrong-line
+    detect: { kind: validator_failed, id: clock-line }
+    feedback: >-
+      The math is right! Now print it exactly like this, with your own numbers: `2 hours 15 minutes`.
+
+wrong_solutions:
+  - expect_mistake: no-convert
+    code: |
+      trip = input("How many minutes is the trip? ")
+      hours = trip // 60
+      mins = trip % 60
+      print(f"{hours} hours {mins} minutes")
+  - expect_mistake: used-slash
+    code: |
+      trip = int(input("How many minutes is the trip? "))
+      hours = trip / 60
+      mins = trip % 60
+      print(f"{hours} hours {mins} minutes")
+  - expect_mistake: wrong-line
+    code: |
+      trip = int(input("How many minutes is the trip? "))
+      hours = trip // 60
+      mins = trip % 60
+      print(f"{hours}h {mins}m")
+
+hints:
+  - How many whole hours fit into 135 minutes? How many minutes are left over?
+  - "`trip // 60` gives the whole hours, and `trip % 60` gives the minutes left over. Don't forget `int()` around `input()`."
+  - |
+    ```python
+    trip = int(input("How many minutes is the trip? "))
+    hours = trip // 60
+    mins = ____
+    print(f"{hours} hours {mins} minutes")
+    ```
+
+story_outro: |
+  "2 hours 15 minutes! My customers will finally know when to pack lunch." Captain Dunes tips his goggles. One camel looks impressed. The other one is asleep.

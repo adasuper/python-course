@@ -21,4 +21,7 @@ opening:
 regions:
   - id: hearthvale-village
     lessons: 2
+  # Region 3: Merchant's Crossing
+  - id: merchants-crossing
+    lessons: 2
 side_quests: true

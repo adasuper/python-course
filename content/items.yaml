@@ -23,3 +23,29 @@
   example: |
     print("Hi)
     # SyntaxError on line 1: the quote never closed.
+# Region 3: Merchant's Crossing
+- id: abacus-of-reckoning
+  name: Abacus of Reckoning
+  icon: abacus
+  region: merchants-crossing
+  description: "Python does math with `+ - * /`, plus `//` for whole shares and `%` for leftovers."
+  example: |
+    print(17 // 5)   # 3 each
+    print(17 % 5)    # 2 left over
+- id: ear-trumpet-of-asking
+  name: Ear Trumpet of Asking
+  icon: ear_trumpet
+  region: merchants-crossing
+  description: "`input()` asks a question and always hands back text."
+  example: |
+    answer = "4"            # input() hands back text like this
+    print(answer * 2)       # 44: the text just repeats
+    print(int(answer) * 2)  # 8: now it's a real number
+- id: scales-of-conversion
+  name: Scales of Conversion
+  icon: balance_scales
+  region: merchants-crossing
+  description: "`int()` turns text like `\"7\"` into the number 7, and `str()` turns a number back into text."
+  example: |
+    coins = int("7")
+    print("Total: " + str(coins * 2))

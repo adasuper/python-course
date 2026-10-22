@@ -1,6 +1,6 @@
 // Runs every quest's solutions through the real Python runtime (docs/specs.md §18.3).
 // Shared by `npm run validate-content` and tests/content/quests.test.ts.
-import { SESSION_VALIDATOR_TYPES, type RegionFile } from '../../src/content/schema';
+import { SESSION_VALIDATOR_TYPES, type RegionFile, type WorkshopFile } from '../../src/content/schema';
 import type { ParsonsSpec } from '../../src/content/types';
 import type { BonusSpec, RunResult, SessionRun, StageSpec, ValidatorSpec } from '../../src/runtime/protocol';
 import { blocksFor, checkOrder, orderFeedback } from '../../src/ui/quest/parsonsModel';
@@ -262,5 +262,28 @@ export function checkRegion(host: PyHost, region: RegionFile): string[] {
       );
     }
   });
+  return problems;
+}
+
+/** Every Workshop map loads in the Python world, and every API example at least compiles. */
+export function checkWorkshop(host: PyHost, workshop: WorkshopFile): string[] {
+  const problems: string[] = [];
+  for (const map of workshop.maps) {
+    const run = host.run({
+      code: 'from codeweald import hero\nhero.say("hi")',
+      stage: map.stage as StageSpec,
+      mode: 'example',
+    });
+    if (run.error) problems.push(`map "${map.id}": ${describe(run)}`);
+  }
+  for (const entry of workshop.api) {
+    const run = host.run({ code: `if False:\n${entry.example.replace(/^/gm, '    ')}`, mode: 'example' });
+    if (
+      run.error?.type === 'SyntaxError' ||
+      run.error?.key.startsWith('syntax.') ||
+      run.error?.key.startsWith('indent.')
+    )
+      problems.push(`api "${entry.call}": the example is not valid Python (${describe(run)})`);
+  }
   return problems;
 }

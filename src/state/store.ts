@@ -21,6 +21,7 @@ export type Route =
   | { name: 'check'; regionId: string }
   | { name: 'inventory' }
   | { name: 'item'; id: string }
+  | { name: 'workshop' }
   | { name: 'spellbook'; tab?: 'pages' | 'spells' | 'examples' | 'scenes' | 'glossary' }
   | { name: 'credits' };
 
@@ -127,9 +128,14 @@ export function announce(text: string) {
 }
 
 let toastId = 0;
+/** At most this many toasts show at once (older ones were already announced). */
+export const MAX_TOASTS = 3;
+
 export function toast(kind: Toast['kind'], text: string, ms = 6000, icon?: string) {
   const item = { id: ++toastId, kind, text, ...(icon ? { icon } : {}) };
-  toasts.value = [...toasts.value, item];
+  // A new save point replaces the last one; the newest toasts win.
+  const kept = kind === 'save-point' ? toasts.value.filter((x) => x.kind !== 'save-point') : toasts.value;
+  toasts.value = [...kept, item].slice(-MAX_TOASTS);
   announce(text);
   if (ms > 0) setTimeout(() => dismissToast(item.id), ms);
 }

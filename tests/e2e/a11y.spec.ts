@@ -1,7 +1,7 @@
 // Brief §7: axe-core checks on the main screens (WCAG 2.1 AA rules).
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { newPlayer, openFixture, quest, solveBody } from './helpers';
+import { defeatTheFirstBoss, newPlayer, openFixture, quest, solveBody } from './helpers';
 
 async function scan(page: Page, label: string) {
   const results = await new AxeBuilder({ page: page as never })
@@ -109,6 +109,15 @@ test('notebook: items, badges and an item page', async ({ page }) => {
   await page.getByRole('button', { name: 'Run the example' }).click();
   await expect(page.locator('.error-explain')).toBeVisible();
   await scan(page, 'item page');
+});
+
+test('Workshop', async ({ page }) => {
+  await defeatTheFirstBoss(page);
+  await page.getByRole('button', { name: /Workshop/ }).click();
+  await expect(page.locator('.loading-panel')).toHaveCount(0, { timeout: 90_000 });
+  await page.getByRole('button', { name: /^▶ Run$/ }).click();
+  await page.locator('.api-ref details summary').click();
+  await scan(page, 'workshop');
 });
 
 test('Spellbook: every tab', async ({ page }) => {

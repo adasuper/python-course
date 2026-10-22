@@ -10,6 +10,7 @@ import {
   ErrorsSchema,
   BadgesSchema,
   GlossarySchema,
+  WorkshopSchema,
   ItemsSchema,
   parseQuest,
   RegionSchema,
@@ -18,6 +19,7 @@ import {
   type ErrorsFile,
   type GlossaryFile,
   type BadgesFile,
+  type WorkshopFile,
   type ItemsFile,
   type NormalQuestFile,
   type PhaseFile,
@@ -63,6 +65,7 @@ export interface LoadedContent {
   glossary: GlossaryFile;
   items: ItemsFile;
   badges: BadgesFile;
+  workshop: WorkshopFile | null;
   errors: ErrorsFile;
   regions: (Located<RegionFile> & { dir: string })[];
   quests: Map<string, Located<QuestFile> & { regionDir: string }>;
@@ -142,6 +145,7 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
     glossary: [],
     items: [],
     badges: [],
+    workshop: null,
     errors: {},
     regions: [],
     quests: new Map(),
@@ -153,6 +157,7 @@ export function loadContent(root = CONTENT_DIR): LoadedContent {
   out.glossary = parseWith(join(root, 'glossary.yaml'), GlossarySchema, problems)?.data ?? [];
   out.items = parseWith(join(root, 'items.yaml'), ItemsSchema, problems)?.data ?? [];
   out.badges = parseWith(join(root, 'badges.yaml'), BadgesSchema, problems)?.data ?? [];
+  out.workshop = parseWith(join(root, 'workshop.yaml'), WorkshopSchema, problems)?.data ?? null;
   out.errors = parseWith(join(root, 'errors.yaml'), ErrorsSchema, problems)?.data ?? {};
 
   const regionsDir = join(root, 'regions');
@@ -312,6 +317,11 @@ export function crossCheck(content: LoadedContent, root = CONTENT_DIR): Problem[
     const sentences = sentenceCount(plainText(parseRich(g.definition)));
     if (sentences > 2)
       add('content/glossary.yaml', `"${g.term}": keep the definition to 2 sentences (it has ${sentences})`);
+  });
+
+  content.workshop?.maps.forEach((m, i) => {
+    for (const message of gridProblems(m.stage as StageSpec))
+      add('content/workshop.yaml', `map ${i + 1} (${m.id}): ${message}`);
   });
 
   const badgeIds = new Set<string>();
@@ -767,6 +777,15 @@ export function compileCourse(content: LoadedContent): Omit<Course, 'contentVers
         },
       ]),
     ),
+    workshop: {
+      maps: (content.workshop?.maps ?? []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        description: rich(m.description),
+        stage: m.stage as StageSpec,
+      })),
+      api: (content.workshop?.api ?? []).map((a) => ({ ...a, summary: rich(a.summary) })),
+    },
     badges: content.badges.map((b) => ({
       id: b.id,
       name: b.name,

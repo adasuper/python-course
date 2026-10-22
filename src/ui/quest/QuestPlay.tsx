@@ -17,6 +17,7 @@ import { InputDialog } from '../components/InputDialog';
 import { JarShelf, OutputScroll, type OutLine } from '../components/Output';
 import { RichText } from '../components/RichText';
 import { prefersReducedMotion } from '../flow';
+import { runWithInput } from '../runWithInput';
 import { ANNOTATE_FROM_REGION } from '../traceback';
 import { BonusList, errorTemplate, Feedback, type RewardView } from './Feedback';
 import { Hints } from './Hints';
@@ -28,9 +29,6 @@ import { ReplayControls } from './ReplayControls';
 import { SessionPanel } from './SessionPanel';
 
 const NOOP_VIEW: ReplayView = { apply: async () => {}, reset: () => {} };
-
-/** Mode B asks at most this many times per run (§6.5). */
-const MAX_TYPED_INPUTS = 20;
 
 export interface UnitProps {
   quest: Quest;
@@ -237,21 +235,14 @@ export function QuestPlay({ quest, body, unitKey, phaseId, outro, starter, onPas
       ...(usesSession ? { session: sessionRef.current } : {}),
     };
     runner.setTimeoutMs(exec.timeoutSeconds * 1000);
-    let res = await runner.run(request);
-    // Mode B: ask the player, then run again from the top with the answer added. The seed
-    // is the same, so the program reaches the same point and carries on (§6.5).
-    while (res.status === 'needs-input') {
-      const value =
-        request.inputs.length < MAX_TYPED_INPUTS ? await ask(res.needsInput?.prompt ?? '', res.output) : null;
-      if (value === null) {
-        const note = request.inputs.length < MAX_TYPED_INPUTS ? t.quest.inputStopped : t.quest.inputTooMany;
-        setRunning(false);
-        setRunNote(note); // shown in a role="status" banner, which announces it
-        return;
-      }
-      request.inputs = [...request.inputs, value];
-      res = await runner.run(request);
+    const outcome = await runWithInput((req) => runner.run(req), request, ask);
+    if ('stopped' in outcome) {
+      setRunning(false);
+      // Shown in a role="status" banner, which announces it.
+      setRunNote(outcome.stopped === 'cancelled' ? t.quest.inputStopped : t.quest.inputTooMany);
+      return;
     }
+    let res = outcome.result;
     if (byOrder) res = withOrderCheck(res);
     const summary = res.validation?.session;
     if (summary) {

@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "maps": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "description": {
+            "type": "string"
+          },
+          "stage": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "grid"
+                  },
+                  "grid": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "legend": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "tile": {
+                          "type": "string"
+                        },
+                        "solid": {
+                          "type": "boolean"
+                        },
+                        "object": {
+                          "type": "string"
+                        },
+                        "item": {
+                          "type": "string"
+                        },
+                        "hero": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "look": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "facing": {
+                    "type": "string",
+                    "enum": [
+                      "up",
+                      "down",
+                      "left",
+                      "right"
+                    ]
+                  },
+                  "chests": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "loot": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "code"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "npcs": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "sprite": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "grid"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "npc"
+                  },
+                  "cast": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "sprite": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "sprite",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "none"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "stage"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "api": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "call": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "example": {
+            "type": "string"
+          },
+          "region": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 11
+          }
+        },
+        "required": [
+          "call",
+          "summary",
+          "example",
+          "region"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "maps",
+    "api"
+  ],
+  "additionalProperties": false
+}

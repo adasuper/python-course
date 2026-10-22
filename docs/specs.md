@@ -1155,7 +1155,8 @@ content/**/*.yaml ──► build-content.ts ──► Zod validate ──► cr
   terms it uses.
 - Searchable (name and summary). Script Fragments and badges appear on separate shelves.
 - **Celebrations** (F-PRG-08): badges and level-ups pop up as dismissible toasts, announced in
-  the polite live region (messages that arrive together are joined). The pop is one 0.5 s scale
+  the polite live region (messages that arrive together are joined). At most three toasts show
+  at once, and a new save point replaces the last one, so they never cover the game. The pop is one 0.5 s scale
   animation, never a flash, and reduced motion turns it off.
 
 ### 11.5 Spellbook (editor + reference)
@@ -1220,6 +1221,14 @@ No badge rewards speed, so there is no time pressure.
   are no validators.
 - Students save up to 20 named programs locally, or export a program as a `.py` download.
 - An API reference panel lists only the calls learned so far, plus "more" for the rest.
+- `content/workshop.yaml` holds the maps (`{ id, name, description, stage }`) and the API
+  reference (`{ call, summary, example, region }`, where `region` is the number of the region
+  whose quests teach the call). A call counts as learned once its region is unlocked.
+  `validate-content` loads every map in Python and compiles every example.
+- The HUD shows a 🛠️ Workshop button once the first region's boss is defeated (and the deploy
+  has `features.workshop`). Every Run gets a new random seed (§6.7); answering `input()` keeps
+  it. The last code and map are kept as drafts. Each finished run counts toward Workshop
+  Inventor.
 
 ### 11.8 Character creator and nicknames
 

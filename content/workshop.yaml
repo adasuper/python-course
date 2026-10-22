@@ -1,0 +1,125 @@
+# yaml-language-server: $schema=../schema/workshop.schema.json
+# The Workshop (docs/specs.md §11.7): sandbox maps to play on, and the API reference panel.
+# `region` is the region whose quests teach that call; the panel lists the calls from the
+# regions the student has reached, and keeps the rest under "More spells".
+maps:
+  - id: meadow
+    name: Sunny Meadow
+    description: Open grass with gems, coins and stars to collect, and a pond in the middle.
+    stage:
+      kind: grid
+      grid: |
+        ##############
+        #H...g....*..#
+        #..~~~...$...#
+        #..~~~.......#
+        #.......g....#
+        #..*.......$.#
+        #............#
+        ##############
+      legend:
+        "#": { tile: hedge, solid: true }
+        ".": { tile: grass }
+        H: { tile: grass, hero: true }
+        g: { tile: grass, item: gem }
+        $: { tile: grass, item: coin }
+        "*": { tile: grass, item: star }
+  - id: maze
+    name: Twisty Maze
+    description: Find the way to the exit. Try `world.look()` to see what is in front of the hero.
+    stage:
+      kind: grid
+      grid: |
+        ###########
+        #H..#.....#
+        #.#.#.###.#
+        #.#...#...#
+        #.#####.#.#
+        #...#...#.#
+        ###.#.###.#
+        #.....#..E#
+        ###########
+  - id: vault
+    name: Treasure Vault
+    description: A key, coins, a gem and a locked chest. The chest's code is 1234.
+    stage:
+      kind: grid
+      grid: |
+        ############
+        #H.k...#..C#
+        #.####.#.###
+        #......#...#
+        #.##.#####.#
+        #..$.....g.#
+        ############
+      chests:
+        C: { code: "1234", loot: [crown] }
+  - id: big-field
+    name: Big Empty Field
+    description: Lots of room and nothing in the way. Draw paths, walk patterns, go wild.
+    stage:
+      kind: grid
+      grid: |
+        ####################
+        #H.................#
+        #..................#
+        #..................#
+        #..................#
+        #..................#
+        #..................#
+        #..................#
+        #..................#
+        #..................#
+        ####################
+      legend:
+        "#": { tile: hedge, solid: true }
+        ".": { tile: grass }
+        H: { tile: grass, hero: true }
+
+api:
+  - call: print(...)
+    summary: Writes words and numbers on the Scroll of Output.
+    example: print("Hello!")
+    region: 1
+  - call: hero.move(direction, steps=1)
+    summary: 'Walks the hero "up", "down", "left" or "right". Bumping into a wall is harmless.'
+    example: hero.move("right", 3)
+    region: 1
+  - call: hero.say(text)
+    summary: Shows a speech bubble over the hero.
+    example: hero.say("Hi there!")
+    region: 1
+  - call: input(prompt)
+    summary: Asks a question and waits for an answer. The answer is always text.
+    example: name = input("What is your name? ")
+    region: 3
+  - call: hero.face(direction)
+    summary: Turns the hero without moving.
+    example: hero.face("up")
+    region: 5
+  - call: world.look()
+    summary: 'Says what is right in front of the hero, like "floor", "wall", "gem" or "exit".'
+    example: |
+      while world.look() == "floor":
+          hero.move("right")
+    region: 5
+  - call: hero.pick_up()
+    summary: Picks up the item the hero is standing on, and gives back its name.
+    example: found = hero.pick_up()
+    region: 5
+  - call: world.items_here()
+    summary: Gives back a list of the items on the hero's tile.
+    example: print(world.items_here())
+    region: 7
+  - call: hero.inventory()
+    summary: Gives back a list of everything the hero is carrying.
+    example: print(len(hero.inventory()))
+    region: 7
+  - call: hero.open_chest(code)
+    summary: Opens the chest in front of the hero if the code is right. The loot goes in the bag.
+    example: hero.open_chest("1234")
+    region: 7
+  - call: hero.position()
+    summary: Gives back the hero's (column, row). The top-left tile is (0, 0).
+    example: column, row = hero.position()
+    region: 9

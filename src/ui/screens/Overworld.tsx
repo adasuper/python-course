@@ -5,9 +5,10 @@ import { getWorldView } from '../../game/worldView';
 import { t } from '../../i18n/en';
 import type { Dir, XY } from '../../runtime/protocol';
 import { levelFor, titleFor, xpForLevel } from '../../state/profile';
-import { questState, regionCounts, regionMarkers } from '../../state/progress';
+import { questState, regionCounts, regionMarkers, workshopUnlocked } from '../../state/progress';
 import {
   announce,
+  config,
   course,
   go,
   profile,
@@ -65,6 +66,11 @@ export function Hud({ regionName }: { regionName: string }) {
         <button type="button" onClick={() => go({ name: 'spellbook' })}>
           📖 {t.hud.spellbook}
         </button>
+        {workshopUnlocked(p, course.value!, config.value.features.workshop) && (
+          <button type="button" onClick={() => go({ name: 'workshop' })}>
+            🛠️ {t.hud.workshop}
+          </button>
+        )}
         <button type="button" onClick={() => go({ name: 'inventory' })}>
           🎒 {t.hud.inventory}
         </button>

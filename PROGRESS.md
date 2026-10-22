@@ -35,8 +35,8 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
 | M2.4 Feedback engine | ✅ Done |
 | M2.5 Progression | ✅ Done |
 | M2.6 Spellbook reference | ✅ Done |
-| M2.7 Workshop | Next |
-| M2.8 Save polish | — |
+| M2.7 Workshop | ✅ Done |
+| M2.8 Save polish | Next |
 | M2.9 Settings and a11y features | — |
 | M2.10 PWA basics | — |
 
@@ -144,6 +144,18 @@ To jump straight to any quest: `http://localhost:4173/?dev#/dev/quest/r1-q3-path
   **Glossary** (A–Z, search, and "not met yet" words marked or hidden).
 - `content/errors.yaml` now names its JSON Schema too, and a test checks that every content file
   does (editor autocomplete for authors, F-AUT-07).
+
+#### M2.7 Workshop
+
+- **The Workshop** opens (🛠️ in the HUD) when the Hearthvale boss is defeated. Four sandbox maps
+  from `content/workshop.yaml` (Sunny Meadow, Twisty Maze, Treasure Vault, Big Empty Field), the
+  full API, typed `input()` answers and the larger loop budget (1,000,000). No checks.
+- **My programs:** save up to 20 named programs, open, delete, and **Download .py** (a local
+  download).
+- **Spells you know:** the API reference lists the calls from the regions you've reached; the
+  rest wait under "More spells".
+- Typed input is now one shared helper for quests and the Workshop.
+- Toasts no longer pile up: one save point at a time and at most three on screen.
 
 ## Phase 1 — Vertical slice ✅
 

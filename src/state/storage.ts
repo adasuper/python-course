@@ -97,7 +97,18 @@ export class Storage {
 
   async deleteProfile(id: string) {
     await this.kv.del(`profile:${id}`);
+    await this.kv.del(`programs:${id}`);
     for (const k of await this.kv.keys()) if (k.startsWith(`draft:${id}:`)) await this.kv.del(k);
+  }
+
+  /** Saved Workshop programs (§11.7), newest first. */
+  async programs(profileId: string): Promise<Program[]> {
+    const list = await this.kv.get<unknown>(`programs:${profileId}`);
+    return Array.isArray(list) ? (list as Program[]) : [];
+  }
+
+  savePrograms(profileId: string, programs: Program[]) {
+    return this.kv.set(`programs:${profileId}`, programs.slice(0, MAX_PROGRAMS));
   }
 
   async draft(profileId: string, key: string): Promise<string | undefined> {
@@ -140,6 +151,18 @@ export class Storage {
     return this.kv.set('meta:lastProfile', id);
   }
 }
+
+/** A saved Workshop program. */
+export interface Program {
+  id: string;
+  name: string;
+  code: string;
+  mapId: string;
+  savedOn: string;
+}
+
+/** Students keep up to this many Workshop programs (§11.7). */
+export const MAX_PROGRAMS = 20;
 
 /** A saved draft. Version 1 drafts were stored as bare strings. */
 interface DraftRecord {

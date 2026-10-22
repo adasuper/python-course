@@ -20,6 +20,7 @@ export const PROSE: Record<string, string> = {
   analogy: 'concept',
   concept_card: 'concept',
   description: 'description',
+  summary: 'reference',
   definition: 'glossary',
   message: 'error message',
   tip: 'error message',
@@ -38,9 +39,14 @@ export interface ProseString {
 }
 
 export function contentFiles(root: string): string[] {
-  const files = ['course.yaml', 'glossary.yaml', 'items.yaml', 'badges.yaml', 'errors.yaml'].map((f) =>
-    join(root, f),
-  );
+  const files = [
+    'course.yaml',
+    'glossary.yaml',
+    'items.yaml',
+    'badges.yaml',
+    'workshop.yaml',
+    'errors.yaml',
+  ].map((f) => join(root, f));
   const regions = join(root, 'regions');
   for (const dir of readdirSync(regions).sort()) {
     files.push(join(regions, dir, 'region.yaml'));

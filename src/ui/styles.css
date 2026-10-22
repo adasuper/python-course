@@ -1339,8 +1339,8 @@ img.pixel,
   margin-top: 0;
 }
 .twin .code-block {
-  white-space: pre;
-  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* ----- tabs (WAI-ARIA pattern) and the Spellbook ----- */
@@ -1375,8 +1375,8 @@ img.pixel,
 }
 .spell-code .code-block {
   width: 100%;
-  white-space: pre;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .example-notes li {
   margin: 0.2rem 0;
@@ -1397,4 +1397,45 @@ button.link {
   text-decoration: underline;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* ----- Workshop ----- */
+.field {
+  display: block;
+  margin: 0.4rem 0;
+  font-weight: 700;
+}
+.field input,
+.field select {
+  margin-left: 0.3rem;
+  font-weight: 400;
+}
+.program-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.program-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.3rem;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+}
+.program-list li.current {
+  border-color: var(--accent);
+}
+.api-list dt {
+  margin-top: 0.5rem;
+}
+.api-list dd {
+  margin: 0;
+}
+/* Long lines wrap: a scrolling box would need its own keyboard focus. */
+.api-list .code-block {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

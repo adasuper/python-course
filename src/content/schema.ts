@@ -539,6 +539,29 @@ export const BadgesSchema = z.array(
   }),
 );
 
+/** The Workshop's sandbox maps and API reference (docs/specs.md §11.7). */
+export const WorkshopSchema = z.strictObject({
+  maps: z
+    .array(
+      z.strictObject({
+        id: Slug,
+        name: z.string().max(40),
+        description: z.string(),
+        stage: StageSchema,
+      }),
+    )
+    .min(1),
+  api: z.array(
+    z.strictObject({
+      call: z.string(),
+      summary: z.string(),
+      example: z.string(),
+      // The region whose quests teach it.
+      region: z.number().int().min(1).max(11),
+    }),
+  ),
+});
+
 export const ErrorsSchema = z.record(
   z.string(),
   z.strictObject({ title: z.string(), message: z.string(), tip: z.string().optional() }),
@@ -553,6 +576,7 @@ export type CourseFile = z.infer<typeof CourseSchema>;
 export type GlossaryFile = z.infer<typeof GlossarySchema>;
 export type ItemsFile = z.infer<typeof ItemsSchema>;
 export type BadgesFile = z.infer<typeof BadgesSchema>;
+export type WorkshopFile = z.infer<typeof WorkshopSchema>;
 export type ErrorsFile = z.infer<typeof ErrorsSchema>;
 export type Validator = z.infer<typeof ValidatorSchema>;
 export type Stage = z.infer<typeof StageSchema>;

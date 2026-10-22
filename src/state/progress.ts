@@ -29,6 +29,18 @@ export function regionUnlocked(p: Profile, course: Course, regionId: string, unl
   return bossBeaten && (!checkGates || Boolean(p.checks[previous.id]));
 }
 
+/** The Workshop opens when the first region's boss is defeated (§11.7), if the deploy has it. */
+export function workshopUnlocked(p: Profile, course: Course, enabled = true): boolean {
+  if (!enabled) return false;
+  const first = course.regions[0]?.id;
+  return course.questOrder.some(
+    (q) =>
+      course.questInfo[q]?.region === first &&
+      course.questInfo[q]?.type === 'boss' &&
+      p.quests[q]?.status === 'completed',
+  );
+}
+
 export function questState(p: Profile, course: Course, questId: string, unlockedThrough = 0): Marker {
   const info = course.questInfo[questId];
   if (!info) return 'locked';

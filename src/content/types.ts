@@ -164,6 +164,12 @@ export type BadgeTrigger =
   | { kind: 'checks_completed'; count: number }
   | { kind: 'quest_completed'; quest: string };
 
+export interface Workshop {
+  maps: { id: string; name: string; description: Rich; stage: StageSpec }[];
+  /** The API reference; `region` is the region number whose quests teach the call. */
+  api: { call: string; summary: Rich; example: string; region: number }[];
+}
+
 export interface Badge {
   id: string;
   name: string;
@@ -210,6 +216,7 @@ export interface Course {
   items: Record<string, Item>;
   /** In badges.yaml order; save codes depend on it. */
   badges: Badge[];
+  workshop: Workshop;
   errors: Record<string, ErrorTemplate>;
 }
 

@@ -151,6 +151,21 @@ export async function solveQuest(page: Page, id: string) {
   await expect(page.getByRole('application')).toBeVisible();
 }
 
+/** Beats the Region 1 boss through the dev route (it opens the Workshop). */
+export async function defeatTheFirstBoss(page: Page) {
+  // A new query string makes this a real page load (a hash change alone isn't).
+  await page.goto('./?dev&boss#/dev/quest/r1-boss-village-crier-bug');
+  const boss = quest('r1-boss-village-crier-bug') as BossQuestFile;
+  for (const [i, phase] of boss.phases.entries()) {
+    await solveBody(page, phase);
+    if (i < boss.phases.length - 1) await page.getByRole('button', { name: /Next phase/ }).click();
+  }
+  await page
+    .locator('#feedback')
+    .getByRole('button', { name: /Back to the map/ })
+    .click();
+}
+
 function escape(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

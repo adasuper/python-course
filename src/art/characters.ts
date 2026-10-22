@@ -486,7 +486,7 @@ const COMMON_ROLES: Record<string, string> = {
   L: '#b4e6ff',
 };
 
-interface PersonOptions {
+export interface PersonOptions {
   skin: [string, string];
   hair: [string, string];
   style: HairStyle;
@@ -623,7 +623,8 @@ export function avatarFrames(avatarId: string, themeId: string): AvatarArt {
 
 // ── Villagers (facing down, two idle "bob" frames) ────────────────────────────────────
 
-function villager(
+/** A villager facing down, with two idle "bob" frames. Regions use it for their people. */
+export function villager(
   name: string,
   o: PersonOptions,
   accessory: Frame = [],
@@ -921,7 +922,8 @@ const BYTE_TALK = plot(BYTE_BUST, [
 
 // ── Bugs ──────────────────────────────────────────────────────────────────────────────
 
-const BUG_PALETTE: Record<string, string> = {
+/** Bugs: O outline, V body, L highlight, w/e eyes, M mouth, g legs; Y/y bell gold. */
+export const BUG_PALETTE: Record<string, string> = {
   O: '#2b1d2e',
   Y: '#f7cd4f',
   y: '#c9972f',

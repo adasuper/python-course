@@ -11,6 +11,10 @@ import {
   avatarFrames,
   type PixelSprite,
 } from '../../src/art/index';
+import { REGION_ART } from '../../src/art/regions';
+import { CHARACTERS as BASE_CHARACTERS } from '../../src/art/characters';
+import { ITEMS as BASE_ITEMS } from '../../src/art/items';
+import { TILES as BASE_TILES } from '../../src/art/tiles';
 import { encodePng, PNG_SIGNATURE } from '../../scripts/lib/png';
 
 const REQUIRED_TILES = [
@@ -108,6 +112,23 @@ describe('pixel art', () => {
       expect(CHARACTERS[name]?.frames.length, `${name} frames`).toBe(2);
     }
     for (const name of REQUIRED_ITEMS) expect(ITEMS, name).toHaveProperty(name);
+  });
+
+  it("never lets a region's art replace another's (src/art/regions)", () => {
+    const names = (kind: 'characters' | 'tiles' | 'items') =>
+      REGION_ART.flatMap((r) => r[kind].map((x) => x.name));
+    for (const [kind, all] of [
+      ['characters', CHARACTERS],
+      ['tiles', TILES],
+      ['items', ITEMS],
+    ] as const) {
+      const added = names(kind);
+      const base = { characters: BASE_CHARACTERS, tiles: BASE_TILES, items: BASE_ITEMS }[kind];
+      expect(new Set(added).size, `${kind} named twice`).toBe(added.length);
+      for (const name of added) expect(base, `${kind}: ${name} already exists`).not.toHaveProperty(name);
+      expect(Object.keys(all)).toHaveLength(Object.keys(base).length + added.length);
+    }
+    for (const r of REGION_ART) for (const p of r.props) expect(TILES, p).toHaveProperty(p);
   });
 
   it('draws every tile, character and item correctly', () => {
